@@ -1,3 +1,4 @@
+import { handleAppBridge } from './app-bridge-server.js';
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
@@ -56,8 +57,11 @@ async function onRequest({ request: req, env, params }) {
   try {
     if (parts[0] === "feed" && method === "GET") {
       const after = Number(url.searchParams.get("after")) || 0;
-      const feed = await kv.get("feed", "json") || [];
-      return json({ now: Date.now(), items: feed.filter((f) => f.at > after) });
+      const legacyFeed = await kv.get("feed", "json") || [];
+      const appFeed = await readAll(kv, "app-feed:");
+      const feed = [...legacyFeed, ...appFeed].sort((a,b) => a.at - b.at);
+      // KV entries may become visible out of timestamp order. The display deduplicates by k.
+      return json({ now: Date.now(), items: feed.filter((f) => f.k?.startsWith('app/') || f.at > after) });
     }
     if (parts[0] === "health" && method === "GET") return json({ ok: true, staffPinSet: (env.STAFF_PIN || "").length >= 4 });
     if (parts[0] === "participants" && parts[1]) {
@@ -80,7 +84,7 @@ async function onRequest({ request: req, env, params }) {
         if (rec.nickname != null && typeof rec.nickname !== "string") return json({ error: "\uB2C9\uB124\uC784 \uD615\uC2DD\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." }, 400);
         const nickname = (rec.nickname || "").trim().normalize("NFC");
         const nicknameLength = typeof Intl.Segmenter === "function" ? Array.from(new Intl.Segmenter("ko", { granularity: "grapheme" }).segment(nickname)).length : Array.from(nickname).length;
-        if (nicknameLength > 6 || /[\u0000-\u001f\u007f]/.test(nickname)) return json({ error: "\uB2C9\uB124\uC784\uC740 6\uAE00\uC790 \uC774\uB0B4\uB85C \uC801\uC5B4 \uC8FC\uC138\uC694." }, 400);
+        if (nickname.length > 40 || /[\u0000-\u001f\u007f]/.test(nickname)) return json({ error: "\uB2C9\uB124\uC784\uC740 40\uC790 \uC774\uB0B4\uB85C \uC801\uC5B4 \uC8FC\uC138\uC694." }, 400);
         const receivedAt = Date.now(), finishedAt = Number(rec.finishedAt) || receivedAt;
         const key = `${id}/${finishedAt}`;
         await kv.put("r:" + key, JSON.stringify({ ...rec, nickname, id, room: "B", receivedAt }));
@@ -559,6 +563,8 @@ function* executeRequest(request) {
 __name(executeRequest, "executeRequest");
 var pages_template_worker_default = {
   async fetch(originalRequest, env, workerContext) {
+    const appResponse = await handleAppBridge(originalRequest, env);
+    if (appResponse) return appResponse;
     let request = originalRequest;
     const handlerIterator = executeRequest(request);
     let data = {};

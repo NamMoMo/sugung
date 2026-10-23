@@ -700,7 +700,7 @@
   <canvas class="frame" aria-hidden="true"></canvas>
   <form id="nicknameForm" novalidate>
     <h2 id="nicknameHeading" data-i18n="nickHeading">어떤 이름으로 불리고 싶어?</h2>
-    <label for="nicknameInput" data-i18n="nickLabel">닉네임 · 최대 6글자</label>
+    <label for="nicknameInput" data-i18n="nickLabel">닉네임 · 최대 40자</label>
     <input id="nicknameInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-describedby="nicknameCount nicknameError" required>
     <p class="counter" id="nicknameCount">0 / 6</p>
     <p id="nicknamePreview" aria-live="polite" data-i18n="nickEmpty">닉네임을 입력해 줘.</p>
@@ -741,6 +741,7 @@
 </script>
 <script type="module">
 import * as THREE from 'three';
+import { appLaunch, loadAppContext, saveAppRecord, showAppReturn, showAppLoadError, clearAppLoadError } from './app-bridge-client.js';
 import { CATEGORY, CAT_NAME, CAT_COLOR, ITEM_EN, CAT_NAME_EN } from './catalog.js';
 import { UI, RABBIT_EN, NEXT_ACTIONS_EN, DETACH_LINES_EN, ABOUT, RANDOM_NICKNAMES_EN, CUSTOM } from './i18n.js';
 import { CHORONG_COLORS, COLOR_STARTERS, twoTone } from './colors.js';   // 초롱 색 바꾸기: 빛깔 10가지   // 한국어 / English 문구 (영어를 고치려면 i18n.js)
@@ -868,6 +869,12 @@ const SERVER = (async () => {
   } catch (e) { return false; }
 })();
 async function loadItems() {
+  if (appLaunch) {
+    const launch = await loadAppContext();
+    participantId = launch.participant_code;
+    record.nickname = record.nickname ?? launch.nickname;
+    return launch.items;
+  }
   // 방법 2: QR 주소에 항목을 직접 넣은 경우 (?id=0417&items=영상 만들기,글쓰기,...)
   if (params.get('items')) {
     return params.get('items').split(',').map(s => s.trim()).filter(Boolean);
@@ -908,6 +915,7 @@ function readPending() { try { return JSON.parse(localStorage.getItem(PENDING_KE
 function writePending(list) { try { localStorage.setItem(PENDING_KEY, JSON.stringify(list)); } catch (e) {} }
 // 현장 와이파이가 끊겼을 때 이 기기에 모아 둔 기록을, 연결되면 다시 보냅니다.
 async function flushPending() {
+  if (appLaunch) return;
   if (!(await SERVER)) return;
   const list = readPending(); if (!list.length) return;
   const left = [];
@@ -918,6 +926,10 @@ async function flushPending() {
 addEventListener('online', flushPending);
 
 async function saveRecord() {
+  if (appLaunch) {
+    try { await saveAppRecord(record); return 'server'; }
+    catch { return 'pending'; }
+  }
   try { localStorage.setItem(`roomB:${record.id}`, JSON.stringify(record)); } catch (e) {}
   console.log('[방 B 기록]', record);
   if (!(await SERVER) || !participantId || params.get('items') || params.get('k')) return 'local';
@@ -2034,9 +2046,9 @@ function updateNickname() {
   const input = $('nicknameInput');
   // 한글 조합 중(글자를 아직 다 치지 않은 상태)에는 입력칸 값은 건드리지 않고(건드리면 자판 조합이 깨짐) 아래 미리보기·글자 수만 바로 바꿈
   // (예전엔 조합 중이면 아무것도 안 바꿔서 '차차'를 쳐도 아래에 '차'만 보였음)
-  if (!nicknameComposing) input.value = nicknameLetters(input.value).slice(0, 6).join('');
-  const name = nicknameLetters(input.value).slice(0, 6).join('').trim();
-  $('nicknameCount').textContent = `${Math.min(6, nicknameLetters(input.value).length)} / 6`;
+  if (!nicknameComposing) input.value = nicknameLetters(input.value).filter((letter, i, all) => all.slice(0, i + 1).join('').length <= 40).join('');
+  const name = input.value.trim();
+  $('nicknameCount').textContent = `${input.value.length} / 40`;
   $('nicknamePreview').textContent = name ? nicknameTitle(name) : U().nickEmpty;
   $('nicknameDialog').classList.toggle('hasName', !!name);   // 이름이 입력돼 있을 때만 '이 이름으로 띄울게요'가 빛남
   {   // 빛나지 않을 때(이름 입력 전)는 금빛 글씨, 입력하면 흰 글씨 + 금빛 번짐
@@ -2121,9 +2133,15 @@ async function launchLantern() {
   paintEndFrame(); $('ending').classList.add('on');
   const where = await saving;
   lastSave = where;
+  if (appLaunch) showAppReturn(record);
   say(RABBIT.done);
   const si = $('saveInfo');
-  if (where === 'pending') { si.hidden = false; si.textContent = U().pending; }
+  if (where === 'pending') {
+    si.hidden = false;
+    si.textContent = appLaunch
+      ? (LANG === 'en' ? 'Completion could not be confirmed. Use the return button to retry.' : '완료 기록을 확인하지 못했습니다. 아래 완료 버튼을 눌러 다시 시도해 주세요.')
+      : U().pending;
+  }
   if (KIOSK) {
     const nb = $('kioskNext'); nb.hidden = false;
     let left = CONFIG.KIOSK_RESET_AFTER_DONE;
@@ -2597,12 +2615,14 @@ async function loadAndShow() {
   let labels;
   try { labels = await loadItems(); }
   catch (e) {
+    if (appLaunch) { showAppLoadError(e.message, loadAndShow); return; }
     if (e instanceof NeedId) { askForId(e.key, ...e.args); return; }
     $('loadInfo').textContent = e.message; $('btnStart').disabled = true; return;
   }
   if (!labels || labels.length < 2) {
     askForId('tooFew'); return;
   }
+  clearAppLoadError();
   labels = labels.slice(0, MAX_TAGS);   // 한 화면(초롱)에 꼬리표는 최대 9개
   $('idForm').hidden = true; $('introActions').hidden = false;
   $('btnStart').disabled = false;
