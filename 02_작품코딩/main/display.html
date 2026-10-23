@@ -1,0 +1,1666 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>수궁야행 · 빔 화면</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  /* 빔 화면은 어떤 화면비에서도 정사각형으로: 짧은 변에 맞춘 정사각형을 가운데에 두고 나머지는 검게 비움.
+     #stage 에 transform 이 있어서, 안의 position: fixed 요소들은 화면이 아니라 이 정사각형을 기준으로 놓임 */
+  #stage { position: fixed; left: 50%; top: 50%; width: min(100vw, 100vh); height: min(100vw, 100vh);
+    transform: translate(-50%, -50%); overflow: hidden; background: #050818; }
+  body { cursor: none; }
+  body.cursor { cursor: default; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #bannerHalo { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; opacity: 0;
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); background: rgba(10,14,40,.3);
+    -webkit-mask-image: radial-gradient(closest-side, #000 35%, rgba(0,0,0,.6) 65%, transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 35%, rgba(0,0,0,.6) 65%, transparent 100%); }
+  #status {
+    position: fixed; right: calc(min(100vw, 100vh) * .012); bottom: calc(min(100vw, 100vh) * .012); font: 400 12px/1 "IBM Plex Sans KR", sans-serif;
+    color: rgba(220,230,255,.35); display: flex; gap: .5em; align-items: center; pointer-events: none;
+  }
+  #status i { width: 7px; height: 7px; border-radius: 50%; background: #5ad19a; display: inline-block; }
+  #status.off i { background: #d96a6a; }
+  #help {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center;
+    font: 400 16px/1.7 "IBM Plex Sans KR", sans-serif; color: #EFE7D3; background: rgba(8,12,34,.8);
+    padding: 1.4em 2em; border-radius: 14px; transition: opacity .6s; pointer-events: none;
+  }
+  #help.hide { opacity: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+<canvas id="sea"></canvas>
+<div id="bannerHalo" aria-hidden="true"></div>   <!-- 하단 글씨 뒤: 바다만 살짝 흐리게 (초롱은 그 위 캔버스라 흐려지지 않음) -->
+<canvas id="cv"></canvas>
+<div id="help">화면을 한 번 누르면 전체 화면이 됩니다 · Click once for full screen<br><span style="opacity:.6;font-size:.85em">스마트폰에서 ‘이걸로 정할게요’를 누르면 그 청사초롱이 바다에서 떠오릅니다<br>When a visitor sends their chorong from their phone, it rises from the sea</span></div>
+<div id="status"><i></i><span id="statusText">연결 중</span></div>
+</div>
+<script type="module">
+import { CATEGORY, CAT_NAME, CAT_COLOR, ITEM_EN } from './catalog.js';   // ITEM_EN: 꼬리표·알림에 함께 쓰는 영어 이름
+import * as THREE from './vendor/three/build/three.module.js';
+import { twoToneFromName } from './colors.js';   // 관람객이 바꾼 위·아래 빛깔 ('쪽빛·다홍')
+/* ───────────────────────── 설정 ───────────────────────── */
+const params = new URLSearchParams(location.search);
+const DEMO = params.has('demo');          // ?demo : 서버 없이 몇 초마다 시험용 초롱이 떠오름
+const POLL_MS = 1500;   // 폰에서 초롱을 날리면 1~2초 안에 떠오르게
+const MAX_LANTERNS = 7;                   // 가까이 머무는 초롱 수. 넘으면 가장 오래된 초롱부터 하나씩 먼 하늘로 물러나 작고 흐릿한 초롱이 되어 계속 떠 있음 (네임택 없이)
+const TRANS_MS = 15000;                   // 가까운 초롱 → 먼 하늘의 흐릿한 초롱으로 물러나는 데 걸리는 시간 (천천히 떠가듯)
+const FAR_MAX = 160;                      // 먼 하늘에 떠 있는 초롱 최대 수. 넘으면 가장 오래된 것부터 조용히 사라짐
+const LEAVE_GAP_MS = 2000;                // 한 초롱이 별이 된 뒤, 다음 초롱이 떠나기까지 쉬는 시간
+const WAIT_MAX = 3;                       // 차례를 기다릴 수 있는 초롱 수 (하늘 10칸 - 머무는 7개). 넘으면 가장 오래된 것은 제자리에서 조용히 흐려져 사라짐
+const AGE_SHRINK = 0.3;                   // 가장 오래된 초롱이 새 초롱보다 작아지는 정도 (0 = 그대로 … 0.45 = 많이). 작을수록 오래된 꼬리표도 잘 보임
+let HORIZON = 0.525;                      // 화면에서 수평선 높이 (화면 높이 비율). 화면 비율에 따라 bgMap() 이 다시 계산
+
+// 체험 화면(index.html)의 여섯 빛깔과 같게
+const PALETTES = {
+  '청홍':   { shape: 'hex',    motif: 'plum',    animal: 'rabbit', top: '#2E4FC4', bottom: '#E8352C', glow: '255,178,122', frame: '#4A2C1E', trim: '#C9A04A' },
+  '보랏빛': { shape: 'hex', motif: 'plum',   animal: 'rabbit', top: '#6B3FD0', bottom: '#F06AB0', glow: '247,166,224', frame: '#2E1A52', trim: '#E0B8F0' },
+  '주황':   { shape: 'hex',    motif: 'plum',     animal: 'turtle', top: '#F7B43C', bottom: '#E6402A', glow: '255,176,96',  frame: '#6A2414', trim: '#E8B04A' },
+  '쪽빛':   { shape: 'hex', motif: 'plum',   animal: 'turtle', top: '#2F76E0', bottom: '#F4F1FF', glow: '201,216,255', frame: '#152E66', trim: '#C8D6F0' },
+  '자홍':   { shape: 'hex',    motif: 'plum', animal: 'rabbit', top: '#B43DD6', bottom: '#FF5E8A', glow: '255,154,200', frame: '#4A2C1E', trim: '#C9A04A' },
+  '노을':   { shape: 'hex',    motif: 'plum',     animal: 'rabbit', top: '#FFD86A', bottom: '#F2732E', glow: '255,194,119', frame: '#4A2C1E', trim: '#C9A04A' },
+};
+const PAL_NAMES = Object.keys(PALETTES);
+// 관람객이 꾸민 투톤 초롱('쪽빛·다홍')이면 그 색으로 초롱 정보를 만들어 PALETTES 에 더함
+function ensurePalette(name) {
+  if (PALETTES[name]) return true;
+  const t = twoToneFromName(name); if (!t) return false;
+  PALETTES[name] = { shape: 'hex', motif: 'plum', animal: 'rabbit', top: t.top, bottom: t.bottom, glow: t.glowRGB, frame: '#4A2C1E', trim: t.trim };
+  return true;
+}
+// 이미 떠 있는 초롱의 색이 바뀌면(체험 화면에서 초롱을 날린 뒤 색을 바꾼 경우) 1.5초에 걸쳐 새 색으로 바뀜
+const RECOLOR_MS = 1500;
+function recolorLantern(e) {
+  if (!ensurePalette(e.color)) return;
+  const L = lanterns.find(o => o.k === e.k && !o.dead);
+  if (!L || L.color === e.color) return;
+  L.prevColor = L.color; L.color = e.color; L.recolorAt = performance.now();
+}
+
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let W = 0, H = 0, dpr = 1;
+const bg = new Image(); bg.src = './display-bg.jpg';
+
+/* ───────────────────────── 청사초롱 그림 (빛깔마다 한 번만 그려 둠) ───────────────────────── */
+const LW = 160, LH = 300;      // 초롱 그림 기준 크기 (본체 + 지붕 + 고리)
+const spriteCache = {};
+const PANEL_FRET = ["##############...##############..#########..###", "##############...##############..#########..###", "##############...##############..#########..###", "###........###...###........###..###...###..###", "###........###...###........###..###...###..###", "###........###...###........###..###...###..###", "###..####################...###..##############", "###..####################...###..##############", "###..####################...###..##############", "###..####..###...##...###...###........###", "###..###...###...##...###...###........###", "#########################...##############", "#########################...##############", "#########################...##############", ".....###...###...##", ".....###...###...##", ".....###...###...##", "###################", "###################", "###################", "###..###...###", "###..###...###", "###..#########", "###..#########", "###..#########", "###", "###", "###", "##############", "##############", "##############", "...........###", "...........###", "########...###", "#########..###", "#########..###", "###..####..###", "###...###..###", "###...###..###", "##############", "##############", "##############", "......###", "......###", "#########", "#########"];   // 초롱 면 귀퉁이 回자 무늬 (마무리 판 END_FRET_FULL 과 같은 무늬)
+function latticeBorder(x, W, H) {
+  // 테두리: 네 귀퉁이에 回자 무늬(마무리 판과 같은 무늬)를 바깥 가장자리에 붙이고, 무늬끼리 얇은 선으로 이음. 한지빛
+  const F = PANEL_FRET, FW = W * 0.24, sc = FW / 47, FH = F.length * sc, IN = 10, col = 'rgba(255,248,236,.62)';
+  x.fillStyle = col; x.strokeStyle = col; x.lineWidth = 2; x.lineCap = 'butt';
+  const e = IN + 1; x.beginPath();
+  x.moveTo(IN + FW, e); x.lineTo(W - IN - FW, e); x.moveTo(IN + FW, H - e); x.lineTo(W - IN - FW, H - e);
+  x.moveTo(e, IN + FH); x.lineTo(e, H - IN - FH); x.moveTo(W - e, IN + FH); x.lineTo(W - e, H - IN - FH); x.stroke();
+  for (const [cx, cy, sx, sy] of [[IN, IN, 1, 1], [W - IN, IN, -1, 1], [IN, H - IN, 1, -1], [W - IN, H - IN, -1, -1]]) {
+    x.save(); x.translate(cx, cy); x.scale(sx, sy); x.beginPath();
+    F.forEach((row, rr) => { for (let c = 0; c < row.length; c++) if (row[c] === '#') { let q = c; while (row[q + 1] === '#') q++; x.rect(c * sc, rr * sc, (q - c + 1) * sc + .3, sc + .3); c = q; } });
+    x.fill(); x.restore();
+  }
+}
+// 수궁 동물 실루엣 (토끼: 뛰어오르는 모습 / 거북: 헤엄치는 모습)
+function animalPath(x, kind, cx, cy, s, flip = 1) {
+  x.save(); x.translate(cx, cy); x.scale(flip * s, s); x.beginPath();
+  if (kind === 'turtle') {
+    x.ellipse(0, 0, 1, .72, 0, 0, Math.PI * 2);
+    x.moveTo(1.5, 0); x.ellipse(1.22, -.02, .3, .22, 0, 0, Math.PI * 2);
+    [[.55, -.72, -.6], [.55, .72, .6], [-.7, -.6, .5], [-.7, .6, -.5]].forEach(([fx, fy, r]) => { x.moveTo(fx + .45, fy); x.ellipse(fx, fy, .45, .16, r, 0, Math.PI * 2); });
+    x.moveTo(-1.1, 0); x.ellipse(-1.12, 0, .16, .07, 0, 0, Math.PI * 2);
+  } else {
+    x.ellipse(0, 0, 1, .52, -.28, 0, Math.PI * 2);
+    x.moveTo(1.3, -.5); x.arc(.95, -.5, .36, 0, Math.PI * 2);
+    x.moveTo(.9, -1.0); x.ellipse(.78, -1.15, .13, .5, -.55, 0, Math.PI * 2);
+    x.moveTo(1.1, -1.05); x.ellipse(.98, -1.18, .12, .46, -.3, 0, Math.PI * 2);
+    x.moveTo(.95, .45); x.ellipse(.75, .45, .12, .42, .9, 0, Math.PI * 2);
+    x.moveTo(-.6, .38); x.ellipse(-.95, .38, .2, .58, -1.05, 0, Math.PI * 2);
+    x.moveTo(-.9, -.18); x.arc(-1.06, -.18, .17, 0, Math.PI * 2);
+  }
+  x.restore();
+}
+function drawAnimal(x, kind, cx, cy, s, flip, mode) {   // mode: 'shadow' 그림자 / 'glow' 빛나는 선
+  animalPath(x, kind, cx, cy, s, flip);
+  if (mode === 'glow') {
+    x.save(); x.shadowColor = 'rgba(255,255,255,.95)'; x.shadowBlur = 14; x.lineWidth = 3; x.strokeStyle = 'rgba(255,255,255,.95)'; x.fillStyle = 'rgba(255,255,255,.18)';
+    x.fill(); x.stroke(); x.restore();
+    if (kind === 'turtle') { x.save(); x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 1.6; x.translate(cx, cy); x.scale(flip * s, s);
+      x.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; x.lineTo(Math.cos(a) * .42, Math.sin(a) * .32); } x.closePath(); x.restore(); x.stroke(); }
+  } else { x.fillStyle = 'rgba(40,30,60,.62)'; x.fill(); }
+}
+// 물고기 비늘 무늬 (위·아래 띠)
+function scaleBand(x, W, y0, y1, col, sz) {
+  x.save(); x.beginPath(); x.rect(0, y0, W, y1 - y0); x.clip();
+  for (let r = 0, y = y0 - sz; y < y1 + sz; r++, y += sz * .55) {
+    for (let cx = (r % 2) * sz - sz; cx < W + sz; cx += sz * 2) {
+      const g = x.createRadialGradient(cx, y + sz * .9, 1, cx, y + sz * .5, sz * 1.1);
+      g.addColorStop(0, 'rgba(255,255,255,.55)'); g.addColorStop(.6, col); g.addColorStop(1, col);
+      x.fillStyle = g; x.beginPath(); x.arc(cx, y + sz, sz, Math.PI, 0); x.lineTo(cx + sz, y + sz * 1.6); x.lineTo(cx - sz, y + sz * 1.6); x.closePath(); x.fill();
+      x.strokeStyle = 'rgba(255,240,210,.75)'; x.lineWidth = 1.6; x.beginPath(); x.arc(cx, y + sz, sz, Math.PI, 0); x.stroke();
+    }
+  }
+  x.restore();
+}
+function waveLines(x, W, y, amp, col, n = 3) {
+  x.strokeStyle = col; x.lineCap = 'round';
+  for (let k = 0; k < n; k++) {
+    x.lineWidth = 3 - k * .7; x.beginPath();
+    for (let px = 0; px <= W; px += 6) { const py = y + k * 14 + Math.sin(px / W * Math.PI * 4 + k) * amp; px ? x.lineTo(px, py) : x.moveTo(px, py); }
+    x.stroke();
+  }
+  // 말린 물결 끝
+  for (let px = W * .12; px < W; px += W * .25) { x.lineWidth = 2.2; x.beginPath(); x.arc(px, y - amp * .3, amp * .8, Math.PI * .2, Math.PI * 1.7); x.stroke(); }
+}
+function drawMotif(x, W, H, pal, motif, animal, rnd) {
+  if (motif === 'scale') {                 // 둥근 비단 초롱: 위아래 비늘, 가운데 물결과 동물 그림자
+    scaleBand(x, W, 0, H * .3, pal.top, 26);
+    scaleBand(x, W, H * .7, H, pal.bottom, 26);
+    const mid = x.createLinearGradient(0, H * .3, 0, H * .7);
+    mid.addColorStop(0, 'rgba(255,250,240,.75)'); mid.addColorStop(.5, 'rgba(255,252,246,.55)'); mid.addColorStop(1, 'rgba(255,250,240,.75)');
+    x.fillStyle = mid; x.fillRect(0, H * .3, W, H * .4);
+    waveLines(x, W, H * .6, 10, 'rgba(255,255,255,.85)');
+    x.strokeStyle = 'rgba(255,240,210,.9)'; x.lineWidth = 3; [H * .3, H * .7].forEach(y => { x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke(); });
+    for (let k = 0; k < 4; k++) drawAnimal(x, animal, W * (.125 + k * .25), H * .47, Math.min(62, W * .07), k % 2 ? -1 : 1, 'shadow');   // 둘레 어디서 봐도 보이게 4마리
+    for (let i = 0; i < 14; i++) { x.fillStyle = 'rgba(255,255,255,.6)'; x.beginPath(); x.arc(rnd() * W, H * (.33 + rnd() * .2), 2 + rnd() * 4, 0, 7); x.fill(); }
+  } else if (motif === 'sea') {            // 네모 유리 초롱: 물속 빛줄기, 거품, 해초·산호, 빛나는 선으로 그린 동물
+    x.save(); x.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 5; i++) { const sx = W * (.15 + rnd() * .7), g = x.createLinearGradient(sx, 0, sx + 60, H * .6);
+      g.addColorStop(0, 'rgba(255,255,255,.28)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g;
+      x.beginPath(); x.moveTo(sx - 10, 0); x.lineTo(sx + 14, 0); x.lineTo(sx + 90, H * .6); x.lineTo(sx + 40, H * .6); x.closePath(); x.fill(); }
+    x.restore();
+    for (let i = 0; i < 26; i++) { const r = 2 + rnd() * 9; x.strokeStyle = 'rgba(255,255,255,.75)'; x.lineWidth = 1.4; x.beginPath(); x.arc(rnd() * W, H * (.08 + rnd() * .55), r, 0, 7); x.stroke(); }
+    x.save(); x.shadowColor = 'rgba(190,255,235,.9)'; x.shadowBlur = 10; x.lineCap = 'round';
+    for (let i = 0; i < 7; i++) { const sx = W * (.05 + i * .15 + rnd() * .05), hh = H * (.18 + rnd() * .2);
+      x.strokeStyle = `rgba(${160 + rnd() * 60},255,${210 + rnd() * 40},.85)`; x.lineWidth = 4 + rnd() * 4;
+      x.beginPath(); x.moveTo(sx, H); x.bezierCurveTo(sx + 24, H - hh * .35, sx - 24, H - hh * .7, sx + 8, H - hh); x.stroke(); }
+    for (let i = 0; i < 3; i++) { const cx = W * (.2 + i * .3), cy = H * .94; x.strokeStyle = 'rgba(255,220,235,.85)'; x.lineWidth = 3;
+      [[-.6, 60], [0, 80], [.6, 55]].forEach(([a, l]) => { x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.sin(a) * l, cy - Math.cos(a) * l); x.stroke(); }); }
+    x.restore();
+    waveLines(x, W, H * .72, 12, 'rgba(255,255,255,.55)', 2);
+    drawAnimal(x, animal, W * .5, H * .44, Math.min(W, 420) * .2, 1, 'glow');
+  }
+}
+function drawLattice(x, W, H, pal, animal) {  // 꽃살창 + 둥근 달창 속 동물 그림자
+  const r = Math.min(W, H) * .3, cy = H * .38;
+  const g = x.createRadialGradient(W / 2, cy, 4, W / 2, cy, r);
+  g.addColorStop(0, 'rgba(255,253,245,.95)'); g.addColorStop(.85, 'rgba(255,246,228,.75)'); g.addColorStop(1, 'rgba(255,246,228,0)');
+  x.fillStyle = g; x.beginPath(); x.arc(W / 2, cy, r, 0, 7); x.fill();
+  drawAnimal(x, animal, W / 2, cy + r * .1, r * .32, 1, 'shadow');
+  x.strokeStyle = 'rgba(255,244,226,.7)'; x.lineWidth = 2;
+  const step = W / 8;
+  for (let px = step; px < W; px += step) { x.beginPath(); x.moveTo(px, H * .74); x.lineTo(px, H - 20); x.stroke(); }
+  for (let py = H * .74; py < H - 20; py += step) { x.beginPath(); x.moveTo(20, py); x.lineTo(W - 20, py); x.stroke(); }
+  x.lineWidth = 3; x.beginPath(); x.arc(W / 2, cy, r * 1.02, 0, 7); x.stroke();
+  latticeBorder(x, W, H);
+}
+// 창(한지) 그림: 체험 화면 초롱과 같은 무늬
+function panelCanvas(p, W, H, seed) {
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  let r = seed * 9301 + 49297; const rnd = () => ((r = (r * 9301 + 49297) % 233280) / 233280);
+  let g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, p.top); g.addColorStop(.36, p.top); g.addColorStop(.62, p.bottom); g.addColorStop(1, p.bottom);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  g = x.createRadialGradient(W / 2, H * .55, 6, W / 2, H * .55, W * .8);
+  g.addColorStop(0, 'rgba(255,250,235,.7)'); g.addColorStop(.5, 'rgba(255,240,220,.2)'); g.addColorStop(1, 'rgba(255,240,220,0)');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  if (p.motif === 'scale' || p.motif === 'sea') { drawMotif(x, W, H, p, p.motif, p.animal, rnd); return c; }
+  if (p.motif === 'lattice') drawLattice(x, W, H, p, p.animal);
+  // 매화 가지
+  x.strokeStyle = 'rgba(48,24,20,.9)'; x.lineCap = 'round';
+  x.lineWidth = W * .03; x.beginPath(); x.moveTo(-4, H * .78); x.bezierCurveTo(W * .3, H * .6, W * .45, H * .55, W * .95, H * .3); x.stroke();
+  x.lineWidth = W * .018; x.beginPath(); x.moveTo(W * .4, H * .56); x.quadraticCurveTo(W * .5, H * .72, W * .72, H * .76); x.stroke();
+  const flower = (fx, fy, rr) => {
+    for (let k = 0; k < 5; k++) { const a = k * Math.PI * 2 / 5 + fx; x.fillStyle = '#FDEEF2'; x.beginPath(); x.arc(fx + Math.cos(a) * rr * .55, fy + Math.sin(a) * rr * .55, rr * .5, 0, 7); x.fill(); }
+    x.fillStyle = '#E7B23C'; x.beginPath(); x.arc(fx, fy, rr * .22, 0, 7); x.fill();
+  };
+  [[.18, .66], [.43, .52], [.7, .38], [.87, .3], [.6, .2], [.72, .75], [.3, .6]].forEach(([fx, fy], i) => flower(W * fx, H * fy, W * (i % 3 ? .07 : .085)));
+  if (p.motif === 'plum') latticeBorder(x, W, H);
+  return c;
+}
+
+/* ───────────────────────── 체험 화면과 똑같은 3D 청사초롱을 그림으로 찍어 씀 ─────────────────────────
+   index.html 의 buildLantern / chorongTexture 를 그대로 가져와, 빛깔마다 한 번 렌더링해서 이미지로 보관. */
+let PALETTE = null;
+const GLOW = () => glowTexture();
+function glowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,214,150,1)');
+  g.addColorStop(.25, 'rgba(244,184,96,.55)');
+  g.addColorStop(1, 'rgba(244,184,96,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+function finishTex(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+function chorongTexture(pal, seed, W = 512, motif = 'plum', animal = 'rabbit') {
+  const H = 820, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  let r = seed * 9301 + 49297; const rnd = () => ((r = (r * 9301 + 49297) % 233280) / 233280);
+  // 위·아래 두 빛깔이 가운데서 번지는 한지
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, pal.top); g.addColorStop(0.36, pal.top); g.addColorStop(0.62, pal.bottom); g.addColorStop(1, pal.bottom);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  // 안쪽 불빛: 가운데가 하얗게 달아오름
+  const hot = x.createRadialGradient(W / 2, H * 0.55, 10, W / 2, H * 0.55, W * 0.75);
+  hot.addColorStop(0, 'rgba(255,250,235,.6)'); hot.addColorStop(0.45, 'rgba(255,240,220,.18)'); hot.addColorStop(1, 'rgba(255,240,220,0)');
+  x.fillStyle = hot; x.fillRect(0, 0, W, H);
+  // 가장자리는 살짝 어둡게 (빛이 덜 비치는 모서리)
+  const edge = x.createLinearGradient(0, 0, W, 0);
+  edge.addColorStop(0, 'rgba(20,10,30,.35)'); edge.addColorStop(.18, 'rgba(20,10,30,0)');
+  edge.addColorStop(.82, 'rgba(20,10,30,0)'); edge.addColorStop(1, 'rgba(20,10,30,.35)');
+  x.fillStyle = edge; x.fillRect(0, 0, W, H);
+  // 한지 섬유 결
+  x.globalAlpha = .07; x.strokeStyle = '#fff';
+  for (let i = 0; i < 220; i++) { x.lineWidth = .5 + rnd(); x.beginPath(); const px = rnd() * W, py = rnd() * H; x.moveTo(px, py); x.lineTo(px + (rnd() - .5) * 46, py + (rnd() - .5) * 46); x.stroke(); }
+  x.globalAlpha = 1;
+
+  if (motif !== 'plum' && motif !== 'lattice') { drawMotif(x, W, H, pal, motif, animal, rnd); return finishTex(c); }
+  if (motif === 'lattice') drawLattice(x, W, H, pal, animal);
+  // 매화 가지
+  const blossoms = [];
+  function branch(px, py, ang, len, width, depth) {
+    x.strokeStyle = 'rgba(48,24,20,.9)'; x.lineCap = 'round';
+    let cx = px, cy = py;
+    const steps = 9;
+    for (let i = 0; i < steps; i++) {
+      ang += (rnd() - .5) * 0.5;
+      const nx = cx + Math.cos(ang) * len / steps, ny = cy + Math.sin(ang) * len / steps;
+      x.lineWidth = Math.max(1.2, width * (1 - i / steps * 0.7));
+      x.beginPath(); x.moveTo(cx, cy); x.lineTo(nx, ny); x.stroke();
+      cx = nx; cy = ny;
+      if (depth > 0 && i > 2 && rnd() < 0.32) branch(cx, cy, ang + (rnd() < .5 ? -1 : 1) * (0.5 + rnd() * 0.6), len * (0.35 + rnd() * 0.25), width * 0.55, depth - 1);
+      if (i > 1 && rnd() < 0.42) blossoms.push([cx + (rnd() - .5) * 30, cy + (rnd() - .5) * 30, 20 + rnd() * 14]);
+    }
+    blossoms.push([cx, cy, 10 + rnd() * 6]);
+  }
+  const fromLeft = seed % 2 === 0;
+  branch(fromLeft ? -10 : W + 10, H * (0.62 + rnd() * 0.25), fromLeft ? -0.55 : Math.PI + 0.55, W * 1.05, 16, 2);
+  branch(fromLeft ? W + 10 : -10, H * (0.18 + rnd() * 0.15), fromLeft ? Math.PI + 0.35 : 0.35, W * 0.6, 9, 1);
+  // 꽃송이: 다섯 장 꽃잎 + 붉은 꽃술
+  blossoms.forEach(([bx, by, br]) => {
+    const rot = rnd() * Math.PI;
+    if (br < 17) {                    // 꽃봉오리
+      x.fillStyle = '#F7C6D0'; x.beginPath(); x.arc(bx, by, br * 0.6, 0, Math.PI * 2); x.fill();
+      x.fillStyle = 'rgba(190,40,70,.8)'; x.beginPath(); x.arc(bx, by + br * 0.2, br * 0.3, 0, Math.PI * 2); x.fill();
+      return;
+    }
+    for (let k = 0; k < 5; k++) {
+      const a = rot + k * Math.PI * 2 / 5;
+      const px = bx + Math.cos(a) * br * 0.55, py = by + Math.sin(a) * br * 0.55;
+      const pg = x.createRadialGradient(px, py, 0, px, py, br * 0.6);
+      pg.addColorStop(0, '#FFFFFF'); pg.addColorStop(0.7, '#FDE7EC'); pg.addColorStop(1, '#F2A9BC');
+      x.fillStyle = pg; x.beginPath(); x.arc(px, py, br * 0.55, 0, Math.PI * 2); x.fill();
+    }
+    x.fillStyle = '#E7B23C'; x.beginPath(); x.arc(bx, by, br * 0.22, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = 'rgba(170,30,60,.85)'; x.lineWidth = 2;
+    for (let k = 0; k < 7; k++) {
+      const a = rot + k * Math.PI * 2 / 7;
+      x.beginPath(); x.moveTo(bx, by); x.lineTo(bx + Math.cos(a) * br * 0.38, by + Math.sin(a) * br * 0.38); x.stroke();
+    }
+  });
+  if (motif === 'plum') latticeBorder(x, W, H);
+  return finishTex(c);
+}
+
+
+const _pendQ = new THREE.Quaternion();
+function levelPendants(lan) {   // 처마 끝 구슬 줄을 땅과 수직으로 (초롱의 기울기를 되돌림)
+  if (!lan || !lan.userData.pendants) return;
+  lan.updateMatrixWorld(true);
+  lan.userData.pendants.forEach(p => { p.parent.getWorldQuaternion(_pendQ); p.quaternion.copy(_pendQ).invert(); });
+}
+function buildLantern() {
+  // 청사초롱 6가지: 빛깔마다 모양(shape)과 무늬(motif)가 다름. 공통: 금속 장식, 매듭과 술, 안쪽 불빛
+  const g = new THREE.Group();
+  const pal = PALETTE, shape = pal.shape || 'hex';
+  const BH = 0.25, Y0 = -0.115;                        // 몸통 높이, 바닥 높이 (모양이 달라도 같은 자리에 걸림)
+  const metal = new THREE.MeshStandardMaterial({ color: pal.trim, roughness: 0.32, metalness: 0.75, emissive: pal.trim, emissiveIntensity: 0.22 });
+  const rod = (p, q, r = 0.0022) => {
+    const a = new THREE.Vector3(...p), b = new THREE.Vector3(...q), len = a.distanceTo(b);
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 6), metal);
+    m.position.copy(a).add(b).multiplyScalar(0.5);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+    g.add(m); return m;
+  };
+  const panelMat = tex => new THREE.MeshStandardMaterial({
+    map: tex, emissiveMap: tex, emissive: 0xFFFFFF, emissiveIntensity: 0.9,
+    roughness: 0.9, side: THREE.DoubleSide, transparent: true, opacity: 0.97,
+  });
+  let mats = [], topY = Y0 + BH, rimR = 0.07;
+
+  if (shape === 'hex') {
+    // ── 육각 초롱 + 살짝 떠 있는 기와 지붕 ──
+    const R = 0.084, AP = R * Math.cos(Math.PI / 6);
+    const corner = i => { const a = i * Math.PI / 3 + Math.PI / 6; return [Math.cos(a), Math.sin(a)]; };
+    const cp = (i, y, rr = R) => { const [cx, cz] = corner(i % 6); return [cx * rr, y, cz * rr]; };
+    mats = [0, 1, 2, 3, 4, 5].map(i => panelMat(chorongTexture(pal, 5 + i * 7, 300, pal.motif, pal.animal)));
+    const face = new THREE.PlaneGeometry(R, BH);
+    for (let i = 0; i < 6; i++) {
+      const a = i * Math.PI / 3, m = new THREE.Mesh(face, mats[i]);
+      m.rotation.y = a; m.position.set(Math.sin(a) * AP, Y0 + BH / 2, Math.cos(a) * AP); g.add(m);
+    }
+    for (let i = 0; i < 6; i++) {
+      rod(cp(i, Y0), cp(i, Y0 + BH), 0.0026);
+      rod(cp(i, Y0 + BH), cp(i + 1, Y0 + BH)); rod(cp(i, Y0), cp(i + 1, Y0));
+      rod(cp(i, Y0 + BH * 0.88), cp(i + 1, Y0 + BH * 0.88), 0.0012); rod(cp(i, Y0 + BH * 0.12), cp(i + 1, Y0 + BH * 0.12), 0.0012);
+    }
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.04, R * 1.04, 0.006, 6), metal);
+    lid.position.y = Y0 + BH + 0.003; g.add(lid);
+    const GAP = 0.02, RY = Y0 + BH + GAP, RH = 0.074, RE = R * 1.5, LIFT = 0.024;
+    const roofCol = new THREE.Color(pal.top).lerp(new THREE.Color(0xFFFFFF), 0.12);
+    const roofMat = new THREE.MeshStandardMaterial({ color: roofCol, roughness: 0.35, metalness: 0.25, side: THREE.DoubleSide, transparent: true, opacity: 0.9, emissive: roofCol, emissiveIntensity: 0.35 });
+    const NU = 10, NV = 10, pos = [], idx = [];
+    const roofPt = (i, u, v) => {
+      const [ax, az] = corner(i), [bx, bz] = corner(i + 1);
+      const px = ax + (bx - ax) * u, pz = az + (bz - az) * u, rr = 0.06 * R + (RE - 0.06 * R) * v;
+      const y = RY + RH * Math.pow(1 - v, 1.7) + LIFT * Math.pow(v, 3) * Math.pow(Math.abs(2 * u - 1), 2.2);
+      return [px * rr, y, pz * rr];
+    };
+    for (let i = 0; i < 6; i++) {
+      const base = pos.length / 3;
+      for (let vi = 0; vi <= NV; vi++) for (let ui = 0; ui <= NU; ui++) pos.push(...roofPt(i, ui / NU, vi / NV));
+      for (let vi = 0; vi < NV; vi++) for (let ui = 0; ui < NU; ui++) { const a = base + vi * (NU + 1) + ui; idx.push(a, a + NU + 1, a + 1, a + 1, a + NU + 1, a + NU + 2); }
+    }
+    const roofGeo = new THREE.BufferGeometry();
+    roofGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); roofGeo.setIndex(idx); roofGeo.computeVertexNormals();
+    g.add(new THREE.Mesh(roofGeo, roofMat));
+    const bead = new THREE.SphereGeometry(0.0032, 8, 6);
+    for (let i = 0; i < 6; i++) {
+      const pts = []; for (let k = 0; k <= 12; k++) pts.push(new THREE.Vector3(...roofPt(i, 0, k / 12)));
+      g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.0022, 5, false), metal));
+      const tip = new THREE.Vector3(...roofPt(i, 0, 1)), out = tip.clone().setY(0).normalize();
+      // 처마 끝: 작은 고리 (세로로 서서, 옆에서 보면 동그랗게)
+      const UP = new THREE.Vector3(0, 1, 0);
+      const rg = new THREE.Mesh(new THREE.TorusGeometry(0.0055, 0.0015, 8, 22), metal);
+      rg.position.copy(tip).addScaledVector(out, 0.0062).addScaledVector(UP, 0.0035);
+      rg.lookAt(rg.position.clone().add(new THREE.Vector3(-out.z, 0, out.x))); g.add(rg);
+      const st = new THREE.Mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.0035, 8), metal); st.position.copy(tip).addScaledVector(out, 0.0012).addScaledVector(UP, 0.0004); st.quaternion.setFromUnitVectors(UP, out); g.add(st);
+      {   // 구슬 줄: 고리 정가운데 아래로, 땅과 수직으로 늘어짐 (초롱이 기울어도 늘 아래로 — levelPendants). 흰 진주 네 개
+        const C = rg.position.clone(), pend = new THREE.Group(); pend.position.copy(C); g.add(pend); (g.userData.pendants ||= []).push(pend);
+        const pearlBead = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: .2, metalness: .1, emissive: 0xFFF0F6, emissiveIntensity: .35 });
+        const th = new THREE.Mesh(new THREE.CylinderGeometry(0.0005, 0.0005, 0.033, 6), metal); th.position.y = -0.0235; pend.add(th);   // 실은 고리 아래 테두리에서 시작
+        for (let k = 1; k <= 4; k++) { const b = new THREE.Mesh(bead, pearlBead); b.position.y = -0.0060 - 0.0085 * k; pend.add(b); }
+      }
+    }
+    rod([0, Y0 + BH + 0.006, 0], [0, RY + RH + 0.03, 0], 0.0018);
+    topY = RY + RH;
+    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.02, R * 0.62, 0.016, 6, 1, true), metal);
+    skirt.position.y = Y0 - 0.008; g.add(skirt);
+    rimR = R * 0.9;
+  } else if (shape === 'barrel') {
+    // ── 둥근 비단 초롱: 배가 부른 몸통, 금속 갈빗대, 위아래 테 ──
+    const prof = [];
+    for (let k = 0; k <= 24; k++) { const v = k / 24, r = 0.062 + 0.034 * Math.sin(Math.PI * v) ** 0.8; prof.push(new THREE.Vector2(r, Y0 + BH * v)); }
+    mats = [panelMat(chorongTexture(pal, 9, 1024, pal.motif, pal.animal))];
+    const body = new THREE.Mesh(new THREE.LatheGeometry(prof, 48), mats[0]); g.add(body);
+    for (let i = 0; i < 6; i++) {             // 갈빗대 (몸통 곡선을 따라)
+      const a = i * Math.PI / 3, pts = prof.map(p => new THREE.Vector3(Math.sin(a) * (p.x + 0.0015), p.y, Math.cos(a) * (p.x + 0.0015)));
+      g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.0018, 5, false), metal));
+    }
+    // 몸통을 감싸는 비단 띠 (나선)
+    const band = []; for (let k = 0; k <= 60; k++) { const v = 0.18 + 0.64 * k / 60, a = k / 60 * Math.PI * 2.2, r = 0.062 + 0.034 * Math.sin(Math.PI * v) ** 0.8 + 0.006; band.push(new THREE.Vector3(Math.sin(a) * r, Y0 + BH * v, Math.cos(a) * r)); }
+    const silk = new THREE.MeshStandardMaterial({ color: new THREE.Color(pal.bottom).lerp(new THREE.Color(0xFFFFFF), .35), roughness: .3, metalness: .2, transparent: true, opacity: .8, emissive: pal.bottom, emissiveIntensity: .25 });
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(band), 80, 0.0035, 6, false), silk));
+    const collarMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(pal.top), roughness: .5, metalness: .3, emissive: pal.top, emissiveIntensity: .25 });
+    [[Y0 + BH + 0.007, 0.066], [Y0 - 0.007, 0.066]].forEach(([y, r]) => {
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.014, 8), collarMat); col.position.y = y; g.add(col);
+      [y - 0.007, y + 0.007].forEach(yy => { const t = new THREE.Mesh(new THREE.TorusGeometry(r, 0.0016, 6, 32), metal); t.rotation.x = Math.PI / 2; t.position.y = yy; g.add(t); });
+    });
+    topY = Y0 + BH + 0.014;
+    rod([0, topY, 0], [0, topY + 0.03, 0], 0.0016);
+    rimR = 0.06;
+  } else {
+    // ── 네모 유리 초롱: 반투명 판, 위아래 계단식 판, 네 줄로 매달림 ──
+    const BW = 0.15, BHb = 0.21, yb = Y0 + 0.02;
+    mats = [0, 1, 2, 3].map(i => panelMat(chorongTexture(pal, 3 + i * 11, 420, pal.motif, pal.animal)));
+    const face = new THREE.PlaneGeometry(BW, BHb);
+    [0, Math.PI / 2, Math.PI, -Math.PI / 2].forEach((ry, i) => {
+      const m = new THREE.Mesh(face, mats[i]); m.rotation.y = ry; m.position.set(Math.sin(ry) * BW / 2, yb + BHb / 2, Math.cos(ry) * BW / 2); g.add(m);
+    });
+    const plateMat = (col, op) => new THREE.MeshStandardMaterial({ color: col, roughness: .25, metalness: .1, transparent: true, opacity: op, emissive: col, emissiveIntensity: .55 });
+    const topCol = new THREE.Color(pal.top), botCol = new THREE.Color(pal.bottom);
+    [[yb + BHb + 0.008, BW + 0.012, 0.016, topCol, .85], [yb + BHb + 0.024, BW - 0.03, 0.016, topCol, .7],
+     [yb - 0.008, BW + 0.012, 0.016, botCol, .85], [yb - 0.024, BW - 0.03, 0.016, botCol, .7]].forEach(([y, w, h, c, op]) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), plateMat(c, op)); m.position.y = y; g.add(m);
+    });
+    // 모서리 빛 선
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => rod([sx * BW / 2, yb, sz * BW / 2], [sx * BW / 2, yb + BHb, sz * BW / 2], 0.0016));
+    topY = yb + BHb + 0.032;
+    const apex = [0, topY + 0.06, 0];         // 네 줄이 한 점으로 모임
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => rod([sx * (BW / 2 - 0.02), topY, sz * (BW / 2 - 0.02)], apex, 0.0012));
+    topY = apex[1] - 0.03;
+    rimR = 0.07;
+  }
+
+  // 꼭지 · 고리 (공통)
+  const finial = new THREE.Mesh(new THREE.SphereGeometry(0.0085, 14, 10), metal);
+  finial.position.y = topY + 0.012; g.add(finial);
+  const spike = new THREE.Mesh(new THREE.ConeGeometry(0.004, 0.018, 8), metal);
+  spike.position.y = topY + 0.028; g.add(spike);
+  // 꼭대기: 큰 고리·꼭지 구슬 대신, 지붕 꼭짓점에 바로 앉은 금빛 토끼
+  finial.visible = false; spike.visible = false;
+  {
+    const R = new THREE.Group(), S = 0.0027;   // 토끼 크기
+    const part = (r, [x, y, z], [sx, sy, sz] = [1, 1, 1], rot = [0, 0, 0]) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r * S, 28, 20), metal); o.position.set(x * S, y * S, z * S); o.scale.set(sx, sy, sz); o.rotation.set(...rot); R.add(o); };
+    const cap = (r, len, [x, y, z], rot) => { const o = new THREE.Mesh(new THREE.CapsuleGeometry(r * S, len * S, 10, 24), metal); o.position.set(x * S, y * S, z * S); o.rotation.set(...rot); R.add(o); };
+    part(4.4, [0, 4.3, -0.5], [0.92, 1.0, 1.08]);                       // 몸통
+    for (const sx of [-1, 1]) {                                          // 뒷다리: 접고 앉은 허벅지 + 뒤꿈치 + 앞으로 뻗은 발
+      part(2.75, [2.15 * sx, 2.45, -1.0], [0.68, 1.0, 1.0]);
+      part(1.25, [2.05 * sx, 0.95, -2.3], [0.75, 0.75, 0.9]);
+      part(1.15, [2.05 * sx, 0.5, 0.6], [0.72, 0.45, 2.6]);
+    }
+    part(2.6, [0, 6.0, 1.5], [0.9, 1.1, 0.9]);                          // 가슴
+    for (const sx of [-1, 1]) {                                          // 앞다리 (위쪽은 가슴에 묻혀 경계 없음) + 앞발
+      cap(0.82, 3.0, [0.9 * sx, 3.0, 2.6], [0.38, 0, 0]);
+      part(0.95, [0.9 * sx, 0.75, 3.3], [0.85, 0.7, 1.3]);
+    }
+    part(2.3, [0, 7.5, 0.9]);                                           // 목
+    part(3.0, [0, 9.0, 1.5], [0.9, 0.95, 1.05], [-0.15, 0, 0]);         // 머리
+    part(1.45, [-1.25, 8.3, 2.6]); part(1.45, [1.25, 8.3, 2.6]);        // 볼
+    part(1.3, [0, 8.6, 3.9], [1.0, 0.8, 0.9]);                          // 주둥이
+    part(0.36, [0, 8.95, 4.95], [1.2, 0.8, 0.8]);                       // 코
+    for (const sx of [-1, 1]) {                                          // 귀: 좌우 대칭, 살짝 비틀려 바깥을 향함
+      const ear = new THREE.Mesh(new THREE.SphereGeometry(1.8 * S, 28, 20), metal);
+      ear.position.set(0.9 * sx * S, 11.8 * S, 0.3 * S); ear.scale.set(0.74, 2.5, 0.36);
+      ear.rotation.set(-0.28, -0.45 * sx, -0.16 * sx, 'YXZ'); R.add(ear);
+    }
+    part(1.4, [0, 2.7, -5.0]);                                          // 꼬리
+    R.position.y = topY - 0.002; R.rotation.y = -0.9; g.add(R);
+  }
+  // 아래 매듭 + 구슬 + 술 (공통, 술 색 = 아랫부분 색)
+  const by = shape === 'box' ? Y0 - 0.012 : Y0 - 0.014;
+  const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.006, 0.0018, 40, 6, 2, 3), metal);
+  knot.position.y = by - 0.012; g.add(knot);
+  const pearl = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: .2, metalness: .1, emissive: 0xFFF0F6, emissiveIntensity: .35 });
+  [0, 1].forEach(k => { const b = new THREE.Mesh(new THREE.SphereGeometry(0.0045, 10, 8), pearl); b.position.y = by - 0.026 - k * 0.009; g.add(b); });
+  const tasselCol = new THREE.Color(pal.bottom).lerp(new THREE.Color(0xFFFFFF), 0.05);
+  const tasselMat = new THREE.MeshStandardMaterial({ color: tasselCol, roughness: 0.85, emissive: tasselCol, emissiveIntensity: 0.25 });
+  const tie = new THREE.Mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.008, 10), metal);
+  tie.position.y = by - 0.046; g.add(tie);
+  const tassel = new THREE.Mesh(new THREE.CylinderGeometry(0.0045, 0.011, 0.065, 12, 1), tasselMat);
+  tassel.position.y = by - 0.082; g.add(tassel);
+
+  const bodyMat = mats[0];
+  g.userData.syncMats = mats.slice(1);
+  // 안쪽 불씨와 빛
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 12), new THREE.MeshBasicMaterial({ color: 0xFFF1D6, transparent: true, opacity: 0.85 }));
+  core.position.y = Y0 + BH * 0.45; g.add(core);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW(), color: pal.glow, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.6 }));
+  halo.scale.set(0.55, 0.55, 1); halo.position.y = Y0 + BH * 0.5; g.add(halo);
+  const light = new THREE.PointLight(pal.glow, 0.6, 1.6, 1.5);
+  light.position.y = Y0 + BH * 0.45; g.add(light);
+  if (shape === 'hex') { const under = new THREE.PointLight(pal.glow, 0.25, 0.3, 2); under.position.y = Y0 + BH + 0.01; g.add(under); }
+
+  Object.assign(g.userData, { bodyMat, halo, light, rimY: Y0 - 0.013, rimR });
+  return g;
+}
+
+
+const hexToInt = h => parseInt(h.slice(1), 16);
+const rgbToInt = s => s.split(',').reduce((a, v) => (a << 8) + (parseInt(v, 10) & 255), 0);
+let lanternR3 = null;
+function lanternSprite3D(name) {
+  const p = PALETTES[name] || PALETTES['청홍'];
+  if (!lanternR3) {
+    const cvs = document.createElement('canvas');
+    const r = new THREE.WebGLRenderer({ canvas: cvs, antialias: true, alpha: true, preserveDrawingBuffer: true });
+    r.setPixelRatio(1); r.setSize(LW * 3, LH * 3, false); r.setClearColor(0x000000, 0);
+    const scene = new THREE.Scene();
+    scene.add(new THREE.HemisphereLight(0x8FB3FF, 0x0E1530, 0.6));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.35); dir.position.set(1, 3, 2); scene.add(dir);
+    const cam = new THREE.PerspectiveCamera(26, LW / LH, 0.1, 10);
+    cam.position.set(0, 0.05, 1.22); cam.lookAt(0, 0.022, 0);
+    lanternR3 = { r, scene, cam, cvs };
+  }
+  const { r, scene, cam, cvs } = lanternR3;
+  PALETTE = { top: p.top, bottom: p.bottom, trim: p.trim, glow: rgbToInt(p.glow), shape: 'hex', motif: 'plum', animal: 'rabbit' };
+  const lan = buildLantern();
+  lan.userData.halo.visible = false;                 // 빛 번짐은 빔 화면이 따로 그림
+  lan.rotation.y = 0.32;                              // 체험 화면처럼 살짝 비스듬히
+  lan.traverse(o => { if (o.isMesh && o.geometry && o.geometry.type === 'SphereGeometry' && o.material.isMeshBasicMaterial) o.visible = false; });   // 안쪽 불씨 공 숨김
+  scene.add(lan);
+  r.render(scene, cam);
+  scene.remove(lan);
+  lan.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); } });
+  const c = document.createElement('canvas'); c.width = LW * 2; c.height = LH * 2;
+  c.getContext('2d').drawImage(cvs, 0, 0, c.width, c.height);
+  return c;
+}
+
+function lanternSprite(name) {
+  if (spriteCache[name]) return spriteCache[name];
+  let c = null;
+  try { c = lanternSprite3D(name); } catch (e) { console.warn('3D 초롱 그림 실패, 평면 그림 사용', e); }
+  return (spriteCache[name] = c || lanternSprite2D(name));
+}
+
+function lanternSprite2D(name) {
+  // 체험 화면과 같은 6가지 청사초롱 (빛깔마다 모양·무늬가 다름): hex 육각 기와지붕 / barrel 둥근 비단 / box 네모 유리
+  const p = PALETTES[name] || PALETTES['청홍'];
+  const c = document.createElement('canvas'); c.width = LW; c.height = LH; const x = c.getContext('2d');
+  const bx = 20, by = 60, bw = 120, bh = 200, cx = LW / 2;
+  const panel = panelCanvas(p, p.shape === 'barrel' ? 640 : 300, 820, 7);
+  let topY = by - 4;
+  x.lineCap = 'round';
+  if (p.shape === 'barrel') {
+    // 배가 부른 몸통
+    const body = () => { x.beginPath(); x.moveTo(cx - 44, by + 4); x.bezierCurveTo(cx - 68, by + 50, cx - 68, by + bh - 50, cx - 44, by + bh - 4);
+      x.lineTo(cx + 44, by + bh - 4); x.bezierCurveTo(cx + 68, by + bh - 50, cx + 68, by + 50, cx + 44, by + 4); x.closePath(); };
+    x.save(); body(); x.clip(); x.drawImage(panel, 0, 0, 320, 820, bx - 4, by, bw + 8, bh); 
+    const sh = x.createLinearGradient(bx, 0, bx + bw, 0); sh.addColorStop(0, 'rgba(20,12,40,.35)'); sh.addColorStop(.3, 'rgba(20,12,40,0)'); sh.addColorStop(.7, 'rgba(20,12,40,0)'); sh.addColorStop(1, 'rgba(20,12,40,.35)');
+    x.fillStyle = sh; x.fillRect(bx - 10, by, bw + 20, bh); x.restore();
+    x.strokeStyle = p.trim; x.lineWidth = 1.6;
+    [-1, -.45, 0, .45, 1].forEach(k => { x.beginPath(); x.moveTo(cx + k * 44, by + 4); x.bezierCurveTo(cx + k * 68, by + 50, cx + k * 68, by + bh - 50, cx + k * 44, by + bh - 4); x.stroke(); });
+    // 비단 띠
+    x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 3; x.beginPath(); x.moveTo(cx - 62, by + bh * .32); x.bezierCurveTo(cx - 10, by + bh * .22, cx + 40, by + bh * .4, cx + 63, by + bh * .55); x.stroke();
+    // 위아래 테
+    [[by - 2, 0], [by + bh - 8, 1]].forEach(([y]) => { x.fillStyle = p.top; x.fillRect(cx - 48, y, 96, 10); x.strokeStyle = p.trim; x.lineWidth = 1.4; x.strokeRect(cx - 48, y, 96, 10); });
+    topY = by - 2;
+    x.strokeStyle = p.trim; x.lineWidth = 1.6; x.beginPath(); x.moveTo(cx, topY); x.lineTo(cx, topY - 14); x.stroke();
+    topY -= 14;
+  } else if (p.shape === 'box') {
+    const bw2 = 116, x0 = cx - bw2 / 2, y0 = by + 14, h2 = bh - 30;
+    x.drawImage(panel, x0, y0, bw2, h2);
+    x.strokeStyle = 'rgba(255,255,255,.6)'; x.lineWidth = 1.4; x.strokeRect(x0, y0, bw2, h2);
+    const plate = (y, w, col, a) => { x.globalAlpha = a; x.fillStyle = col; x.fillRect(cx - w / 2, y, w, 10); x.globalAlpha = 1; x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = 1; x.strokeRect(cx - w / 2, y, w, 10); };
+    plate(y0 - 10, bw2 + 8, p.top, .9); plate(y0 - 20, bw2 - 22, p.top, .75);
+    plate(y0 + h2, bw2 + 8, p.bottom, .9); plate(y0 + h2 + 10, bw2 - 22, p.bottom, .75);
+    x.strokeStyle = p.trim; x.lineWidth = 1.2; const ay = y0 - 52;
+    [[-1, 0], [1, 0]].forEach(([sd]) => { x.beginPath(); x.moveTo(cx + sd * (bw2 / 2 - 14), y0 - 20); x.lineTo(cx, ay); x.stroke(); });
+    topY = ay + 6;
+  } else {
+    // 육각: 가운데 면 + 양옆 면, 가는 금속 살대, 떠 있는 기와 지붕
+    const s1 = bx + 26, s2 = bx + bw - 26;
+    x.drawImage(panel, bx, by, bw, bh);
+    x.fillStyle = 'rgba(20,12,40,.28)'; x.fillRect(bx, by, s1 - bx, bh); x.fillRect(s2, by, bx + bw - s2, bh);
+    x.strokeStyle = p.trim;
+    x.lineWidth = 2.4; [bx + 1, s1, s2, bx + bw - 1].forEach(px => { x.beginPath(); x.moveTo(px, by); x.lineTo(px, by + bh); x.stroke(); });
+    [by, by + bh].forEach(py => { x.beginPath(); x.moveTo(bx, py); x.lineTo(bx + bw, py); x.stroke(); });
+    x.lineWidth = 1; [by + bh * .12, by + bh * .88].forEach(py => { x.beginPath(); x.moveTo(bx, py); x.lineTo(bx + bw, py); x.stroke(); });
+    x.fillStyle = p.trim; x.fillRect(bx - 3, by - 4, bw + 6, 4);
+    const ry = by - 12, ay = 18, ex = 74;
+    x.lineWidth = 1.6; x.beginPath(); x.moveTo(cx, by - 4); x.lineTo(cx, ay - 6); x.stroke();
+    const roof = () => { x.beginPath(); x.moveTo(cx - ex - 4, ry - 9); x.quadraticCurveTo(cx - ex * .55, ry + 2, cx - ex * .2, ry + 1); x.lineTo(cx + ex * .2, ry + 1);
+      x.quadraticCurveTo(cx + ex * .55, ry + 2, cx + ex + 4, ry - 9); x.quadraticCurveTo(cx + ex * .45, ry - 8, cx + 4, ay); x.lineTo(cx - 4, ay); x.quadraticCurveTo(cx - ex * .45, ry - 8, cx - ex - 4, ry - 9); x.closePath(); };
+    const rg = x.createLinearGradient(0, ay, 0, ry + 2); rg.addColorStop(0, p.top); rg.addColorStop(1, 'rgba(255,255,255,.85)');
+    x.globalAlpha = .88; roof(); x.fillStyle = rg; x.fill(); x.globalAlpha = 1;
+    x.strokeStyle = p.trim; x.lineWidth = 1.6; roof(); x.stroke();
+    x.lineWidth = 1.2;
+    x.beginPath(); x.moveTo(cx - 3, ay + 1); x.quadraticCurveTo(cx - ex * .18, ry - 6, cx - ex * .3, ry + 1); x.stroke();
+    x.beginPath(); x.moveTo(cx + 3, ay + 1); x.quadraticCurveTo(cx + ex * .18, ry - 6, cx + ex * .3, ry + 1); x.stroke();
+    [-1, 1].forEach(sd => { const tx = cx + sd * (ex + 4), ty = ry - 9;
+      x.lineWidth = 1.4; x.beginPath(); x.arc(tx + sd * 3, ty - 3, 3.5, 0, Math.PI * 1.5); x.stroke();
+      x.fillStyle = p.trim; for (let k = 1; k <= 4; k++) { x.beginPath(); x.arc(tx, ty + 3 + k * 4.2, 1.5, 0, 7); x.fill(); } });
+    x.fillStyle = p.trim; x.beginPath(); x.moveTo(bx - 2, by + bh); x.lineTo(bx + bw + 2, by + bh); x.lineTo(bx + bw - 18, by + bh + 8); x.lineTo(bx + 18, by + bh + 8); x.closePath(); x.fill();
+    topY = ay;
+  }
+  // 꼭지 · 고리
+  x.fillStyle = p.trim; x.beginPath(); x.arc(cx, topY - 3, 3.6, 0, 7); x.fill();
+  x.beginPath(); x.moveTo(cx - 2, topY - 6); x.lineTo(cx, topY - 13); x.lineTo(cx + 2, topY - 6); x.closePath(); x.fill();
+  x.strokeStyle = p.trim; x.lineWidth = 2; x.beginPath(); x.arc(cx, topY - 19, 5, 0, 7); x.stroke();
+  // 매듭 · 구슬 · 술
+  const ky = by + bh + 10;
+  x.fillStyle = p.trim; x.beginPath(); x.arc(cx, ky, 4, 0, 7); x.fill();
+  x.fillStyle = '#FFF6FA'; [ky + 7, ky + 13].forEach(y => { x.beginPath(); x.arc(cx, y, 2.4, 0, 7); x.fill(); });
+  x.fillStyle = p.trim; x.fillRect(cx - 3, ky + 16, 6, 3);
+  x.fillStyle = p.bottom; x.beginPath(); x.moveTo(cx - 3, ky + 19); x.lineTo(cx + 3, ky + 19); x.lineTo(cx + 6, ky + 36); x.lineTo(cx - 6, ky + 36); x.closePath(); x.fill();
+  x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = .8; [-3, 0, 3].forEach(d => { x.beginPath(); x.moveTo(cx + d * .6, ky + 21); x.lineTo(cx + d, ky + 35); x.stroke(); });
+  return c;
+}
+
+/* ───────────────────────── 꼬리표 (체험 화면과 같은 모양) ───────────────────────── */
+const TAG_W = 720, TAG_H = 200, TAG_HOLE_X = 46;            // 꼬리표 몸통 기준 (구멍 중심 x)
+const TAG_PAD = 84, TAG_CW = TAG_W + TAG_PAD;                // 왼쪽 여백: 구멍에 묶인 끈이 밖으로 나오는 자리
+function tagShape(x, L, T, R, B, cut, rad) {
+  x.beginPath();
+  x.moveTo(L + cut, T);
+  x.lineTo(R - rad, T); x.quadraticCurveTo(R, T, R, T + rad);
+  x.lineTo(R, B - rad); x.quadraticCurveTo(R, B, R - rad, B);
+  x.lineTo(L + cut, B);
+  x.lineTo(L, B - cut * 0.9);
+  x.lineTo(L, T + cut * 0.9);
+  x.closePath();
+}
+function twine(x, pts, w = 6) {   // 꼬인 삼끈: 진한 바탕 + 엇갈린 밝은 결
+  const path = () => { x.beginPath(); x.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i += 2) x.quadraticCurveTo(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]); };
+  x.save(); x.lineCap = 'round'; x.lineJoin = 'round';
+  path(); x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = w + 2; x.stroke();
+  path(); x.strokeStyle = '#8A6538'; x.lineWidth = w; x.stroke();
+  path(); x.strokeStyle = '#D2AE78'; x.lineWidth = w * 0.45; x.setLineDash([w * 0.7, w * 0.9]); x.stroke();
+  x.lineDashOffset = w * 0.8; path(); x.strokeStyle = 'rgba(90,60,30,.55)'; x.lineWidth = w * 0.3; x.stroke();
+  x.restore();
+}
+function tagTexture(label, cat) {
+  const c = document.createElement('canvas'); c.width = TAG_CW; c.height = TAG_H;
+  const x = c.getContext('2d');
+  const hx = TAG_PAD + TAG_HOLE_X, hy = TAG_H / 2;
+  // 고리의 뒤쪽 절반 (꼬리표 뒤로 지나감)
+  twine(x, [[hx, hy], [hx - 30, hy + 44], [TAG_PAD - 20, hy + 8]], 6);
+  x.save(); x.translate(TAG_PAD, 0);
+  const L = 6, T = 8, R = TAG_W - 6, B = TAG_H - 8, cut = 46;
+  // 살짝 그림자
+  x.save(); x.translate(3, 4); tagShape(x, L, T, R, B, cut, 14); x.fillStyle = 'rgba(0,0,0,.22)'; x.filter = 'blur(4px)'; x.fill(); x.restore();
+  x.save();
+  tagShape(x, L, T, R, B, cut, 14); x.clip();
+  // 종이 바탕 (색은 기존 그대로) + 가장자리로 갈수록 아주 살짝 진하게
+  x.fillStyle = '#EFE7D3'; x.fillRect(0, 0, TAG_W, TAG_H);
+  const vg = x.createRadialGradient(TAG_W * 0.55, TAG_H * 0.45, 40, TAG_W * 0.55, TAG_H * 0.5, TAG_W * 0.62);
+  vg.addColorStop(0, 'rgba(255,255,255,.18)'); vg.addColorStop(1, 'rgba(150,115,70,.16)');
+  x.fillStyle = vg; x.fillRect(0, 0, TAG_W, TAG_H);
+  // 판지 결: 짧은 섬유와 작은 반점
+  for (let i = 0; i < 220; i++) {
+    x.fillStyle = `rgba(120,96,60,${Math.random() * .08})`;
+    x.fillRect(Math.random() * TAG_W, Math.random() * TAG_H, 6 + Math.random() * 30, 1.2);
+  }
+  for (let i = 0; i < 120; i++) {
+    x.fillStyle = `rgba(110,85,50,${.05 + Math.random() * .12})`;
+    x.beginPath(); x.arc(Math.random() * TAG_W, Math.random() * TAG_H, .6 + Math.random() * 1.2, 0, Math.PI * 2); x.fill();
+  }
+  // 묶음 색 띠 (구멍 바로 오른쪽)
+  x.fillStyle = CAT_COLOR[cat]; x.fillRect(88, 0, 22, TAG_H);
+  // 테두리 눌린 자국
+  x.lineWidth = 3; x.strokeStyle = 'rgba(120,92,55,.28)'; tagShape(x, L + 1.5, T + 1.5, R - 1.5, B - 1.5, cut - 1, 13); x.stroke();
+  // 구멍 보강 링 (몸통 좌표)
+  const rg = x.createRadialGradient(TAG_HOLE_X, hy, 12, TAG_HOLE_X, hy, 25);
+  rg.addColorStop(0, '#D9C8A4'); rg.addColorStop(0.75, '#E3D4B3'); rg.addColorStop(1, 'rgba(200,180,140,.0)');
+  x.fillStyle = rg; x.beginPath(); x.arc(TAG_HOLE_X, hy, 25, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = 'rgba(130,100,60,.45)'; x.lineWidth = 2; x.beginPath(); x.arc(TAG_HOLE_X, hy, 22, 0, Math.PI * 2); x.stroke();
+  // 구멍 뚫기
+  x.globalCompositeOperation = 'destination-out';
+  x.beginPath(); x.arc(TAG_HOLE_X, hy, 12, 0, Math.PI * 2); x.fill();
+  x.globalCompositeOperation = 'source-over';
+  x.strokeStyle = 'rgba(90,65,35,.55)'; x.lineWidth = 2; x.beginPath(); x.arc(TAG_HOLE_X, hy, 12.5, 0, Math.PI * 2); x.stroke();
+  x.restore();
+  // 글자
+  const TX0 = 134, TX1 = R - 24;
+  x.fillStyle = CAT_COLOR[cat];
+  x.font = '600 26px "IBM Plex Sans KR", sans-serif';
+  x.textAlign = 'left'; x.textBaseline = 'middle';
+  x.fillText(CAT_NAME[cat], TX0, 46);
+  x.fillStyle = '#16182B'; x.textAlign = 'center';
+  let fs = 66;
+  do { x.font = `700 ${fs}px "Gowun Batang", serif`; fs -= 2; } while (x.measureText(label).width > (TX1 - TX0) && fs > 30);
+  x.fillText(label, (TX0 + TX1) / 2, 122);
+  x.restore();
+  // 고리의 앞쪽 절반 + 매듭 + 늘어진 두 가닥
+  twine(x, [[hx, hy], [hx - 34, hy - 46], [TAG_PAD - 20, hy - 6]], 6);
+  x.save(); x.fillStyle = '#8A6538'; x.beginPath(); x.ellipse(TAG_PAD - 20, hy + 1, 9, 11, 0.3, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = '#D2AE78'; x.lineWidth = 2; x.beginPath(); x.arc(TAG_PAD - 20, hy + 1, 6, 0.6, 2.6); x.stroke(); x.restore();
+  twine(x, [[TAG_PAD - 22, hy - 2], [TAG_PAD - 48, hy - 30], [TAG_PAD - 70, hy - 66]], 5);
+  twine(x, [[TAG_PAD - 18, hy + 4], [TAG_PAD - 52, hy + 20], [TAG_PAD - 76, hy - 12]], 5);
+  return c;
+}
+
+const tagCache = {};
+
+/* ── 꼬리표: 체험 화면과 같은 'A 자개 명패' ── */
+function silkCord(x, pts, w, col, hi) {   // 비단 매듭끈
+  const path = () => { x.beginPath(); x.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i += 2) x.quadraticCurveTo(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]); };
+  x.save(); x.lineCap = 'round'; x.lineJoin = 'round';
+  path(); x.strokeStyle = 'rgba(0,0,0,.3)'; x.lineWidth = w + 2; x.stroke();
+  path(); x.strokeStyle = col; x.lineWidth = w; x.stroke();
+  path(); x.strokeStyle = hi; x.lineWidth = w * .35; x.setLineDash([w * .5, w * .6]); x.stroke();
+  x.restore();
+}
+function knotAt(x, cx, cy, col, hi, s = 1) {   // 작은 동심결 매듭
+  x.save(); x.translate(cx, cy); x.scale(s, s);
+  x.fillStyle = col; x.strokeStyle = hi; x.lineWidth = 2;
+  for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; x.beginPath(); x.ellipse(Math.cos(a) * 9, Math.sin(a) * 9, 8, 5, a, 0, 7); x.fill(); x.stroke(); }
+  x.beginPath(); x.arc(0, 0, 6, 0, 7); x.fill(); x.stroke();
+  x.restore();
+}
+function fitText(x, label, maxW, fs0, weight, family) {
+  let fs = fs0; do { x.font = `${weight} ${fs}px ${family}`; fs -= 2; } while (x.measureText(label).width > maxW && fs > 28);
+}
+function plaquePath(x, L, T, R, B, r) {   // 모서리가 안으로 파인 패(牌) 모양
+  x.beginPath();
+  x.moveTo(L + r, T); x.lineTo(R - r, T); x.arc(R, T, r, Math.PI, Math.PI / 2, true);
+  x.lineTo(R, B - r); x.arc(R, B, r, Math.PI * 1.5, Math.PI, true);
+  x.lineTo(L + r, B); x.arc(L, B, r, 0, -Math.PI / 2, true);
+  x.lineTo(L, T + r); x.arc(L, T, r, Math.PI / 2, 0, true); x.closePath();
+}
+function tagTextureA(label, cat) {
+  const c = document.createElement('canvas'); c.width = TAG_CW; c.height = TAG_H;
+  const x = c.getContext('2d');
+  const hx = TAG_PAD + TAG_HOLE_X, hy = TAG_H / 2;
+  const L = TAG_PAD + 8, T = 14, R = TAG_CW - 10, B = TAG_H - 14, cy = (T + B) / 2;
+    const hxA = hx + 36;                                       // 실 구멍: 테두리 귀퉁이와 떨어지게 안쪽으로
+    const SILK = '#E9DFC6', SILK_HI = '#FFFBEF', SILK_DK = '#B9AC88';   // 명주실 색
+    // ── A. 자개 명패: 검정에 가까운 옻칠 바탕 + 자개(무지갯빛 조개껍질) 테두리·무늬·토끼 ──
+    //    네 귀퉁이는 깊게 파인 패(牌) 모양, 왼쪽 구멍에 붉은 실이 동그랗게 걸리고 끝에 매듭·노리개 장식
+    const NR = 14;   // 홈 없이 메운 직사각형 (모서리만 살짝 둥글게)
+    const rr = (x0, y0, x1, y1, r) => { x.beginPath(); x.roundRect(x0, y0, x1 - x0, y1 - y0, r); };
+    let sd = 7; const srnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);   // 항상 같은 무늬
+    const nacre = (x0, y0, x1, y1) => {          // 자개 빛: 분홍·연보라·하늘·민트가 비스듬히 번짐
+      const g = x.createLinearGradient(x0, y0, x1, y1);
+      [['#E8C98A', 0], ['#FFF4DA', .16], ['#D9AE68', .32], ['#F6DCC6', .48], ['#FFFBEF', .62], ['#E2BC7C', .78], ['#F3D6B8', .9], ['#FFF6E2', 1]].forEach(([c0, o]) => g.addColorStop(o, c0));
+      return g;
+    };
+    const shellFleck = (cx, cy, r) => {          // 자개 조각 결: 작은 다각형 조각들이 빛을 다르게 받음
+      const cols = ['rgba(255,220,245,', 'rgba(200,225,255,', 'rgba(190,255,230,', 'rgba(235,210,255,'];
+      for (let i = 0; i < 6; i++) { x.fillStyle = cols[i % 4] + (.25 + srnd() * .35) + ')'; x.beginPath();
+        const a0 = srnd() * 6.28; for (let k = 0; k < 4; k++) { const a = a0 + k * 1.6 + srnd() * .5, rr = r * (.3 + srnd() * .7); x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } x.fill(); }
+    };
+    // 붉은 실 고리의 뒤쪽 절반 (패 뒤로 지나감)
+    // 옻칠 바탕
+    x.save(); x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 14; x.shadowOffsetY = 5;
+    rr(L, T, R, B, NR); const g = x.createLinearGradient(0, T, 0, B); g.addColorStop(0, '#16141C'); g.addColorStop(1, '#07070B'); x.fillStyle = g; x.fill(); x.restore();
+    x.save(); rr(L, T, R, B, NR); x.clip();
+    const gl = x.createLinearGradient(0, T, 0, T + 40); gl.addColorStop(0, 'rgba(255,255,255,.08)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gl; x.fillRect(L, T, R - L, 40);   // 옻칠 광택
+    x.restore();
+    // 테두리 (참고 그림의 네 귀퉁이를 그대로 옮긴 回자 창살 매듭). 위아래 귀퉁이가 서로 겹치지 않는 크기로
+    const FRET = ["##############...##############..#########..###", "##############...##############..#########..###", "##############...##############..#########..###", "###........###...###........###..###...###..###", "###........###...###........###..###...###..###", "###........###...###........###..###...###..###", "###..####################...###..##############", "###..####################...###..##############", "###..####################...###..##############", "###..####..###...##...###...###........###", "###..###...###...##...###...###........###", "#########################...##############", "#########################...##############", "#########################...##############", ".....###...###...##", ".....###...###...##", ".....###...###...##", "###################", "###################", "###################", "###..###...###", "###..###...###", "###..#########", "###..#########", "###..#########", "###", "###", "###", "##############", "##############", "##############", "...........###", "...........###", "########...###", "#########..###", "#########..###", "###..####..###", "###...###..###", "###...###..###", "##############", "##############", "##############", "......###", "......###", "#########", "#########"];
+    const FRET_CUT = FRET.slice(0, 31);   // 마무리 판 옛 시안처럼 세로 팔을 2/3 길이에서 자름 (가로 띠가 끝나는 자리라 자연스럽게 끊김)
+    const fw = Math.max(...FRET.map(r => r.length)), fhFull = FRET.length, fh = FRET_CUT.length;
+    const fm = document.createElement('canvas'); fm.width = fw; fm.height = fh; const fmx = fm.getContext('2d');
+    fmx.fillStyle = '#fff'; FRET_CUT.forEach((r, j) => { for (let i = 0; i < r.length; i++) if (r[i] === '#') fmx.fillRect(i, j, 1, 1); });
+    const fx0 = L + 12, fy0 = T + 12, fx1 = R - 12, fy1 = B - 12;
+    const cell = Math.min(1.45, ((fy1 - fy0) - 14) / 2 / fhFull),   /* 무늬 크기는 그대로, 길이만 자름 */ cw0 = fw * cell, ch0 = fh * cell;   // 위·아래 귀퉁이 사이를 14px 이상 띄움
+    const lay = document.createElement('canvas'); lay.width = TAG_CW; lay.height = TAG_H; const lx = lay.getContext('2d');
+    lx.imageSmoothingEnabled = false;
+    [[fx0, fy0, 1, 1], [fx1, fy0, -1, 1], [fx0, fy1, 1, -1], [fx1, fy1, -1, -1]].forEach(([cx0, cy0, sx, sy]) => {
+      lx.save(); lx.translate(cx0, cy0); lx.scale(sx * cell, sy * cell); lx.drawImage(fm, 0, 0); lx.restore();
+    });
+    // 바깥 테두리: 귀퉁이 무늬 바깥으로 간격을 두고 한 줄 (귀퉁이 사이 이중선은 없앰)
+    lx.strokeStyle = '#fff'; lx.lineWidth = 2.2; lx.beginPath(); lx.roundRect(L + 4.5, T + 4.5, R - L - 9, B - T - 9, NR - 4); lx.stroke();
+    lx.globalCompositeOperation = 'source-atop'; lx.fillStyle = nacre(L, T, R, B); lx.fillRect(0, 0, TAG_CW, TAG_H);
+    for (let i = 0; i < 90; i++) { lx.fillStyle = `rgba(255,255,255,${.15 + srnd() * .35})`; lx.fillRect(L + srnd() * (R - L), T + srnd() * (B - T), 2 + srnd() * 6, 2 + srnd() * 6); }   // 자개 조각 반짝임
+    x.save(); x.shadowColor = 'rgba(240,200,130,.55)'; x.shadowBlur = 6; x.drawImage(lay, 0, 0); x.restore();
+    // 실 구멍: 자개 테 + 뚫린 구멍
+    // 구멍: 속은 완전히 뚫려 뒤 배경이 비침. 두꺼운 자개 고리 하나 + 간격을 두고 감싸는 가는 고리 하나
+    const HR = 11;
+    x.globalCompositeOperation = 'destination-out'; x.beginPath(); x.arc(hxA, hy, HR, 0, 7); x.fill(); x.globalCompositeOperation = 'source-over';
+    x.save(); x.shadowColor = 'rgba(240,200,130,.5)'; x.shadowBlur = 5;
+    x.strokeStyle = nacre(hxA - 18, hy - 18, hxA + 18, hy + 18); x.lineWidth = 5.5; x.beginPath(); x.arc(hxA, hy, HR + 2.8, 0, 7); x.stroke();
+    x.lineWidth = 1.3; x.beginPath(); x.arc(hxA, hy, HR + 10, 0, 7); x.stroke();
+    x.restore();
+    // 글씨: 모든 꼬리표가 같은 자리·같은 크기 (길면 그 줄만 조금 줄임), 가운데 정렬. 진주빛
+    const gcx = (L + R) / 2, half = Math.min(gcx - (hxA + HR + 18), R - 40 - gcx), GX0 = gcx - half, GX1 = gcx + half;   // 패 전체 기준 가운데 (긴 이름은 구멍과 겹치지 않는 폭 안에서 줄어듦)
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    const en = ITEM_EN[label], ty = en ? cy - 22 : cy;   // 영어 이름이 있으면 한국어를 조금 위로 올리고 아래에 영어를 씀
+    fitText(x, label, GX1 - GX0, en ? 54 : 62, 700, '"Gowun Batang", serif');
+    const tw = x.measureText(label).width, tx0 = gcx - tw / 2, tx1 = gcx + tw / 2;
+    // 금빛 자개 글씨: 크림·연금·복숭아빛 조각이 섞인 자개를 글자 모양으로 박아 넣은 느낌
+    const tc = document.createElement('canvas'); tc.width = TAG_CW; tc.height = TAG_H; const t2 = tc.getContext('2d');
+    t2.font = x.font; t2.textAlign = 'center'; t2.textBaseline = 'middle'; t2.fillStyle = '#000'; t2.fillText(label, gcx, ty + 2);
+    t2.globalCompositeOperation = 'source-atop';   // 글자 모양 안에만 칠함
+    const gold = t2.createLinearGradient(tx0, ty - 34, tx1, ty + 34);
+    [['#FFF3D6', 0], ['#E9C88C', .18], ['#FFFAEC', .34], ['#DDB06A', .5], ['#F8E2C8', .66], ['#E8C482', .82], ['#FFF4DC', 1]].forEach(([c0, o]) => gold.addColorStop(o, c0));
+    t2.fillStyle = gold; t2.fillRect(0, 0, TAG_CW, TAG_H);
+    let ts2 = 11; const tr2 = () => ((ts2 = (ts2 * 16807) % 2147483647) / 2147483647);
+    const flk = ['rgba(255,250,236,', 'rgba(240,205,140,', 'rgba(250,222,200,', 'rgba(255,255,248,', 'rgba(215,170,95,'];   // 금빛 자개 조각   // 흰 조각 위주 + 금빛 조각 약간
+    for (let i = 0; i < 160; i++) {                // 자개 조각
+      const fx = tx0 + tr2() * tw, fy = ty - 30 + tr2() * 64, r0 = 3 + tr2() * 9;
+      t2.fillStyle = flk[i % 5] + (.35 + tr2() * .5) + ')'; t2.beginPath();
+      const a0 = tr2() * 6.28; for (let k = 0; k < 5; k++) { const a = a0 + k * 1.25 + tr2() * .4, rr0 = r0 * (.4 + tr2() * .6); t2.lineTo(fx + Math.cos(a) * rr0, fy + Math.sin(a) * rr0); } t2.fill();
+    }
+    for (let i = 0; i < 40; i++) { t2.fillStyle = `rgba(255,255,255,${.5 + tr2() * .5})`; t2.beginPath(); t2.arc(tx0 + tr2() * tw, ty - 26 + tr2() * 56, .8 + tr2() * 1.4, 0, 7); t2.fill(); }   // 반짝임
+    x.save(); x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 3; x.shadowOffsetY = 1.5; x.drawImage(tc, 0, 0); x.restore();   // 살짝 박힌 그림자
+    x.save(); x.shadowColor = 'rgba(245,205,140,.5)'; x.shadowBlur = 8; x.drawImage(tc, 0, 0); x.restore();
+    x.strokeStyle = 'rgba(190,140,70,.55)'; x.lineWidth = .9; x.strokeText(label, gcx, ty + 2);   // 글자 가장자리 금선
+    if (en) {   // 영어 이름 (외국인 관람객용): 한국어 아래 작게, 같은 금빛
+      fitText(x, en, GX1 - GX0, 44, 700, '"Gowun Batang", serif');
+      x.save(); x.fillStyle = '#E9CF9C'; x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 3; x.shadowOffsetY = 1;
+      x.fillText(en, gcx, cy + 42); x.restore();
+    }
+    // 붉은 실 고리의 앞쪽 절반 + 매듭
+    // 명주실이 구멍 왼쪽 테두리를 꽉 감음: 위·아래 두 가닥이 테두리 왼쪽 끝에서 만나 고리를 이루고 매듭으로 이어짐 (뒷면 실은 안 보임)
+    const wx = hxA - HR - 2.8;                                    // 두꺼운 고리의 왼쪽 끝
+    // 고리에서 매듭까지 35도 아래로 자연스럽게 축 늘어짐 (중간이 살짝 처지는 곡선)
+    const DROOP = 35 * Math.PI / 180, LOOP = 74;
+    const kx = wx - Math.cos(DROOP) * LOOP, ky = hy + Math.sin(DROOP) * LOOP;   // 매듭 자리
+    const mx = (wx + kx) / 2, my = (hy + ky) / 2;
+    silkCord(x, [[wx + 4, hy + 3], [mx + 4, my + 12], [kx + 2, ky + 4]], 6, SILK_DK, SILK_HI);   // 아래 가닥
+    silkCord(x, [[wx + 4, hy - 3], [mx - 6, my + 2], [kx - 2, ky - 3]], 6, SILK, SILK_HI);       // 위 가닥
+    x.save(); x.lineCap = 'round'; x.strokeStyle = SILK; x.lineWidth = 6.5;                       // 테두리를 감싼 부분
+    x.beginPath(); x.arc(hxA, hy, HR + 2.8, Math.PI * .86, Math.PI * 1.14); x.stroke();
+    x.strokeStyle = SILK_HI; x.lineWidth = 2; x.setLineDash([3, 4]); x.beginPath(); x.arc(hxA, hy, HR + 2.8, Math.PI * .86, Math.PI * 1.14); x.stroke(); x.restore();
+    knotAt(x, kx, ky, SILK, SILK_DK, .75);
+    // 매듭 아래 늘어진 끈 → 작은 매듭 → 자개 구슬 → 술 (노리개): 바깥쪽으로 25도 기울어 늘어짐
+    x.save(); x.translate(kx, ky); x.rotate(25 * Math.PI / 180); x.scale(.62, .62); x.translate(-(TAG_PAD - 20), -(hy + 1));
+    silkCord(x, [[TAG_PAD - 22, hy + 6], [TAG_PAD - 34, hy + 30], [TAG_PAD - 30, hy + 52]], 5, SILK, SILK_HI);
+    knotAt(x, TAG_PAD - 30, hy + 58, SILK, SILK_DK, .8);
+    { const bg = x.createRadialGradient(TAG_PAD - 32, hy + 71, 1, TAG_PAD - 30, hy + 74, 8); bg.addColorStop(0, '#EFFFFF'); bg.addColorStop(.5, '#9FE0F0'); bg.addColorStop(1, '#5AA8D8');   // 푸른 구슬 (그대로)
+      x.fillStyle = bg; x.beginPath(); x.arc(TAG_PAD - 30, hy + 74, 7.5, 0, 7); x.fill(); }
+    x.fillStyle = '#C9A04A'; x.fillRect(TAG_PAD - 36, hy + 80, 12, 5);
+    for (let k = -4; k <= 4; k++) {
+      x.strokeStyle = k % 2 ? SILK_DK : SILK; x.lineWidth = 2.2; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(TAG_PAD - 30 + k * .9, hy + 85); x.quadraticCurveTo(TAG_PAD - 30 + k * 1.7, hy + 94, TAG_PAD - 30 + k * 2, hy + 99); x.stroke();
+    }
+    x.restore();
+  return c;
+}
+function tagSprite(label) {
+  if (!tagCache[label]) {
+    tagCache[label] = tagTextureA(label, CATEGORY[label] || 'want');
+    // 고운바탕 글꼴(이 글자들)이 아직 준비되지 않았으면, 준비된 뒤 이 꼬리표를 다시 그림 (기본 글꼴로 굳지 않게)
+    const F = '700 62px "Gowun Batang"';
+    if (document.fonts && !document.fonts.check(F, label)) document.fonts.load(F, label).then(() => { delete tagCache[label]; }).catch(() => {});
+  }
+  return tagCache[label];
+}
+
+/* ───────────────────────── 초롱들 ───────────────────────── */
+const lanterns = [];
+const FADE_MS = 2500;                      // 밀린 초롱이 제자리에서 흐려지는 데 걸리는 시간
+let nextLeaveAt = 0;                       // 다음 초롱이 별이 되러 떠날 수 있는 가장 이른 시각
+let seen = new Set(), lastAt = 0, total = 0;
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+function addLantern(entry, fresh) {
+  if (seen.has(entry.k)) return; seen.add(entry.k); total++;
+  const color = ensurePalette(entry.color) ? entry.color : PAL_NAMES[Math.abs(hash(entry.k)) % PAL_NAMES.length];
+  // 토끼(왼쪽 아래)를 피해서 가운데~오른쪽 바다에서 떠오름
+  const sx = rnd(0.55, 0.9);
+  const L = {
+    k: entry.k, id: entry.id, nickname: typeof entry.nickname === 'string' ? entry.nickname.trim() : '', item: entry.item, color,
+    sx,                                  // 떠오르는 자리
+    slot: pickNearSlot(),                 // 머무를 하늘 칸 (7칸, 한 칸에 초롱 하나: 초롱·꼬리표가 서로 겹치지 않음)
+    sizeK: rnd(0.8, 1), rx: Math.random(), ry: Math.random(),   // 크기, 칸 안에서 살짝 비껴 앉는 자리(0~1)
+    born: fresh ? performance.now() : performance.now() - Math.max(0, Date.now() - (entry.at || Date.now())),
+    fresh, phase: rnd(0, 6.28), sway: rnd(0.6, 1.2), depth: 0,
+  };
+  placeInSlot(L);
+  lanterns.push(L);
+  if (fresh) announce(L);
+}
+
+/* ───────────────────────── 초롱 자리: 하늘을 칸으로 나눠 한 칸에 하나씩 ─────────────────────────
+   초롱 하나가 차지하는 네모(본체 + 끈 + 꼬리표)가 칸 밖으로 나가지 않게 크기와 자리를 정합니다.
+   그래서 머무는 초롱끼리는 겹치지 않고 꼬리표가 가려지지 않습니다. (떠오르는 중이거나 별이 되러 떠나는 초롱은 잠깐 지나갈 수 있음) */
+const LANTERN_SCALE = 1.8;   // 초롱 크기 배율 (칸에 맞춘 크기 대비). 1보다 크면 이웃 초롱과 살짝 겹치며 앞뒤 원근감이 생김
+const SLOT_COLS = 5, SLOT_ROWS = 2;                    // 가로 5칸 × 세로 2줄 = 10칸
+let SKY_LEFT = 0.39, SKY_BOTTOM = 0.59;              // 초롱이 놓이는 하늘 범위: 왼쪽 끝, 꼬리표 아래 끝 (화면 비율)
+const FOOT = { l: 144, r: 118, u: 168, d: 217 };       // 초롱 중심에서 본 네모 크기 (배율 1, 1080 높이 기준 px): 왼쪽은 꼬리표 끈까지
+function skyGrid() {   // 지금 화면 크기에 맞는 칸 크기와, 칸에 꽉 차는 초롱 배율(화면 px 기준)
+  const top = 10 + 0.012 * H, bottom = SKY_BOTTOM * H, left = SKY_LEFT * W, right = W - 12;
+  const MX = 0.012 * W + 8, MY = 0.02 * H + 6;         // 이웃 칸 사이 여유: 살랑살랑 흔들리고 천천히 오르는 만큼
+  const pitch = (right - left) / SLOT_COLS, fw = FOOT.l + FOOT.r, fh = FOOT.u + FOOT.d;
+  const sMax = Math.max(0.2, Math.min((bottom - top - MY * (SLOT_ROWS - 1)) / (fh * SLOT_ROWS), (pitch - MX) / fw));
+  const spare = Math.max(0, (bottom - top) - (fh * sMax * SLOT_ROWS + MY * (SLOT_ROWS - 1))) / (SLOT_ROWS + 1);   // 세로로 남는 만큼은 줄 사이에 고르게
+  return { top, left, pitch, sMax, fw, fh, MY, spare };
+}
+const SKY_RIGHT_FROM = 0.4;   // 초롱이 놓이는 하늘의 왼쪽 끝 (화면 폭 비율). 오른쪽에 모이게
+const NEAR_BOTTOM = 0.83;     // 가까운 초롱·꼬리표가 내려올 수 있는 아래 끝 (화면 높이 비율). 바다 위까지 내려와 서로 거의 겹치지 않게 (아래 글씨 자리는 비움)
+function spotFor(rx, ry, sizeK) {   // 무작위 값(rx, ry: 0~1) → 하늘 자리·크기·차지하는 네모
+  const g = skyGrid(), s = g.sMax * sizeK * LANTERN_SCALE;
+  const x0 = SKY_RIGHT_FROM * W + FOOT.l * s, x1 = W - 12 - FOOT.r * s;     // 초롱·꼬리표가 화면 밖으로 나가지 않는 범위
+  const y0 = g.top + FOOT.u * s, y1 = Math.max(SKY_BOTTOM, NEAR_BOTTOM) * H - FOOT.d * s;
+  const cx = x1 > x0 ? x0 + (x1 - x0) * rx : (x0 + x1) / 2;
+  const cy = y1 > y0 ? y0 + (y1 - y0) * ry : (y0 + y1) / 2;
+  const m = 6;   // 살랑살랑 흔들리는 만큼 여유
+  return { cx, cy, s, box: [cx - FOOT.l * s - m, cy - FOOT.u * s - m, cx + FOOT.r * s + m, cy + FOOT.d * s + m] };
+}
+// 가까운 초롱 7칸: 칸끼리 겹치지 않으니 초롱·꼬리표도 거의 겹치지 않음
+//  넓은 화면: 위 4칸 + 아래 3칸 (반 칸씩 엇갈림)
+//  정사각형에 가까운 화면: 2칸 / 3칸 / 2칸 세 줄 (벌집처럼 엇갈림 — 위아래 줄이 반 칸 비껴 있어 줄 사이를 조금 좁혀도 안 겹침)
+const NEAR_GROW = 1.16;
+function nearLayout() {
+  return W / H < 1.3 ? { cols: 3, rows: [[2, 0.5], [3, 0], [2, 0.5]], ov: 0.22, from: 0.34 }
+                     : { cols: 4, rows: [[4, 0], [3, 0.5]], ov: 0, from: SKY_RIGHT_FROM };
+}
+function nearSlotSpot(slot, rx, ry, sizeK) {
+  const Lo = nearLayout(), nR = Lo.rows.length;
+  const x0 = Lo.from * W, x1 = W - 12, y0 = 10 + 0.012 * H, y1 = Math.max(SKY_BOTTOM, NEAR_BOTTOM) * H;
+  const cw = (x1 - x0) / Lo.cols, rowH = (y1 - y0) / (nR - (nR - 1) * Lo.ov), m = 6;
+  const fw = FOOT.l + FOOT.r, fh = FOOT.u + FOOT.d;
+  const s = Math.min((cw - 2 * m) / fw, (rowH - 2 * m) / fh) * NEAR_GROW * sizeK;
+  let r = 0, c = slot; while (r < nR - 1 && c >= Lo.rows[r][0]) { c -= Lo.rows[r][0]; r++; }
+  const col = c + Lo.rows[r][1], top = y0 + r * rowH * (1 - Lo.ov);
+  let cx = x0 + (col + 0.5) * cw + (FOOT.l - FOOT.r) * s / 2 + (rx - 0.5) * cw * 0.1;   // 칸 가운데에서 살짝 비껴 앉음
+  cx = Math.min(x1 - FOOT.r * s, Math.max(x0 + FOOT.l * s, cx));
+  const jy = Math.abs(ry - 0.5) * rowH * 0.12, k = r === 0 ? 0 : r === nR - 1 ? 1 : 0.5;   // 맨 위 줄은 위로, 맨 아래 줄은 아래로 붙여 줄 사이를 띄움
+  let cy = top + FOOT.u * s + (rowH - fh * s) * k + (k === 1 ? -jy : k === 0 ? jy : (ry - 0.5) * jy);
+  return { cx, cy, s, box: [cx - FOOT.l * s - m, cy - FOOT.u * s - m, cx + FOOT.r * s + m, cy + FOOT.d * s + m] };
+}
+function pickNearSlot() {   // 빈 칸 중 무작위. 빈 칸이 없으면 곧 먼 하늘로 떠날 가장 오래된 초롱의 칸을 이어받음
+  const staying = lanterns.filter(o => !o.leaveAt && !o.fadeAt && o.slot != null);
+  const N = MAX_LANTERNS, cnt = Array(N).fill(0), oldest = Array(N).fill(Infinity);
+  staying.forEach(o => { if (o.slot < N) { cnt[o.slot]++; oldest[o.slot] = Math.min(oldest[o.slot], o.born); } });
+  const minC = Math.min(...cnt), cands = [];
+  for (let i = 0; i < N; i++) if (cnt[i] === minC) cands.push(i);
+  if (minC === 0) return cands[Math.floor(Math.random() * cands.length)];
+  return cands.reduce((a, b) => (oldest[b] < oldest[a] ? b : a));
+}
+function placeInSlot(L) {   // 하늘 자리(tx, ty)와 크기(scale). 화면 크기가 바뀌면 다시 부름
+  const sp = nearSlotSpot(L.slot, L.rx, L.ry, L.sizeK);
+  L.tx = sp.cx / W; L.ty = sp.cy / H; L.scale = sp.s * 1080 / H; L.box = sp.box;
+}
+function pickSpot(sizeK) {   // 무작위 후보 여러 개 중, 이미 떠 있는 초롱들과 가장 덜 겹치는 자리 (안 겹치는 자리가 있으면 그중 무작위)
+  const staying = lanterns.filter(o => !o.leaveAt && !o.fadeAt && o.box);
+  const over = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+  let best = null, bestO = Infinity;
+  for (let k = 0; k < 400; k++) {
+    const rx = Math.random(), ry = Math.random(), sp = spotFor(rx, ry, sizeK);
+    const o = staying.reduce((acc, L) => acc + over(sp.box, L.box), 0);
+    if (o < bestO) { bestO = o; best = { rx, ry }; if (o === 0) break; }
+  }
+  return best;
+}
+function pickSlot() {   // 빈 칸 중에서, 이미 있는 초롱들과 가장 떨어진 칸 (새 초롱이 한쪽에만 몰리지 않게)
+  const N = SLOT_COLS * SLOT_ROWS, staying = lanterns.filter(o => !o.leaveAt && !o.fadeAt);
+  const used = new Set(staying.map(o => o.slot));
+  const free = []; for (let i = 0; i < N; i++) if (!used.has(i)) free.push(i);
+  if (!free.length) {   // 칸이 모두 찼으면: 가장 오래된 초롱이 제자리에서 흐려지며 칸을 내어 줌
+    const oldest = staying.sort((a, b) => a.born - b.born)[0];
+    oldest.fadeAt = performance.now();
+    return oldest.slot;
+  }
+  const pos = i => [i % SLOT_COLS, Math.floor(i / SLOT_COLS) * 1.6];
+  let best = free[0], bestD = -1;
+  free.forEach(i => {
+    const [x, y] = pos(i); let d = 99;
+    used.forEach(u => { const [ux, uy] = pos(u); d = Math.min(d, Math.hypot(ux - x, uy - y)); });
+    d += Math.random() * 0.5;
+    if (d > bestD) { bestD = d; best = i; }
+  });
+  return best;
+}
+// 초롱이 별이 될 자리: 하늘 위쪽, 기존 십자별·새 별들과 겹치지 않게
+function pickStarSpot(from) {   // from: 지금 초롱 자리(화면 비율). 그보다 왼쪽 위 하늘에서 고름
+  const taken = [...(typeof bigStars !== 'undefined' ? bigStars : []), ...newStars.filter(n => !n.leaving), ...lanterns.map(l => l.star).filter(Boolean)];
+  let best = null, bestD = -1;
+  for (let i = 0; i < 30; i++) {
+    const c = { x: Math.max(0.05, from.x - 0.14 - Math.random() * 0.26), y: Math.min(0.3, Math.max(0.05, from.y - 0.02 - Math.random() * 0.16)) };
+    let dmin = 9; taken.forEach(o => { dmin = Math.min(dmin, Math.hypot((o.x - c.x) * 1.78, o.y - c.y)); });
+    if (dmin > bestD) { bestD = dmin; best = c; }
+  }
+  return best;
+}
+function hash(s) { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return h; }
+
+// 새 초롱 소개 글귀
+let banner = null;
+const bannerHalo = document.getElementById('bannerHalo');
+function announce(L) { banner = { L, t0: performance.now() }; }
+
+/* ───────────────────────── 그리기 ───────────────────────── */
+/* 배경 그림을 화면에 놓는 방법. 16:9 화면은 꽉 채움(cover).
+   정사각형처럼 좁은 화면은 꽉 채우면 토끼가 너무 크고 왼쪽 끝에 붙으므로, 그림을 조금 작게(SQUARE_ZOOM) 놓고
+   남는 위·아래는 하늘·바다를 거울처럼 이어 붙임(셰이더). 늘어난 자리는 대부분 위쪽 하늘로 감 */
+const SQUARE_ZOOM = 0.82;           // 정사각형 화면에서 배경(토끼 포함) 크기 배율
+function bgMap() {
+  const ia = (bg.naturalWidth || 2752) / (bg.naturalHeight || 1536), sa = W / H;
+  const sc = sa > ia ? [1, ia / sa] : [sa / ia, 1];
+  const z = sa < 1.45 ? SQUARE_ZOOM : 1;
+  sc[0] /= z; sc[1] /= z;
+  const off = [z < 1 ? Math.max(0, (1 - sc[0]) / 2 - 0.07) : (1 - sc[0]) / 2,   // 좁은 화면: 그림을 오른쪽으로 밀어 토끼를 가운데 쪽으로
+               sc[1] > 1 ? -(sc[1] - 1) * 0.85 : (1 - sc[1]) / 2];   // 위로 85%, 아래로 15%
+  return { sc, off };
+}
+function resize() {
+  dpr = Math.min(devicePixelRatio || 1, 2); W = H = Math.min(innerWidth, innerHeight);   // 정사각형 무대 (#stage 와 같은 크기)
+  cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  { const m = bgMap(); HORIZON = (0.524 /* = SEA_HZ */ - m.off[1]) / m.sc[1]; SKY_BOTTOM = HORIZON + 0.065;   // 초롱 자리·물빛을 수평선에 맞춤
+    SKY_LEFT = Math.max(0.3, (0.39 - m.off[0]) / m.sc[0] * 0.6 + 0.39 * 0.4); }
+  lanterns.forEach(L => { if (!L.leaveAt) placeInSlot(L); });   // 전체 화면 전환 등으로 화면 크기가 바뀌면 칸에 맞춰 다시 놓음
+}
+addEventListener('resize', resize); resize();
+
+/* ───────────────────────── 출렁이는 바다 (WebGL) ─────────────────────────
+   배경 그림을 그대로 쓰되, 수평선 아래 바다만 물결처럼 일렁이고 윤슬이 반짝이게 합니다.
+   토끼와 바위 둘레는 움직이지 않게 비워 둡니다. WebGL을 못 쓰면 그림을 그대로 그립니다. */
+const SEA_HZ = 0.524;                          // 그림 속 수평선 높이 (그림 높이 비율)
+const KEEP = { x: 0.267, y: 0.722, rx: 0.088, ry: 0.044 };   // 움직이지 않는 바위 몸통 (그림 기준)
+const ROCK = { x: 0.262, y: 0.752, rx: 0.086, ry: 0.04 };   // 바위 둘레 물결이 퍼져 나가는 타원 (그림에 그려진 물결 모양에 맞춤)
+const BUNNY = { x: 0.27, y: 0.63, rx: 0.06, ry: 0.13, baseY: 0.725 };   // 토끼 몸 (숨쉬기), baseY = 바위에 닿은 높이
+const seaCv = document.getElementById('sea');
+const gl = seaCv.getContext('webgl', { premultipliedAlpha: false });
+let seaReady = false, seaU = {};
+if (gl) {
+  const vs = `attribute vec2 p; varying vec2 v; void main(){ v = p * 0.5 + 0.5; v.y = 1.0 - v.y; gl_Position = vec4(p, 0.0, 1.0); }`;
+  const fs = `precision highp float;
+    varying vec2 v; uniform sampler2D tex; uniform float t; uniform vec2 sc, off; uniform float hz; uniform vec4 keep; uniform vec4 rock; uniform vec4 bun; uniform float bunBase;
+    uniform vec4 LP[24]; uniform vec3 LC[24]; uniform int LN; uniform float aspect;
+    float hash(vec2 q){ return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
+    void main(){
+      vec2 uv = v * sc + off;                                   // 화면 → 그림 좌표 (cover)
+      float d = (uv.y - hz) / (1.0 - hz);                        // 0 수평선 … 1 화면 아래
+      // 움직이지 않는 곳: 바위 몸통 + 토끼
+      float mRock = 1.0 - smoothstep(0.88, 1.04, length((uv - keep.xy) / keep.zw));
+      float mBun = 1.0 - smoothstep(0.8, 1.05, length((uv - bun.xy) / bun.zw));
+      float m = max(mRock, mBun);
+      float sea = smoothstep(0.0, 0.02, d) * (1.0 - m);
+      // 원근: 멀수록(수평선 가까이) 물결이 촘촘하고 작게
+      float z = 1.0 / (max(d, 0.0) + 0.06);
+      vec2 w = vec2(uv.x * z * 0.55, z);
+      float a1 = sin(w.y * 2.6 - t * 1.25 + sin(w.x * 1.7 + t * 0.6) * 1.2);
+      float a2 = sin(w.y * 4.3 + w.x * 1.1 - t * 1.9);
+      float a3 = sin(w.y * 7.1 - w.x * 2.3 + t * 2.4);
+      vec2 dis = vec2(a1 * 0.6 + a3 * 0.3, a2 * 0.7 + a1 * 0.3) * 0.0042 * (0.25 + d) * sea;
+      // 바위 둘레 물결: 바다 물결과 같은 결(부드러운 띠 + 동그란 윤슬)로, 바위에서 천천히 퍼져 나가다 바다 물결에 섞여 사라짐
+      vec2 er = (uv - rock.xy) / rock.zw;
+      float rr = length(er);
+      float ang = atan(er.y, er.x);
+      float front = mix(0.35, 1.0, smoothstep(-0.7, 0.4, er.y / (rr + 1e-4)));          // 바위 뒤쪽(먼 쪽)은 옅게
+      float ringZone = smoothstep(0.92, 1.2, rr) * (1.0 - smoothstep(1.35, 2.5, rr)) * (1.0 - m) * front;
+      float rw = rr + 0.06 * sin(ang * 3.0 + t * 0.3) + 0.04 * sin(ang * 5.0 - t * 0.45);   // 고리가 반듯한 타원이 되지 않게 살짝 일그러뜨림
+      float ring = sin(rw * 9.0 - t * 1.25 + a1 * 0.8);                                  // a1·a2: 바다 물결과 맞물려 함께 흔들림
+      float ring2 = sin(rw * 14.0 - t * 1.9 + a2 * 0.7 + 1.3);
+      float ringW = ring * 0.65 + ring2 * 0.35;
+      dis += normalize(er + 1e-5) * rock.zw * (ring * 0.016 + ring2 * 0.007) * ringZone;
+      // 토끼 숨쉬기: 바위에 닿은 아랫부분은 그대로, 몸이 아주 살짝 부풀었다 가라앉음 (약 4.5초에 한 번)
+      float br = 0.5 + 0.5 * sin(t * 1.4);
+      br = br * br * (3.0 - 2.0 * br);
+      float k = 1.0 - smoothstep(0.65, 1.0, length((uv - bun.xy) / bun.zw));
+      vec2 anc = vec2(bun.x, bunBase);
+      vec2 su = anc + (uv - anc) * vec2(1.0 - 0.016 * br * k, 1.0 - 0.032 * br * k);
+      vec2 q = su + dis; q.y = q.y < 0.0 ? -q.y : (q.y > 1.0 ? 2.0 - q.y : q.y);   // 그림 밖(정사각형 화면의 위·아래)은 거울처럼 이어 붙임
+      vec3 col = texture2D(tex, q).rgb;
+      // 하늘: 그림 속 별을 조금 덜어 냄 (밝은 점만 30% 어둡게) — 위에 십자별·유성을 얹기 때문
+      float skyM = 1.0 - smoothstep(-0.02, 0.0, d);
+      col -= max(col - vec3(0.09, 0.11, 0.24), 0.0) * 0.32 * skyM;
+      col *= 1.0 + 0.06 * br * k;                                  // 숨 들이쉴 때 테두리 빛도 살짝 밝아짐
+      // 물결 따라 밝고 어두운 띠가 천천히 흘러감
+      col *= 1.0 + 0.13 * sea * (a1 * 0.6 + a2 * 0.4);
+      // 바위 둘레 물결의 띠: 바다와 같은 방식으로 마루는 밝게, 골은 어둡게 (가는 선을 따로 긋지 않음)
+      float crestR = smoothstep(0.25, 1.0, ringW) * ringZone;
+      col *= 1.0 + 0.2 * ringZone * ringW;
+      col += vec3(0.07, 0.1, 0.19) * crestR * 0.5;
+      // 물가: 바위에 닿은 물빛이 천천히 밝아졌다 어두워짐 (그림에 그려진 반짝임을 그대로 살림)
+      float lap = exp(-pow((rr - 1.06) * 5.5, 2.0)) * (1.0 - m);
+      col *= 1.0 + 0.2 * lap * (0.55 * sin(ang * 4.0 + t * 1.5) + 0.45 * sin(ang * 7.0 - t * 1.1 + a2));
+      // 윤슬: 밝은 물빛 위에서 반짝임이 깜빡이며 생겼다 사라짐 (바위 둘레 물결의 마루에서도 같은 점이 반짝임)
+      float b = dot(col, vec3(0.3, 0.45, 0.25));
+      vec2 cp = vec2(uv.x * 340.0, w.y * 22.0), cell = floor(cp), f = fract(cp) - 0.5;
+      float tw = hash(cell + floor(t * 2.5 + hash(cell) * 4.0));
+      float dotm = smoothstep(0.32, 0.05, length(f * vec2(1.0, 1.8)));   // 동그란 작은 점
+      float spark = step(0.9 - 0.16 * crestR, tw) * dotm * max(smoothstep(0.2, 0.42, b), crestR * 0.4) * sea;
+      col += vec3(0.8, 0.87, 1.0) * spark * 0.7;
+      // 초롱 물빛: 초롱 아래 수면에 그 빛깔이 길게 비치고, 물결 마루마다 끊어지며 반짝임 (개인 화면과 같은 느낌)
+      float hzS = (hz - off.y) / sc.y;                       // 화면에서의 수평선 높이
+      float ds = (v.y - hzS) / (1.0 - hzS);
+      if (ds > 0.0) {
+        float crest = smoothstep(0.15, 0.95, 0.5 + 0.5 * (a1 * 0.55 + a3 * 0.45));   // 물결 마루
+        vec2 gp = vec2(v.x * 520.0, w.y * 30.0), gc = floor(gp), gf = fract(gp) - 0.5;
+        float glint = step(0.8, hash(gc + floor(t * 4.0 + hash(gc) * 5.0))) * smoothstep(0.35, 0.05, length(gf * vec2(1.0, 2.0)));
+        vec3 add = vec3(0.0);
+        for (int i = 0; i < 24; i++) {
+          if (i >= LN) break;
+          vec4 L = LP[i];                                    // x, y(화면 비율), 너비, 밝기
+          float h = max(hzS - L.y, 0.015);                   // 수평선 위로 떠 있는 높이
+          float wid = L.z * (0.55 + 1.3 * ds);               // 가까운 물일수록 넓게 퍼짐
+          float dx = (v.x - L.x + 0.012 * a2 * ds) / wid;    // 물결 따라 좌우로 흔들림
+          float yc = hzS + h * 0.55, ylen = h * 0.85 + 0.04;
+          float dy = (v.y - yc) / ylen;
+          float col_ = exp(-dx * dx * 2.2) * exp(-dy * dy * 1.6);
+          float pool = exp(-dx * dx * 0.9) * exp(-pow((v.y - hzS) / (0.05 + h * 0.4), 2.0)) * 0.45;   // 수평선 근처 번짐
+          add += LC[i] * L.w * (col_ * (0.25 + 0.75 * crest + 1.4 * glint) + pool);
+        }
+        add *= 0.55;
+        col += add / (1.0 + add * 1.2) * smoothstep(0.0, 0.015, ds);   // 겹쳐도 하얗게 타지 않게 부드럽게 눌러 줌
+      }
+      gl_FragColor = vec4(col, 1.0);
+    }`;
+  const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o);
+    if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+  try {
+    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+    const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    ['t', 'sc', 'off', 'hz', 'keep', 'rock', 'bun', 'bunBase', 'LP', 'LC', 'LN', 'aspect'].forEach(n => seaU[n] = gl.getUniformLocation(pr, n));
+    const texObj = gl.createTexture();
+    const upload = () => {
+      gl.bindTexture(gl.TEXTURE_2D, texObj);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, bg);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      seaReady = true;
+    };
+    if (bg.complete && bg.naturalWidth) upload(); else bg.addEventListener('load', upload);
+  } catch (e) { console.warn('바다 효과를 끕니다:', e); }
+}
+function drawBg(now) {
+  if (seaReady) {
+    if (seaCv.width !== cv.width || seaCv.height !== cv.height) { seaCv.width = cv.width; seaCv.height = cv.height; }
+    gl.viewport(0, 0, seaCv.width, seaCv.height);
+    // cover: 화면 비율에 맞춰 그림의 가운데 부분을 씀
+    const { sc, off } = bgMap();
+    gl.uniform1f(seaU.t, now / 1000);
+    gl.uniform2f(seaU.sc, sc[0], sc[1]);
+    gl.uniform2f(seaU.off, off[0], off[1]);
+    gl.uniform1f(seaU.hz, SEA_HZ);
+    gl.uniform4f(seaU.keep, KEEP.x, KEEP.y, KEEP.rx, KEEP.ry);
+    gl.uniform4f(seaU.rock, ROCK.x, ROCK.y, ROCK.rx, ROCK.ry);
+    gl.uniform4f(seaU.bun, BUNNY.x, BUNNY.y, BUNNY.rx, BUNNY.ry); gl.uniform1f(seaU.bunBase, BUNNY.baseY);
+    // 물빛: 불이 켜진 초롱이 바다에 비침. 막 떠오르는 초롱은 그 빛깔로 더 또렷하게 비침
+    // 별이 되러 떠나는 초롱은 불은 켜진 채지만, 멀어지는 만큼 바다에 비치는 빛은 서서히 옅어짐
+    const lp = new Float32Array(96), lc = new Float32Array(72); let n = 0;
+    [...lanterns].sort((a, b) => a.depth - b.depth).forEach(L => {
+      if (n >= Math.min(24, LIT_MAX + 1)) return;
+      const age = (now - L.born) / 1000;
+      const far = L.leaveAt ? Math.max(0, 1 - (now - L.leaveAt) / ((L.trans || TRANS_MS) * 0.7)) : 1;
+      const wgt = litWeight(L) * far * (L.fresh && age < 14 ? 1 + 0.6 * (1 - age / 14) : 1);
+      const P = lanternPose(L, now); if (P.a <= 0.02 || wgt <= 0) return;
+      const g = PALETTES[L.color].glow.split(',').map(v => v / 255);
+      const flick = 0.85 + 0.15 * Math.sin(now / 1000 * 7 + L.phase) * Math.sin(now / 1000 * 3.1);
+      lp.set([P.x / W, P.y / H, (LW * P.s) / W, P.a * flick * wgt], n * 4); lc.set(g, n * 3); n++;
+    });
+    gl.uniform4fv(seaU.LP, lp); gl.uniform3fv(seaU.LC, lc); gl.uniform1i(seaU.LN, n);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    ctx.clearRect(0, 0, W, H);        // 위 캔버스는 투명하게 두고 초롱만 그림
+    return;
+  }
+  if (!bg.complete || !bg.naturalWidth) { ctx.fillStyle = '#0b1030'; ctx.fillRect(0, 0, W, H); return; }
+  const { sc, off } = bgMap();                                           // 셰이더가 없을 때: 같은 배치로 그림만
+  ctx.fillStyle = '#0b1030'; ctx.fillRect(0, 0, W, H);
+  ctx.drawImage(bg, -off[0] / sc[0] * W, -off[1] / sc[1] * H, W / sc[0], H / sc[1]);
+}
+const ease = t => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+
+/* ───────── 먼 하늘의 초롱들 (참고: 수많은 등불이 멀리 흐릿하게 떠 있는 장면) ─────────
+   가까운 초롱이 7개를 넘으면 가장 오래된 초롱이 먼 하늘로 물러나, 네임택 없이 작고 흐릿한 불빛으로 계속 떠 있음 */
+const farLanterns = [], farSpriteCache = {};
+const FAR_BLUR = [4.6, 2.6, 1.1];   // 먼 초롱의 흐림 단계 (멀수록 흐리게)
+function farSprite(color, b = 1) {   // 흐릿하게 번진 작은 초롱 그림 (빛 번짐 포함) — 색·흐림 단계마다 한 번만 만들어 둠
+  const key = color + '|' + b;
+  if (farSpriteCache[key]) return farSpriteCache[key];
+  const spr = lanternSprite(color), pal = PALETTES[color] || PALETTES[PAL_NAMES[0]];
+  const h = 110, w = h * LW / LH, pad = 40, c = document.createElement('canvas');
+  c.width = Math.round(w + pad * 2); c.height = Math.round(h + pad * 2);
+  const x = c.getContext('2d'), cx = c.width / 2, cy = pad + h * 0.55;
+  const g = x.createRadialGradient(cx, cy, 0, cx, cy, w * 1.25);
+  g.addColorStop(0, `rgba(${pal.glow},.55)`); g.addColorStop(.5, `rgba(${pal.glow},.18)`); g.addColorStop(1, `rgba(${pal.glow},0)`);
+  x.fillStyle = g; x.fillRect(0, 0, c.width, c.height);
+  x.filter = `blur(${FAR_BLUR[b]}px) brightness(1.15)`;
+  x.drawImage(spr, cx - w / 2, cy - h * 0.55, w, h);
+  return (farSpriteCache[key] = c);
+}
+function pickFarSpot() {   // 먼 하늘의 자리: 왼쪽부터 차례로 채움 — 이미 떠 있는 먼 초롱들과 일정 거리 이상 떨어진 후보 중 가장 왼쪽
+  const cands = [];
+  for (let k = 0; k < 60; k++) cands.push({ x: 0.03 + Math.random() * 0.94, y: 0.05 + Math.random() * (HORIZON - 0.13) });
+  const near = c => { let d = 9; for (const F of farLanterns) if (!F.bye) d = Math.min(d, Math.hypot(F.x - c.x, (F.y - c.y) * 1.4)); for (const L of lanterns) if (L.far && L.leaveAt) d = Math.min(d, Math.hypot(L.far.x - c.x, (L.far.y - c.y) * 1.4)); return d; };
+  cands.forEach(c => c.d = near(c));
+  for (let minD = 0.085; minD > 0.004; minD *= 0.7) {
+    const ok = cands.filter(c => c.d >= minD);
+    if (ok.length) return ok.reduce((a, b) => (b.x < a.x ? b : a));
+  }
+  return cands.reduce((a, b) => (b.d > a.d ? b : a));
+}
+function farLook() {   // 먼 초롱마다 깊이를 달리해 크기·선명도·밝기에 차이 (가까울수록 크고 또렷하게)
+  const d = Math.random(), b = d > 0.68 ? 2 : d > 0.3 ? 1 : 0;
+  return { s: 0.07 + d * 0.17, a: 0.42 + d * 0.48, b, sp: 0.6 + Math.random() * 0.8 };
+}
+function farWobble(ph, sp, t) {   // 먼 초롱의 아른거림·흔들림 — 물러나는 초롱도 도착하며 같은 움직임에 맞춰져, 자리 잡을 때 덜컹하지 않음
+  return { dx: Math.sin(t * 0.12 * sp + ph) * 0.006, dy: Math.sin(t * 0.3 * sp + ph * 2) * 0.003, f: 0.82 + 0.18 * Math.sin(t * (1.3 + sp) + ph * 3) };
+}
+function toFar(L, now, P) {   // 물러나기를 마친 초롱을 먼 하늘의 초롱으로 바꿈
+  farLanterns.push({ color: L.color, x: L.far.x, y: L.far.y, s: L.far.s, a: L.far.a, b: L.far.b ?? 1, ph: L.phase, sp: L.far.sp || 1, born: now });
+  while (farLanterns.length > FAR_MAX) { const old = farLanterns.find(F => !F.bye); if (!old) break; old.bye = now; break; }
+}
+function drawFarLanterns(now) {
+  const t = now / 1000;
+  for (let i = farLanterns.length - 1; i >= 0; i--) {
+    const F = farLanterns[i];
+    const wb = farWobble(F.ph, F.sp, t);
+    let a = F.a * wb.f;                // 아른아른
+    if (F.bye) { a *= Math.max(0, 1 - (now - F.bye) / 4000); if (a <= 0) { farLanterns.splice(i, 1); continue; } }
+    const age = (now - F.born) / 1000;
+    const x = (F.x + wb.dx) * W;
+    const y = (F.y - Math.min(0.02, age * 0.0002) + wb.dy) * H;   // 아주 천천히 더 높이
+    const spr = farSprite(F.color, F.b), sc = F.s * (H / 1080) * LH / 110;
+    ctx.globalAlpha = a;
+    ctx.drawImage(spr, x - spr.width * sc / 2, y - (40 + 110 * 0.55) * sc, spr.width * sc, spr.height * sc);
+  }
+  ctx.globalAlpha = 1;
+}
+function easeLeave(q) {   // cubic-bezier(.45,0,.3,1): 출발은 천천히 → 가속 → 아주 길고 부드러운 감속 (툭 멈추지 않게)
+  const x1 = 0.45, x2 = 0.3, bx = t => 3 * x1 * t * (1 - t) ** 2 + 3 * x2 * t * t * (1 - t) + t ** 3;
+  let lo = 0, hi = 1, t = q;
+  for (let i = 0; i < 22; i++) { t = (lo + hi) / 2; if (bx(t) < q) lo = t; else hi = t; }
+  return 3 * t * t * (1 - t) + t ** 3;   // y1 = 0, y2 = 1
+}
+function tasselBottom(spr) {   // 초롱 그림에서 술 맨 아래 끝의 높이(0~1): 가운데 세로줄에서 불투명한 맨 아래 점을 찾음 (그림마다 한 번)
+  if (spr._tb !== undefined) return spr._tb;
+  let tb = 0.95;
+  try {
+    const W = spr.width, H = spr.height, cx = Math.round(W / 2), d = spr.getContext('2d').getImageData(cx - 3, 0, 7, H).data;
+    for (let y = H - 1; y > H * 0.5; y--) { let a = 0; for (let i = 0; i < 7; i++) a = Math.max(a, d[(y * 7 + i) * 4 + 3]); if (a > 90) { tb = (y + 1) / H; break; } }
+    // 술 아랫부분 너비: 맨 아래보다 조금 위 가로줄에서 가운데를 지나는 불투명한 구간
+    const ry = Math.max(0, Math.round(tb * H) - 4), row = spr.getContext('2d').getImageData(0, ry, W, 1).data;
+    let l = cx, r = cx; while (l > 0 && row[(l - 1) * 4 + 3] > 90) l--; while (r < W - 1 && row[(r + 1) * 4 + 3] > 90) r++;
+    spr._tw = (r - l + 1) / W;
+  } catch (e) {}
+  return (spr._tb = tb);
+}
+function drawSilk(c, x, y0, y1, rw) {   // 명주실: 흰 비단실, 가운데로 은은한 윤기 + 아주 가는 꼬임 결
+  const len = y1 - y0; if (len <= 0) return;
+  c.save();
+  const g = c.createLinearGradient(x - rw / 2, 0, x + rw / 2, 0);
+  g.addColorStop(0, 'rgba(176,160,132,.85)'); g.addColorStop(.42, 'rgba(255,251,240,.98)'); g.addColorStop(.58, 'rgba(255,248,232,.95)'); g.addColorStop(1, 'rgba(176,160,132,.85)');
+  c.fillStyle = g; c.fillRect(x - rw / 2, y0, rw, len);
+  c.beginPath(); c.rect(x - rw / 2, y0, rw, len); c.clip();
+  c.strokeStyle = 'rgba(150,132,104,.28)'; c.lineWidth = Math.max(.5, rw * .18);   // 가는 꼬임 결
+  for (let y = y0 - rw; y < y1 + rw; y += rw * 1.6) { c.beginPath(); c.moveTo(x - rw / 2, y + rw * .45); c.lineTo(x + rw / 2, y - rw * .45); c.stroke(); }
+  c.restore();
+}
+function drawRope(c, x, y0, y1, rw) {   // 동아줄: 어두운 바탕 줄 + 비스듬히 감긴 세 가닥의 밝은 등 (꼰 결)
+  const len = y1 - y0; if (len <= 0) return;
+  c.save();
+  c.lineCap = 'butt'; c.strokeStyle = '#5E4422'; c.lineWidth = rw; c.beginPath(); c.moveTo(x, y0); c.lineTo(x, y1); c.stroke();
+  c.beginPath(); c.rect(x - rw / 2, y0, rw, len); c.clip();
+  const pitch = rw * 1.25, sl = rw * 0.55;   // 가닥 간격, 기울기
+  c.lineCap = 'round';
+  for (let y = y0 - pitch; y < y1 + pitch; y += pitch) {
+    c.strokeStyle = '#B8915A'; c.lineWidth = rw * 0.55; c.beginPath(); c.moveTo(x - rw / 2, y + sl); c.lineTo(x + rw / 2, y - sl); c.stroke();
+    c.strokeStyle = 'rgba(235,207,150,.9)'; c.lineWidth = rw * 0.22; c.beginPath(); c.moveTo(x - rw * 0.35, y + sl * 0.7); c.lineTo(x + rw * 0.35, y - sl * 0.7); c.stroke();
+  }
+  c.restore();
+}
+function lanternPose(L, now) {
+  const age = (now - L.born) / 1000, t = now / 1000;
+  const RISE = L.fresh ? 9 : 0.001;     // 바다에서 하늘 자리까지 걸리는 시간(초)
+  const k = ease(age / RISE);
+  // 처음엔 크게 → 하늘 자리로 가면서 작아짐
+  const big = L.fresh ? L.scale * 1.6 : L.scale;   // 바다에서 떠오를 땐 자리 크기의 1.6배에서 시작
+  let x = L.sx + (L.tx - L.sx) * k, y = (HORIZON + 0.06) + (L.ty - (HORIZON + 0.06)) * k;
+  let s = big + (L.scale - big) * k;
+  // 자리에 머무는 동안 아주 조금 더 올라가고, 살랑살랑 흔들림 (칸 사이 여유 안에서만 움직여 이웃과 겹치지 않음)
+  const settle = Math.max(0, age - RISE);
+  y -= Math.min(0.012, settle * 0.0004);
+  x += Math.sin(t * 0.35 * L.sway + L.phase) * 0.006;
+  y += Math.sin(t * 0.6 + L.phase) * 0.004;
+  let a = Math.min(1, age / 1.2);
+  // 오래된 순서대로 제자리에서 조금씩 작아지고 살짝 흐려짐 (자리는 옮기지 않음 — 옮기면 이웃 초롱과 겹침)
+  const d = L.depth;
+  s *= 1 - AGE_SHRINK * d; a *= 1 - 0.2 * d;
+  // 차례가 된 가장 오래된 초롱: 왼쪽으로 흘러가며 작아지고, 마지막에 십자별이 됨 (한 번에 하나씩만)
+  if (L.leaveAt) {
+    const q = Math.min(1, (now - L.leaveAt) / (L.trans || TRANS_MS)), e = easeLeave(q);   // 천천히 출발해 빨라지고, 도착할 땐 길게 스르르 멈춤
+    if (!L.leaveFrom) L.leaveFrom = { x, y };
+    const tt = (now - L.leaveAt) / 1000, calm = (1 - e) * Math.min(1, tt / 2.5);   // 출발할 때 툭 튀지 않게 서서히 흔들리기 시작, 도착할수록 잦아듦
+    if (!L.far) { const sp = pickFarSpot(); L.far = { x: sp.x, y: sp.y, ...farLook(), s0: s }; }
+    x = L.leaveFrom.x + (L.far.x - L.leaveFrom.x) * e + Math.sin(tt * 0.7 + L.phase) * 0.012 * calm;
+    y = L.leaveFrom.y + (L.far.y - L.leaveFrom.y) * e - Math.sin(Math.PI * e) * 0.03 + Math.sin(tt * 1.1 + L.phase * 2) * 0.01 * calm;   // 위아래로 둥실둥실
+    const wb = farWobble(L.phase, L.far.sp, t);                                 // 도착할수록 먼 초롱의 흔들림·밝기에 그대로 맞춰짐
+    x += wb.dx * e; y += wb.dy * e;
+    s = L.far.s0 + (L.far.s - L.far.s0) * e;                                   // 먼 초롱 크기로 작아짐
+    a = a * (1 - e) + L.far.a * wb.f * e;
+  }
+  if (L.fadeAt) a *= Math.max(0, 1 - (now - L.fadeAt) / FADE_MS);   // 너무 많이 밀렸을 때: 제자리에서 조용히 흐려짐
+  // 물에서 막 나올 땐 아랫부분이 물에 잠긴 듯 흐리게
+  const blur = L.leaveAt ? easeLeave(Math.min(1, (now - L.leaveAt) / (L.trans || TRANS_MS))) : 0;   // 물러날수록 흐릿하게 (0~1)
+  return { x: x * W, y: y * H, s: s * H / 1080, a: Math.max(0, a), rot: Math.sin(t * 0.5 + L.phase) * 0.03 * (1 - blur), blur };
+}
+
+// 불이 켜진 초롱: 하늘에 있는 초롱은 모두 켜져 있고, 별이 되러 떠날 때도 켜진 채로 감
+// (LIT_MAX 를 MAX_LANTERNS 보다 작게 하면 — 예: 6 — 그 수를 넘는 오래된 초롱부터 불이 서서히 꺼짐)
+const LIT_MAX = MAX_LANTERNS + WAIT_MAX;
+function litWeight(L) {   // 1 켜짐 … 0 꺼짐
+  return Math.min(1, Math.max(0, LIT_MAX - L.depth * MAX_LANTERNS));
+}
+function drawLantern(L, now) {
+  const P = lanternPose(L, now);
+  const spr = lanternSprite(L.color), pal = PALETTES[L.color];
+  // 멀어질수록 초롱은 흐려지고, 그 자리에 작은 빛점이 모여 별이 될 준비를 함
+  const conv = 0;   // (예전: 별이 될 빛점) 이제는 별로 바뀌지 않고 먼 하늘의 초롱이 됨
+  if (conv > 0) {
+    const u = H / 900, r = (1.2 + 1.8 * conv) * u;          // 작고 또렷한 빛점
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const pg = ctx.createRadialGradient(P.x, P.y, 0, P.x, P.y, r * 4);
+    pg.addColorStop(0, `rgba(255,250,240,${0.95 * conv})`); pg.addColorStop(0.25, `rgba(${pal.glow},${0.5 * conv})`); pg.addColorStop(1, `rgba(${pal.glow},0)`);
+    ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(P.x, P.y, r * 4, 0, 7); ctx.fill(); ctx.restore();
+  }
+  if (P.a <= 0) return;
+  const w = LW * P.s, h = LH * P.s;
+  const flick = 0.85 + 0.15 * Math.sin(now / 1000 * 7 + L.phase) * Math.sin(now / 1000 * 3.1);
+  const lit = litWeight(L);
+  ctx.save(); ctx.globalAlpha = P.a;
+  // 빛 번짐 (불이 꺼진 초롱은 없음)
+  if (lit > 0.01 && P.blur < 1) {
+    ctx.globalCompositeOperation = 'lighter';
+    const gr = ctx.createRadialGradient(P.x, P.y, 0, P.x, P.y, w * 1.4);
+    gr.addColorStop(0, `rgba(${pal.glow},${0.42 * flick * lit * (1 - P.blur)})`); gr.addColorStop(1, `rgba(${pal.glow},0)`);   // 큰 빛 번짐은 물러날수록 잦아들어, 먼 초롱의 은은한 번짐으로 이어짐
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(P.x, P.y, w * 1.4, 0, 7); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  // 초롱 (불이 꺼지면 한지가 어둑해짐)
+  ctx.translate(P.x, P.y); ctx.rotate(P.rot);
+  if (lit < 0.99) ctx.filter = `brightness(${(0.42 + 0.58 * lit).toFixed(3)}) saturate(${(0.7 + 0.3 * lit).toFixed(3)})`;
+  const rk = L.recolorAt ? Math.min(1, (now - L.recolorAt) / RECOLOR_MS) : 1;   // 색 바뀜: 예전 색 → 새 색으로 서서히
+  if (rk < 1 && L.prevColor) {
+    const old = lanternSprite(L.prevColor), a0 = ctx.globalAlpha;
+    ctx.drawImage(old, -w / 2, -h * 0.55, w, h);
+    ctx.globalAlpha = a0 * rk; ctx.drawImage(spr, -w / 2, -h * 0.55, w, h); ctx.globalAlpha = a0;
+  } else { if (P.blur > 0) ctx.globalAlpha = P.a * (1 - P.blur); ctx.drawImage(spr, -w / 2, -h * 0.55, w, h); ctx.globalAlpha = P.a; }
+  ctx.filter = 'none';
+  if (P.blur > 0) {   // 물러나는 초롱: 흐릿한 먼 초롱 그림을 점점 겹쳐 그려 자연스럽게 이어짐
+    const fs = farSprite(L.color, L.far.b), k = h / 110;
+    ctx.globalAlpha = P.a * P.blur; ctx.drawImage(fs, -fs.width * k / 2, -(40 + 110 * 0.55) * k, fs.width * k, fs.height * k); ctx.globalAlpha = P.a;
+  }
+  const tagA = P.blur > 0 ? Math.max(0, 1 - P.blur * 2.5) : 1;   // 물러나기 시작하면 네임택은 먼저 사라짐
+  if (tagA <= 0) { ctx.restore(); return; }
+  ctx.globalAlpha = P.a * tagA;
+  // 남긴 항목 꼬리표: 체험 화면과 같은 크라프트 꼬리표 (구멍·삼끈 매듭·묶음 색 띠).
+  // 초롱에서 내려온 끈은 꼬리표 몸통의 위쪽 가운데에 닿음
+  const tg = tagSprite(L.item), tw = w * 1.55, th = tw * TAG_H / TAG_CW;
+  const bodyCx = ((TAG_PAD + TAG_W / 2) / TAG_CW - 0.5) * tw;    // 왼쪽 끈 여백 보정
+  const tyTop = h * 0.5;
+  tasselBottom(spr); drawSilk(ctx, 0, h * 0.45, tyTop + th * 0.1, Math.max(1, (spr._tw || 0.07) * w / 3 * 0.75));   // 체험 화면과 같은 명주실 (동아줄의 3/4 굵기)
+  ctx.drawImage(tg, -tw / 2 - bodyCx, tyTop, tw, th);
+  ctx.restore();
+  // 물에 비친 그림자: WebGL 바다가 켜져 있으면 바다에서 그림 (아래는 WebGL을 못 쓸 때만)
+  if (seaReady) return;
+  const ry = HORIZON * H + (HORIZON * H - P.y) * 0.35 + 6;
+  if (ry < H && !L.leaveAt) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = P.a * Math.max(0.12, 0.5 - (HORIZON * H - P.y) / H);
+    const rg = ctx.createLinearGradient(0, ry - h * 0.2, 0, ry + h * 0.5);
+    rg.addColorStop(0, `rgba(${pal.glow},.5)`); rg.addColorStop(1, `rgba(${pal.glow},0)`);
+    ctx.fillStyle = rg;
+    for (let i = 0; i < 9; i++) { const yy = ry + i * h * 0.06, ww = w * (0.45 + Math.sin(now / 400 + i + L.phase) * 0.15);
+      ctx.fillRect(P.x - ww / 2 + Math.sin(now / 700 + i) * 4, yy, ww, Math.max(1.5, h * 0.025)); }
+    ctx.restore();
+  }
+}
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+function lanternAnnouncement(entry) {
+  const owner = entry.nickname ? `${entry.nickname}의 `
+    : entry.id && entry.id !== 'direct' ? `${entry.id}번 참여자의 ` : '';
+  return `${owner}청사초롱이 떠올랐어요`;
+}
+function lanternAnnouncementEn(entry) {   // 영어 안내 (외국인 관람객용)
+  const owner = entry.nickname || (entry.id && entry.id !== 'direct' ? `Visitor ${entry.id}` : '');
+  return owner ? `${owner}’s chorong has risen` : 'A new chorong has risen';
+}
+function drawBanner(now) {
+  if (!banner) return;
+  const t = (now - banner.t0) / 1000; if (t > 9) { banner = null; bannerHalo.style.opacity = 0; return; }
+  const a = Math.min(1, t / 1.2) * Math.min(1, (9 - t) / 1.5);
+  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center';
+  const itemEn = ITEM_EN[banner.L.item];
+  const cx = W * 0.62, cy = H * (itemEn ? 0.855 : 0.9);   // 영어 줄이 더해지면 조금 위로
+  // 하단 글씨(항목 이름 + 안내 문장): 표지 제목 '청사초롱, 꿈을 담다'와 같은 샴페인 골드 자개 빛
+  // 샴페인 골드: 흰빛·분홍빛을 빼고 금빛을 짙게 (자개 결은 유지)
+  const NACRE = [['#E4BE78', 0], ['#F6DCA2', .18], ['#D4A85C', .36], ['#F0CF90', .54], ['#F8E2B0', .68], ['#DDB46C', .84], ['#F2D49A', 1]];
+  const nacreText = (text, y, fs, glow) => {
+    const tw = ctx.measureText(text).width;
+    const g = ctx.createLinearGradient(cx - tw / 2, y - fs, cx + tw / 2, y - fs + tw * Math.tan(25 * Math.PI / 180) + fs * .2);   // 115° 비스듬한 결
+    NACRE.forEach(([c, o]) => g.addColorStop(o, c));
+    // 그림자·빛은 단색 글씨로 먼저 깔고(그라데이션 글씨에 그림자를 주면 일부 브라우저에서 네모가 생김), 그 위에 자개 글씨
+    ctx.fillStyle = '#E6C27E';
+    ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 12; ctx.fillText(text, cx, y);            // 바다 위에서도 읽히게 어두운 그림자
+    if (glow) { ctx.shadowColor = 'rgba(240,205,150,.35)'; ctx.shadowBlur = H * 0.02; ctx.fillText(text, cx, y); }   // 은은한 샴페인 빛
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.fillStyle = g; ctx.fillText(text, cx, y);
+  };
+  let fs = Math.round(H * 0.042 * 0.8);   // 큰 글씨 (원래보다 20% 작게)
+  ctx.font = `700 ${fs}px "Gowun Batang", serif`;
+  nacreText(`‘${banner.L.item}’`, cy, fs, true);
+  let y = cy;
+  if (itemEn) {   // 항목의 영어 이름
+    y += H * 0.033; const f2 = Math.round(H * 0.021);
+    ctx.font = `700 ${f2}px "Gowun Batang", serif`; nacreText(itemEn, y, f2, false);
+  }
+  fs = Math.round(H * 0.022 * 0.8);   // 작은 글씨 (원래보다 20% 작게)
+  ctx.font = `600 ${fs}px "IBM Plex Sans KR", sans-serif`;
+  const announcement = lanternAnnouncement(banner.L);
+  nacreText(announcement, y + H * 0.036, fs, false);
+  ctx.font = `400 ${fs}px "IBM Plex Sans KR", sans-serif`;
+  const announcementEn = lanternAnnouncementEn(banner.L);
+  ctx.globalAlpha = a * 0.85; nacreText(announcementEn, y + H * 0.064, fs, false); ctx.globalAlpha = a;
+  {   // 글씨 뒤 halo: 글 전체를 감싸는 타원 영역의 바다를 살짝 흐리게
+    const hw = Math.max(ctx.measureText(announcementEn).width * 1.35, H * 0.5), hh = H * (itemEn ? 0.24 : 0.2);
+    Object.assign(bannerHalo.style, { left: `${cx - hw / 2}px`, top: `${(cy + y + H * 0.064) / 2 - hh / 2}px`, width: `${hw}px`, height: `${hh}px`, opacity: a });
+  }
+  ctx.restore();
+}
+function drawCount() {
+  if (!total) return;
+  ctx.save(); ctx.font = `400 ${Math.round(H * 0.018)}px "IBM Plex Sans KR", sans-serif`;
+  ctx.fillStyle = 'rgba(239,231,211,.55)'; ctx.textAlign = 'left';
+  ctx.fillText(`오늘 띄운 청사초롱 ${total}개 · ${total} chorong${total === 1 ? '' : 's'} today`, W * 0.02, H * 0.975); ctx.restore();
+}
+
+
+/* ───────────────────────── 십자별 · 유성 (개인 화면과 같은 모양) ───────────────────────── */
+const SW = { core: '#FFFFFF', ray: '255,255,255', halo: '225,232,255', edge: '200,210,255' };
+const SG = { core: '#FFE8BE', ray: '238,200,128', halo: '230,185,105', edge: '215,165,85' };
+const rayDirs = deg => { const r = deg * Math.PI / 180; return [[Math.cos(r), Math.sin(r)], [-Math.sin(r), Math.cos(r)]]; };
+let sseed = 11;
+const srnd = () => ((sseed = (sseed * 16807) % 2147483647) / 2147483647);
+// 큰 십자별 6개, 작은 십자별 16개. 하늘(수평선 위)에만, 서로 너무 붙지 않게
+const bigStars = [], tinyStars = [];
+while (bigStars.length < 6) {
+  const c = { x: 0.04 + srnd() * 0.92, y: 0.04 + srnd() * 0.36, ph: srnd() * 6.28, sp: 0.8 + srnd() * 1.2 };
+  if (c.x < 0.4 && c.y > 0.33) continue;                       // 토끼 머리 위는 비워 둠
+  if (bigStars.every(b => Math.hypot((b.x - c.x) * 1.78, b.y - c.y) > 0.32)) bigStars.push(c);
+}
+for (let i = 0; i < 16; i++) tinyStars.push({ x: srnd(), y: 0.02 + srnd() * 0.44, l: 3 + srnd() * 5, a: 0.5 + srnd() * 0.45 });
+// 가운데 쪽은 똑바른 +, 바깥은 25° · 크기는 1, 0.9, 0.7, 0.6 배 섞어서 · 흰색/샴페인골드 반반
+[...bigStars].sort((a, b) => Math.hypot(a.x - .5, a.y - .25) - Math.hypot(b.x - .5, b.y - .25))
+  .forEach((b, i) => { b.dirs = rayDirs(i % 2 ? 35 : 25); b.k = [1, 0.9, 0.7, 1, 0.6, 0.9][i]; b.pal = i % 2 ? SG : SW; });
+tinyStars.forEach((t, i) => { t.dirs = rayDirs(i % 3 === 1 ? 35 : 25); t.pal = i % 2 ? SG : SW; });
+
+function crossStar(g, x, y, len, core, alpha, pal, dirs) {
+  g.save(); g.globalAlpha = alpha; g.globalCompositeOperation = 'lighter';
+  const halo = g.createRadialGradient(x, y, 0, x, y, len * 0.45);
+  halo.addColorStop(0, `rgba(${pal.ray},.55)`); halo.addColorStop(0.25, `rgba(${pal.halo},.2)`); halo.addColorStop(1, `rgba(${pal.edge},0)`);
+  g.fillStyle = halo; g.beginPath(); g.arc(x, y, len * 0.45, 0, Math.PI * 2); g.fill();
+  dirs.forEach(([dx, dy]) => {
+    const gr = g.createLinearGradient(x - dx * len, y - dy * len, x + dx * len, y + dy * len);
+    gr.addColorStop(0, `rgba(${pal.ray},0)`); gr.addColorStop(0.5, `rgba(${pal.ray},.95)`); gr.addColorStop(1, `rgba(${pal.ray},0)`);
+    g.strokeStyle = gr; g.lineWidth = Math.max(0.6, core * 0.45);
+    g.beginPath(); g.moveTo(x - dx * len, y - dy * len); g.lineTo(x + dx * len, y + dy * len); g.stroke();
+  });
+  g.fillStyle = pal.core; g.beginPath(); g.arc(x, y, core, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+// 유성: 한 번에 하나, 10~22초마다 오른쪽 위에서 왼쪽 아래로 (수평선 위에서 사라짐)
+const meteors = []; let meteorNext = performance.now() + 4000;
+const meteorDust = [];   // 유성이 흩뿌리는 빛 알갱이 (바다 윤슬과 같은 작은 동그란 점)
+// 초롱이 된 '새로운 십자별' (최대 5개, 넘으면 가장 오래된 별이 천천히 사라짐)
+const NEW_STAR_MAX = 5;
+const STAR_BYE_DELAY = 4000;   // 새 별이 생긴 뒤, 가장 오래된 별이 반짝이며 사라지기 시작할 때까지의 간격
+const newStars = [];
+function becomeStar(L, now) {
+  const g = PALETTES[L.color].glow;
+  newStars.push({ x: L.star.x, y: L.star.y, born: now, item: L.item, ph: Math.random() * 6.28,
+    pal: { core: '#FFFFFF', ray: g, halo: g, edge: g }, dirs: rayDirs(Math.random() < 0.5 ? 25 : 35) });
+  const alive = newStars.filter(n => !n.leaving);
+  if (alive.length > NEW_STAR_MAX) alive[0].leaving = now + STAR_BYE_DELAY;   // 새 별이 반짝인 뒤 조금 있다가 (두 반짝임이 겹치지 않게)
+}
+function drawNewStars(now) {
+  const u = H / 900, t = now / 1000;
+  for (let i = newStars.length - 1; i >= 0; i--) {
+    const n = newStars[i], age = (now - n.born) / 1000;
+    let a = 1, burst = 0;
+    const going = n.leaving && now >= n.leaving;   // 사라질 차례가 되었는지 (정해진 시각 전까지는 평소처럼 빛남)
+    if (going) {   // 6번째 별이 생기면 가장 오래된 별: 크게 한 번 반짝인 뒤 사라짐
+      const p = (now - n.leaving) / 1600;
+      if (p >= 1) { newStars.splice(i, 1); continue; }
+      burst = p < 0.35 ? Math.sin(Math.PI * 0.5 * p / 0.35) : Math.max(0, 1 - (p - 0.35) / 0.3);
+      a = p < 0.35 ? 1 : Math.max(0, 1 - (p - 0.35) / 0.65);
+    }
+    // 태어날 때: 반짝 하고 커졌다가 별 크기로 자리 잡음
+    const grow = Math.min(1, age / 1.2), flash = Math.max(0, 1 - age / 1.6);
+    const tw = 0.85 + 0.15 * Math.sin(t * 1.6 + n.ph);
+    const fl = Math.max(flash, burst * 1.6);
+    const len = (26 + 30 * fl) * (0.4 + 0.6 * grow) * tw * u * (going ? Math.max(0.2, a) : 1);
+    if (fl > 0) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const R = 60 * u * fl + 1;
+      const fg = ctx.createRadialGradient(n.x * W, n.y * H, 0, n.x * W, n.y * H, R);
+      fg.addColorStop(0, `rgba(255,255,255,${Math.min(0.85, 0.5 * fl)})`); fg.addColorStop(1, `rgba(${n.pal.ray},0)`);
+      ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(n.x * W, n.y * H, R, 0, 7); ctx.fill(); ctx.restore();
+    }
+    crossStar(ctx, n.x * W, n.y * H, len, 2.0 * u * (0.6 + 0.4 * grow) * (1 + burst * 0.6), Math.min(1, a * tw + burst * 0.3), n.pal, n.dirs);
+  }
+}
+function drawSkyExtras(now) {
+  drawNewStars(now);
+  const u = H / 900, t = now / 1000;
+  tinyStars.forEach(s => crossStar(ctx, s.x * W, s.y * H, s.l * u, 0.7 * u, s.a * (0.75 + 0.25 * Math.sin(t * 1.3 + s.x * 40)), s.pal, s.dirs));
+  bigStars.forEach(b => {
+    const tw = 0.82 + 0.18 * Math.sin(t * b.sp + b.ph);
+    crossStar(ctx, b.x * W, b.y * H, (34 + 22 * 0.9) / 1.5 * b.k * tw * u * 1.25, (1.6 + 0.9) / 1.5 * Math.sqrt(b.k) * u * 1.25, tw, b.pal, b.dirs);
+  });
+  // 유성: 레퍼런스처럼 곧게, 가늘고 긴 분홍·보랏빛 꼬리 + 푸르스름한 흰 머리. 가끔 둘이 나란히
+  // 빛 알갱이: 바다 윤슬처럼 깜빡이며 생겼다 사라짐
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = meteorDust.length - 1; i >= 0; i--) {
+    const d = meteorDust[i], age = (now - d.born) / d.life;
+    if (age >= 1) { meteorDust.splice(i, 1); continue; }
+    const tdt = (now - d.born) / 1000;
+    const blink = Math.sin(tdt * d.sp + d.ph) > -0.2 ? 1 : 0.15;       // 켜졌다 꺼졌다
+    ctx.globalAlpha = d.a * (1 - age) * blink;
+    ctx.fillStyle = 'rgb(190,210,255)';   // 바다 윤슬처럼 은은한 푸른 흰빛
+    ctx.beginPath(); ctx.arc(d.x + d.vx * tdt, d.y + d.vy * tdt, d.r, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+  if (meteorDust.length > 600) meteorDust.splice(0, meteorDust.length - 600);
+  if (!meteors.length) {
+    if (now < meteorNext) return;
+    const ang = Math.PI * (0.70 + Math.random() * 0.07);             // 오른쪽 위 → 왼쪽 아래
+    const sx = W * (0.45 + Math.random() * 0.45), sy = H * (0.02 + Math.random() * 0.12);
+    const dist = H * (0.24 + Math.random() * 0.1), dur = 2200 + Math.random() * 900;
+    meteors.push({ t0: now, dur, sx, sy, ang, dist, len: H * (0.27 + Math.random() * 0.08), w: 1 });
+    if (Math.random() < 0.35) {                                      // 짝 유성: 조금 뒤·아래에서 나란히, 더 작고 짧게
+      const off = H * (0.05 + Math.random() * 0.04);
+      meteors.push({ t0: now + 250 + Math.random() * 300, dur: dur * 0.9, sx: sx - Math.sin(ang) * off * 1.4 + Math.cos(ang) * off * 0.6,
+        sy: sy + Math.cos(ang) * off * 1.4 + Math.sin(ang) * off * 0.6, ang, dist: dist * 0.85, len: H * 0.17, w: 0.7 });
+    }
+  }
+  for (let i = meteors.length - 1; i >= 0; i--) {
+    const m = meteors[i], p = (now - m.t0) / m.dur;
+    if (p < 0) continue;
+    if (p >= 1) { meteors.splice(i, 1); if (!meteors.length) meteorNext = now + 10000 + Math.random() * 12000; continue; }
+    const e = 1 - Math.pow(1 - p, 1.3);
+    const dx = Math.cos(m.ang), dy = Math.sin(m.ang);
+    const hx = m.sx + dx * m.dist * e, hy = m.sy + dy * m.dist * e;
+    const L = m.len * Math.min(1, p * 2.2) * (1 - Math.max(0, p - 0.75) / 0.25 * 0.5);
+    const fade = (p < 0.1 ? p / 0.1 : (p > 0.72 ? (1 - p) / 0.28 : 1)) * m.w;
+    // 지나간 자리에 빛 알갱이를 흩뿌림 (머리 뒤쪽 꼬리 근처에 무작위로)
+    // 화면 갱신 속도와 상관없이 초당 개수로 (평균 약 190개/초 = 처음 버전의 약 2/3). 순간순간 들쭉날쭉하게: 뜸했다가 확 쏟아지기도 함
+    if (!m.burstT || now > m.burstT) { m.rate = Math.random() < 0.25 ? 280 + Math.random() * 140 : 90 + Math.random() * 90; m.burstT = now + 120 + Math.random() * 380; }
+    m.acc = (m.acc || 0) + m.rate * m.w * Math.min(0.1, (now - (m.lastEmit || now)) / 1000); m.lastEmit = now;
+    const emit = Math.floor(m.acc); m.acc -= emit;
+    for (let k = 0; k < emit; k++) {
+      const back = Math.pow(Math.random(), 1.6) * 0.5 * m.len * Math.min(1, p * 2.2);                      // 머리 가까이 많고 멀수록 드문드문
+      const side = (Math.random() - 0.5) * (Math.random() < 0.2 ? 26 : 10) * u;                              // 가끔 옆으로 멀리 튐
+      meteorDust.push({ x: hx - Math.cos(m.ang) * back - Math.sin(m.ang) * side, y: hy - Math.sin(m.ang) * back + Math.cos(m.ang) * side,
+        vx: (Math.random() - 0.5) * 6 * u, vy: (4 + Math.random() * 10) * u,          // 아주 천천히 흩어지며 아래로
+        born: now, life: 500 + Math.random() * 2000, r: (0.45 + Math.random() * 0.85) * u, ph: Math.random() * 6.28, sp: 3 + Math.random() * 16, a: fade * (Math.random() < 0.12 ? 0.85 : 0.4 + Math.random() * 0.3) });
+    }
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    // 꼬리: 머리 쪽이 넓고 끝으로 갈수록 뾰족해지는 가는 빛줄기. 흰빛 → 분홍 → 보랏빛으로 사라짐
+    const tx = hx - dx * L, ty = hy - dy * L, nx = -dy, ny = dx, w0 = 2.4 * u * m.w;
+    const tg = ctx.createLinearGradient(hx, hy, tx, ty);
+    tg.addColorStop(0, `rgba(255,255,255,${0.95 * fade})`); tg.addColorStop(0.07, `rgba(255,255,255,${0.85 * fade})`);
+    tg.addColorStop(0.4, `rgba(245,248,255,${0.5 * fade})`); tg.addColorStop(0.75, `rgba(230,238,255,${0.22 * fade})`); tg.addColorStop(1, 'rgba(220,230,255,0)');   // 흰 꼬리
+    ctx.fillStyle = tg;
+    // 머리 쪽 끝을 둥근 반타원으로 (각지지 않게) → 꼬리 끝으로 뾰족하게
+    ctx.beginPath(); ctx.moveTo(hx - nx * w0, hy - ny * w0);
+    ctx.ellipse(hx, hy, w0 * 1.9, w0, m.ang, -Math.PI / 2, Math.PI / 2);
+    ctx.lineTo(tx, ty); ctx.closePath(); ctx.fill();
+    const cg = ctx.createLinearGradient(hx, hy, hx - dx * L * 0.5, hy - dy * L * 0.5);   // 가운데 밝은 심
+    cg.addColorStop(0, `rgba(255,255,255,${0.9 * fade})`); cg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = cg; ctx.lineWidth = 0.8 * u * m.w;
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - dx * L * 0.5, hy - dy * L * 0.5); ctx.stroke();
+    // 머리: 진행 방향으로 길쭉한 푸르스름한 빛 + 흰 심지
+    ctx.globalAlpha = fade;
+    ctx.translate(hx, hy); ctx.rotate(m.ang);
+    ctx.scale(2.6, 1);
+    const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, 7 * u * m.w);
+    hg.addColorStop(0, 'rgba(255,255,255,1)'); hg.addColorStop(0.35, 'rgba(200,215,255,.7)'); hg.addColorStop(1, 'rgba(150,170,255,0)');
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0, 0, 7 * u * m.w, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function frame(now) {
+  drawBg(now);
+  drawSkyExtras(now);   // 초롱보다 뒤(먼 하늘)에 그림
+  drawFarLanterns(now); // 먼 하늘로 물러난 흐릿한 초롱들
+  const gapMs = now - (frame.last || now);
+  const dt = Math.min(0.1, gapMs / 1000); frame.last = now;
+  // 화면이 한동안 멈췄다 돌아온 경우(다른 탭·창 가림·절전): 그사이 밀린 초롱이 한꺼번에 움직이지 않게,
+  // 가장 새로운 것들만 남기고 나머지는 보이지 않는 사이에 조용히 정리
+  if (gapMs > 3000) {
+    const kept = lanterns.filter(L => !L.leaveAt && !L.fadeAt).sort((a, b) => b.born - a.born);
+    kept.slice(MAX_LANTERNS).forEach(L => { const sp = pickFarSpot(); L.far = { x: sp.x, y: sp.y, ...farLook() }; toFar(L, now); lanterns.splice(lanterns.indexOf(L), 1); });   // 보이지 않던 사이 밀린 초롱은 바로 먼 하늘로
+    kept.slice(0, MAX_LANTERNS).forEach((L, rank) => { L.depth = rank / MAX_LANTERNS; });
+    nextLeaveAt = now + LEAVE_GAP_MS * 2;
+  }
+  // 새로 온 순서(rank). 하늘에 머무는 것은 MAX_LANTERNS 개까지, 그보다 오래된 초롱은 제자리에서 차례를 기다림
+  const staying = lanterns.filter(L => !L.leaveAt && !L.fadeAt).sort((a, b) => b.born - a.born);
+  staying.forEach((L, rank) => {
+    const target = Math.min(rank, MAX_LANTERNS - 1) / MAX_LANTERNS;
+    L.depth += (target - L.depth) * (1 - Math.exp(-dt * 0.8));
+  });
+  // 너무 많이 밀리면(시험용 빠른 모드 등) 가장 오래된 것부터 제자리에서 흐려짐
+  while (staying.length > MAX_LANTERNS + WAIT_MAX) { const L = staying.pop(); L.trans = TRANS_MS * 0.4; L.leaveAt = now; L.leaveFrom = null; }   // 너무 많이 밀리면 기다리지 않고 바로 먼 하늘로
+  // 하나씩 천천히: 별이 되러 떠나는 초롱은 한 번에 하나. 앞의 초롱이 별이 되고 잠깐 쉰 뒤에 다음 초롱이 출발
+  // (기다리는 초롱이 2개 이상 쌓이면 조금씩 빨리 떠나서 하늘이 너무 붐비지 않게 함)
+  const waiting = staying.length - MAX_LANTERNS;
+  if (waiting > 0 && now >= nextLeaveAt && !lanterns.some(L => L.leaveAt && !L.dead)) {
+    const L = staying[staying.length - 1];                                   // 가장 오래된 초롱
+    const hurry = Math.max(0.5, 1 - (waiting - 1) * 0.25);                   // 1 = 평소 빠르기(기다리는 초롱 1개) … 0.5 = 3개가 기다릴 때
+    const P = lanternPose(L, now);
+    L.trans = TRANS_MS * hurry; L.leaveAt = now; L.leaveFrom = null;
+    nextLeaveAt = now + L.trans + LEAVE_GAP_MS * hurry;
+  }
+  lanterns.forEach(L => {
+    if (L.leaveAt && !L.dead && now - L.leaveAt >= (L.trans || TRANS_MS)) { L.dead = true; toFar(L, now); }   // 별 대신 먼 하늘의 초롱으로
+    if (L.fadeAt && now - L.fadeAt >= FADE_MS) L.dead = true;
+  });
+  lanterns.sort((a, b) => (b.depth + (b.leaveAt ? 1 : 0)) - (a.depth + (a.leaveAt ? 1 : 0)));   // 먼 것부터 그림
+  lanterns.forEach(L => drawLantern(L, now));
+  for (let i = lanterns.length - 1; i >= 0; i--) if (lanterns[i].dead) lanterns.splice(i, 1);
+  drawBanner(now); drawCount();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ───────────────────────── 서버에서 새 초롱 받기 ───────────────────────── */
+const st = document.getElementById('status'), stText = document.getElementById('statusText');
+let first = true;
+async function poll() {
+  try {
+    const res = await fetch(`./api/feed?after=${first ? 0 : lastAt}&t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) throw new Error(res.status);
+    const { items } = await res.json();
+    items.sort((a, b) => a.at - b.at);
+    // 처음 열었을 때는 초롱 없이 빈 하늘로 시작: 이미 띄운 기록은 건너뛰고, 화면을 연 뒤에 새로 들어온 것만 띄움
+    if (first) items.forEach(e => seen.add(e.k));
+    else {
+      items.filter(e => seen.has(e.k) && e.recolor).forEach(recolorLantern);   // 색만 바뀐 초롱
+      items.filter(e => !seen.has(e.k)).forEach((e, i) => setTimeout(() => addLantern(e, true), i * 2500));   // 여러 개가 한꺼번에 오면 차례로
+    }   // 여러 개가 한꺼번에 오면 차례로
+    items.forEach(e => { lastAt = Math.max(lastAt, e.at); });
+    first = false; st.classList.remove('off'); stText.textContent = '연결됨';
+  } catch (e) { st.classList.add('off'); stText.textContent = '연결 끊김 · 다시 시도 중'; }
+  setTimeout(poll, POLL_MS);
+}
+if (DEMO) {
+  const items = ['양치하기', '산책하기', '물 마시기', '스트레칭하기', '창문 열기', '샤워하기', '안부 전하기', '노래 듣기', '햇볕 쬐기', '이불 정리'];
+  let n = 1; stText.textContent = '시험 모드';
+  const go = () => { addLantern({ k: 'demo' + n, id: String(n).padStart(4, '0'), item: items[n % items.length], color: PAL_NAMES[n % 6], at: Date.now() }, true); n++; };
+  // 평소 시험: 처음 MAX_LANTERNS 개는 6초마다 떠올라 하늘을 채우고, 그 뒤로는 20초마다 하나씩 (하나씩 천천히 별이 되는 모습을 보기 위해)
+  // ?demo&fast: 2.5초마다 계속 (한꺼번에 몰릴 때를 시험)
+  const FAST = params.has('fast');
+  const tick = () => { go(); setTimeout(tick, FAST ? 2500 : (n <= MAX_LANTERNS ? 6000 : 20000)); };
+  tick();
+} else poll();
+
+/* ───────────────────────── 전체 화면 · 커서 ───────────────────────── */
+const help = document.getElementById('help');
+setTimeout(() => help.classList.add('hide'), 6000);
+addEventListener('click', () => { help.classList.add('hide'); if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {}); });
+let curT; addEventListener('mousemove', () => { document.body.classList.add('cursor'); clearTimeout(curT); curT = setTimeout(() => document.body.classList.remove('cursor'), 2500); });
+// 화면이 꺼지지 않게
+(async () => { try { await navigator.wakeLock?.request('screen'); } catch (e) {} })();
+document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible') { try { await navigator.wakeLock?.request('screen'); } catch (e) {} } });
+</script>
+</body>
+</html>

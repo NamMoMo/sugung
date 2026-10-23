@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>수궁야행 방 B · 직원용</title>
+<style>
+  :root {
+    --bg: #F6F1E7; --card: #FFFDF8; --ink: #1D2340; --muted: #6B6A72; --line: #E2D9C8;
+    --gold: #D9A441; --green: #2F7D6D; --blue: #3D6FA3; --red: #A23B3B;
+    font-family: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  header { position: sticky; top: 0; z-index: 5; background: var(--ink); color: #F6F1E7; padding: .9rem 1.2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  header h1 { font-size: 1.05rem; margin: 0; font-weight: 600; }
+  nav { display: flex; gap: .3rem; margin-left: auto; }
+  nav button { background: transparent; color: #F6F1E7; border: 1px solid rgba(246,241,231,.3); }
+  nav button[aria-selected="true"] { background: #F6F1E7; color: var(--ink); }
+  main { max-width: 980px; margin: 0 auto; padding: 1.2rem; }
+  section[hidden] { display: none; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 1.2rem; margin-bottom: 1rem; }
+  h2 { font-size: 1.1rem; margin: 0 0 .8rem; }
+  h3 { font-size: .95rem; margin: 1rem 0 .5rem; display: flex; align-items: center; gap: .5rem; }
+  h3 i { width: .7rem; height: .7rem; border-radius: 50%; display: inline-block; }
+  button { font: inherit; font-size: .95rem; padding: .6rem 1rem; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+  button.danger { color: var(--red); }
+  button:disabled { opacity: .45; cursor: default; }
+  input[type=text], input[type=password], input[type=search] { font: inherit; font-size: 1.05rem; padding: .65rem .8rem; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+  .row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .chip { border-radius: 999px; padding: .5rem .9rem; border: 1px solid var(--line); background: #fff; }
+  .chip[aria-pressed="true"] { color: #fff; border-color: transparent; }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .msg { min-height: 1.4em; font-size: .92rem; }
+  .msg.err { color: var(--red); } .msg.ok { color: var(--green); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: .55rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .tableWrap { overflow-x: auto; }
+  .tag { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .8rem; background: #EFE7D6; }
+  .tag.done { background: #DCEFE9; color: var(--green); }
+  #qrBox, .qrBox { display: grid; grid-template-columns: auto 1fr; gap: 1.2rem; align-items: center; }
+  #qrBox canvas, .qrBox canvas { width: 180px; height: 180px; image-rendering: pixelated; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  .bigId { font-size: 2.2rem; font-weight: 700; letter-spacing: .1em; }
+  #login { max-width: 360px; margin: 12vh auto; }
+  @media (max-width: 560px) { #qrBox, .qrBox { grid-template-columns: 1fr; } }
+  /* 인쇄: QR 카드만 */
+  @media print {
+    body * { visibility: hidden; }
+    #printCard, #printCard * { visibility: visible; }
+    #printCard { position: absolute; inset: 0; display: grid !important; place-items: center; }
+  }
+  #printCard { display: none; text-align: center; font-size: 14pt; }
+  #printCard canvas { width: 50mm; height: 50mm; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+
+<div id="login" class="card">
+  <h2>직원용 화면</h2>
+  <p class="muted">직원 PIN을 입력해 주세요.</p>
+  <form id="loginForm" class="row">
+    <input type="password" id="pin" inputmode="numeric" autocomplete="current-password" placeholder="PIN" required>
+    <button class="primary" type="submit">들어가기</button>
+  </form>
+  <p class="msg err" id="loginMsg"></p>
+</div>
+
+<div id="app" hidden>
+  <div id="offlineBanner" hidden style="background:#7A4B12;color:#fff;padding:.7rem 1.2rem;font-size:.92rem">서버 없는 모드: 고른 항목이 QR 주소에 바로 담깁니다. 결과는 체험한 기기에만 남고, 참여자·결과 목록은 볼 수 없어요. 현장 태블릿에서도 참여자 QR을 찍어(또는 주소를 열어) 시작하세요.</div>
+  <header>
+    <h1>수궁야행 방 B · 직원용</h1>
+    <nav role="tablist">
+      <button role="tab" data-tab="entry" aria-selected="true">방 A 기록 입력</button>
+      <button role="tab" data-tab="people" aria-selected="false">참여자</button>
+      <button role="tab" data-tab="results" aria-selected="false">방 B 결과</button>
+      <button role="tab" data-tab="setup" aria-selected="false">현장 설정</button>
+    </nav>
+  </header>
+  <main>
+    <!-- 방 A 기록 입력 -->
+    <section id="tab-entry">
+      <div class="card">
+        <h2>참여자가 방 A에서 고른 항목</h2>
+        <div class="row">
+          <label for="pid">참여 번호</label>
+          <input type="text" id="pid" inputmode="numeric" maxlength="20" style="width:9rem;letter-spacing:.1em">
+          <button id="btnNextId">새 번호</button>
+          <button id="btnLoadId">이 번호 불러오기</button>
+        </div>
+        <div id="cats"></div>
+        <p class="muted" id="countInfo">0개 선택</p>
+        <div class="row">
+          <button class="primary" id="btnSave">저장하고 QR 만들기</button>
+          <button id="btnClear">선택 지우기</button>
+        </div>
+        <p class="msg" id="entryMsg"></p>
+      </div>
+      <div class="card" id="qrCard" hidden>
+        <div id="qrBox">
+          <canvas id="qrCanvas" width="180" height="180"></canvas>
+          <div>
+            <div class="muted">참여 번호</div>
+            <div class="bigId" id="qrId"></div>
+            <p class="muted" id="qrUrl" style="word-break:break-all"></p>
+            <div class="row">
+              <button id="btnPrint">QR 인쇄</button>
+              <button id="btnPng">QR 이미지 저장</button>
+              <button class="primary" id="btnNextPerson">다음 참여자</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 참여자 -->
+    <section id="tab-people" hidden>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">참여자 <span class="muted" id="peopleCount"></span></h2>
+          <div class="row"><input type="search" id="peopleSearch" placeholder="번호 검색"><button id="btnPeopleRefresh">새로고침</button></div>
+        </div>
+        <div class="tableWrap"><table>
+          <thead><tr><th>번호</th><th>방 A 항목</th><th>방 B</th><th>입력 시각</th><th></th></tr></thead>
+          <tbody id="peopleBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- 결과 -->
+    <section id="tab-results" hidden>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">방 B 결과 <span class="muted" id="resultCount"></span></h2>
+          <div class="row"><button id="btnResultsRefresh">새로고침</button><button class="primary" id="btnCsv">엑셀용 CSV 받기</button></div>
+        </div>
+        <div class="tableWrap"><table>
+          <thead><tr><th>번호</th><th>남긴 것</th><th>이번 주에 해볼 일</th><th>뗀 순서</th><th>되돌림</th><th>걸린 시간</th><th>방식</th><th>마친 시각</th><th></th></tr></thead>
+          <tbody id="resultBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- 현장 설정 -->
+    <section id="tab-setup" hidden>
+      <div class="card">
+        <h2>현장 태블릿 주소</h2>
+        <p class="muted">비치용 태블릿은 아래 주소로 열어 두세요. 참여 번호를 입력해 시작하고, 끝나면 자동으로 처음 화면으로 돌아갑니다(조작이 없으면 3분 뒤에도).</p>
+        <div class="qrBox">
+          <canvas id="kioskQr" width="180" height="180"></canvas>
+          <div><p id="kioskUrl" style="word-break:break-all;font-weight:600"></p>
+            <p class="muted">아이패드: 사파리 공유 › 홈 화면에 추가 후 '사용법 유도된 접근'을 켜면 다른 앱으로 못 나갑니다.</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>빔 화면</h2>
+        <p class="muted">프로젝터에 연결한 컴퓨터에서 아래 주소를 열고 화면을 한 번 누르면 전체 화면이 됩니다. 참여자가 ‘이걸로 정할게요’를 누르면 3초 안에 그 청사초롱이 바다에서 떠오릅니다. 리허설용은 주소 끝에 <b>?demo</b>.</p>
+        <p id="displayUrl" style="word-break:break-all;font-weight:600"></p>
+      </div>
+      <div class="card">
+        <h2>관람객 휴대폰</h2>
+        <p class="muted">A4의 QR에는 참여자마다 <b>?id=번호</b>가 붙은 주소를 넣습니다(‘방 A 기록 입력’에서 만든 QR). 번호 없는 공용 QR로 들어오면 번호를 직접 입력하는 화면이 나옵니다.</p>
+        <p class="muted">시험용 번호 0417, 0102 는 서버에 없어도 샘플 항목으로 동작합니다.</p>
+      </div>
+      <div class="card">
+        <h2>서버 상태</h2>
+        <p class="msg" id="healthMsg">확인 중…</p>
+        <button id="btnLogout">로그아웃</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="printCard"><div><canvas id="printQr" width="400" height="400"></canvas><p>참여 번호 <b id="printId"></b></p><p>휴대폰 카메라로 비추면 방 B가 열려요</p></div></div>
+
+<script src="./vendor/qrcode/qrcode.js"></script>
+<script type="module">
+import { CATEGORY, CAT_NAME, CAT_COLOR } from './catalog.js';
+
+const $ = id => document.getElementById(id);
+const API = '/api';
+let PIN = sessionStorage.getItem('staffPin') || '';
+let OFFLINE = false;   // 서버가 없는 정적 호스팅에서 열었을 때
+const selected = new Set();
+
+async function api(path, opt = {}) {
+  const res = await fetch(API + path, { ...opt, headers: { 'Content-Type': 'application/json', 'x-staff-pin': PIN, ...(opt.headers || {}) }, cache: 'no-store' });
+  const body = await res.json().catch(() => ({}));
+  if (res.status === 401) { logout('PIN이 맞지 않아요.'); throw new Error('unauthorized'); }
+  if (!res.ok) throw new Error(body.error || `오류 (${res.status})`);
+  return body;
+}
+
+/* ── 로그인 ── */
+async function tryLogin() {
+  try {
+    const res = await fetch(API + '/staff/check', { headers: { 'x-staff-pin': PIN }, cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status === 401 ? 'PIN이 맞지 않아요.' : `서버 오류 (${res.status})`);
+    sessionStorage.setItem('staffPin', PIN);
+    $('login').hidden = true; $('app').hidden = false;
+    init();
+  } catch (e) { $('loginMsg').textContent = e.message === 'Failed to fetch' ? '서버에 연결하지 못했어요.' : e.message; }
+}
+function logout(msg) { sessionStorage.removeItem('staffPin'); PIN = ''; $('app').hidden = true; $('login').hidden = false; $('loginMsg').textContent = msg || ''; }
+$('loginForm').onsubmit = e => { e.preventDefault(); PIN = $('pin').value.trim(); tryLogin(); };
+(async () => {
+  let ok = false;
+  try {
+    const res = await fetch(API + '/health', { cache: 'no-store' });
+    ok = res.ok && (res.headers.get('content-type') || '').includes('json') && (await res.json()).ok;
+  } catch (e) {}
+  if (!ok) {   // 서버 없음 → 로그인 없이 QR 만들기만
+    OFFLINE = true;
+    $('login').hidden = true; $('app').hidden = false; $('offlineBanner').hidden = false;
+    document.querySelectorAll('nav button[data-tab="people"], nav button[data-tab="results"], #btnLoadId').forEach(b => b.hidden = true);
+    $('btnLogout').hidden = true;
+    init(); return;
+  }
+  if (PIN) tryLogin();
+})();
+
+/* ── 탭 ── */
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.setAttribute('aria-selected', x === b));
+  ['entry', 'people', 'results', 'setup'].forEach(t => $('tab-' + t).hidden = t !== b.dataset.tab);
+  if (b.dataset.tab === 'people') loadPeople();
+  if (b.dataset.tab === 'results') loadResults();
+  if (b.dataset.tab === 'setup') loadSetup();
+});
+
+/* ── QR ── */
+function drawQr(canvas, text) {
+  const qr = qrcode(0, 'M'); qr.addData(text); qr.make();
+  const n = qr.getModuleCount(), quiet = 2, size = canvas.width, cell = Math.floor(size / (n + quiet * 2));
+  const off = Math.floor((size - cell * n) / 2), g = canvas.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, size, size); g.fillStyle = '#16182B';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) g.fillRect(off + c * cell, off + r * cell, cell, cell);
+}
+const siteBase = () => new URL('./', location.href).href;   // /staff.html 과 /staff 모두에서 사이트 첫 주소
+const participantUrl = id => OFFLINE
+  ? `${siteBase()}?id=${encodeURIComponent(id)}&k=${[...selected].map(i => Object.keys(CATEGORY).indexOf(i)).join('.')}`   // 항목 번호로 짧게
+  : `${siteBase()}?id=${encodeURIComponent(id)}`;
+
+/* ── 방 A 기록 입력 ── */
+function renderCats() {
+  const groups = {};
+  Object.entries(CATEGORY).forEach(([item, cat]) => (groups[cat] ||= []).push(item));
+  $('cats').innerHTML = '';
+  Object.entries(groups).forEach(([cat, items]) => {
+    const h = document.createElement('h3'); h.innerHTML = `<i style="background:${CAT_COLOR[cat]}"></i>${CAT_NAME[cat]}`;
+    const wrap = document.createElement('div'); wrap.className = 'chips';
+    items.forEach(item => {
+      const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = item;
+      b.setAttribute('aria-pressed', selected.has(item));
+      b.style.background = selected.has(item) ? CAT_COLOR[cat] : '';
+      b.onclick = () => { selected.has(item) ? selected.delete(item) : selected.add(item); renderCats(); };
+      wrap.appendChild(b);
+    });
+    $('cats').append(h, wrap);
+  });
+  $('countInfo').textContent = `${selected.size}개 선택` + (selected.size < 2 ? ' · 2개 이상 골라 주세요' : selected.size > 9 ? ' · 초롱에는 앞의 9개만 달려요' : '');
+  $('btnSave').disabled = selected.size < 2;
+}
+async function nextId() {
+  if (OFFLINE) {
+    const n = (parseInt(localStorage.getItem('roomB:lastId') || '0', 10) || 0) + 1;
+    $('pid').value = String(n).padStart(4, '0'); return;
+  }
+  try { const { next } = await api('/staff/next-id'); $('pid').value = next; } catch (e) {}
+}
+function setMsg(el, text, kind = '') { el.textContent = text; el.className = 'msg ' + kind; }
+
+$('btnNextId').onclick = nextId;
+$('btnClear').onclick = () => { selected.clear(); renderCats(); };
+$('btnLoadId').onclick = async () => {
+  const id = $('pid').value.trim(); if (!id) return;
+  const res = await fetch(`${API}/participants/${encodeURIComponent(id)}`, { cache: 'no-store' });
+  if (!res.ok) { setMsg($('entryMsg'), `${id}번 기록이 없어요. 새로 입력하면 됩니다.`); return; }
+  const { items } = await res.json(); selected.clear(); items.forEach(i => selected.add(i)); renderCats();
+  setMsg($('entryMsg'), `${id}번 기록을 불러왔어요. 고친 뒤 저장하면 덮어씁니다.`);
+};
+$('btnSave').onclick = async () => {
+  const id = $('pid').value.trim();
+  if (!/^[A-Za-z0-9-]{1,20}$/.test(id)) { setMsg($('entryMsg'), '참여 번호는 숫자·영문·-(하이픈) 20자 이내로 적어 주세요.', 'err'); return; }
+  if (OFFLINE) {
+    localStorage.setItem('roomB:lastId', String(Math.max(parseInt(id, 10) || 0, parseInt(localStorage.getItem('roomB:lastId') || '0', 10) || 0)));
+    setMsg($('entryMsg'), `${id}번 QR을 만들었어요 (${selected.size}개, 서버 없는 모드).`, 'ok');
+    showQr(id); return;
+  }
+  $('btnSave').disabled = true;
+  try {
+    await api(`/participants/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify({ items: [...selected] }) });
+    setMsg($('entryMsg'), `${id}번 저장 완료 (${selected.size}개).`, 'ok');
+    showQr(id);
+  } catch (e) { if (e.message !== 'unauthorized') setMsg($('entryMsg'), e.message, 'err'); }
+  $('btnSave').disabled = selected.size < 2;
+};
+function showQr(id) {
+  $('qrCard').hidden = false; $('qrId').textContent = id; $('qrUrl').textContent = participantUrl(id);
+  drawQr($('qrCanvas'), participantUrl(id)); drawQr($('printQr'), participantUrl(id)); $('printId').textContent = id;
+  $('qrCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+$('btnPrint').onclick = () => window.print();
+$('btnPng').onclick = () => {
+  const big = document.createElement('canvas'); big.width = big.height = 600; drawQr(big, participantUrl($('qrId').textContent));
+  const a = document.createElement('a'); a.href = big.toDataURL('image/png'); a.download = `roomB-QR-${$('qrId').textContent}.png`; a.click();
+};
+$('btnNextPerson').onclick = async () => {
+  selected.clear(); renderCats(); $('qrCard').hidden = true; setMsg($('entryMsg'), ''); await nextId(); window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+/* ── 참여자 ── */
+let people = [];
+const fmt = t => t ? new Date(t).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+async function loadPeople() {
+  $('peopleBody').innerHTML = '<tr><td colspan="5" class="muted">불러오는 중…</td></tr>';
+  try { people = (await api('/staff/participants')).participants; renderPeople(); }
+  catch (e) { if (e.message !== 'unauthorized') $('peopleBody').innerHTML = `<tr><td colspan="5" class="msg err">${esc(e.message)}</td></tr>`; }
+}
+function renderPeople() {
+  const q = $('peopleSearch').value.trim();
+  const list = people.filter(p => !q || p.id.includes(q));
+  $('peopleCount').textContent = `${people.length}명 · 방 B 완료 ${people.filter(p => p.roomB).length}명`;
+  $('peopleBody').innerHTML = list.map(p => `<tr>
+    <td><b>${esc(p.id)}</b></td>
+    <td>${p.items.map(esc).join(', ')}</td>
+    <td>${p.roomB ? `<span class="tag done">완료</span> ${esc(p.roomB.kept)}` : '<span class="tag">아직</span>'}</td>
+    <td class="muted">${fmt(p.updatedAt)}</td>
+    <td class="row"><button data-act="edit" data-id="${esc(p.id)}">고치기·QR</button><button class="danger" data-act="del" data-id="${esc(p.id)}">삭제</button></td>
+  </tr>`).join('') || '<tr><td colspan="5" class="muted">아직 없어요.</td></tr>';
+}
+$('peopleSearch').oninput = renderPeople;
+$('btnPeopleRefresh').onclick = loadPeople;
+$('peopleBody').onclick = async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const id = b.dataset.id, p = people.find(x => x.id === id);
+  if (b.dataset.act === 'edit') {
+    $('pid').value = id; selected.clear(); p.items.forEach(i => selected.add(i)); renderCats(); showQr(id);
+    document.querySelector('nav button[data-tab="entry"]').click();
+  } else if (b.dataset.act === 'del' && confirm(`${id}번 참여자의 방 A 기록을 지울까요? (방 B 결과는 남습니다)`)) {
+    await api(`/participants/${encodeURIComponent(id)}`, { method: 'DELETE' }); loadPeople();
+  }
+};
+
+/* ── 결과 ── */
+let results = [];
+async function loadResults() {
+  $('resultBody').innerHTML = '<tr><td colspan="8" class="muted">불러오는 중…</td></tr>';
+  try { results = (await api('/staff/results')).results; renderResults(); }
+  catch (e) { if (e.message !== 'unauthorized') $('resultBody').innerHTML = `<tr><td colspan="8" class="msg err">${esc(e.message)}</td></tr>`; }
+}
+const dur = r => r.startedAt && r.finishedAt ? Math.round((r.finishedAt - r.startedAt) / 1000) : null;
+const modeName = m => ({ ar: '카메라', demo: '연습' }[m] || m || '');
+function renderResults() {
+  $('resultCount').textContent = `${results.length}건`;
+  $('resultBody').innerHTML = results.map(r => `<tr>
+    <td><b>${esc(r.id)}</b></td><td>${esc(r.kept?.item)}</td><td>${esc(r.kept?.nextAction)}</td>
+    <td>${(r.removals || []).map(x => esc(x.item)).join(' → ')}</td><td>${(r.undos || []).length}</td>
+    <td>${dur(r) != null ? Math.floor(dur(r) / 60) + '분 ' + (dur(r) % 60) + '초' : ''}</td>
+    <td>${esc(modeName(r.mode))}${r.kiosk ? ' · 태블릿' : ''}${r.lanternColor ? '<br><span class="muted">' + esc(r.lanternColor) + ' 초롱</span>' : ''}</td><td class="muted">${fmt(r.finishedAt)}</td>
+    <td><button class="danger" data-key="${esc(r.key)}">삭제</button></td></tr>`).join('')
+    || '<tr><td colspan="9" class="muted">아직 없어요.</td></tr>';
+}
+$('resultBody').onclick = async e => {
+  const b = e.target.closest('button[data-key]'); if (!b) return;
+  if (!confirm(`${b.dataset.key.split('/')[0]}번의 이 결과를 지울까요? (시험 기록 정리용)`)) return;
+  await api(`/staff/results?key=${encodeURIComponent(b.dataset.key)}`, { method: 'DELETE' }); loadResults();
+};
+$('btnResultsRefresh').onclick = loadResults;
+$('btnCsv').onclick = () => {
+  const head = ['참여번호', '남긴 것', '이번 주에 해볼 일', '뗀 순서', '되돌린 항목', '되돌림 횟수', '방 A 항목', '걸린 시간(초)', '방식', '기기', '초롱 색', '시작', '마침'];
+  const iso = t => t ? new Date(t).toLocaleString('sv-SE') : '';
+  const rows = results.map(r => [r.id, r.kept?.item, r.kept?.nextAction, (r.removals || []).map(x => x.item).join(' > '),
+    (r.undos || []).map(x => x.item).join(' > '), (r.undos || []).length, (r.loaded || []).join(' / '), dur(r) ?? '',
+    modeName(r.mode), r.kiosk ? '현장 태블릿' : '개인 휴대폰', r.lanternColor || '', iso(r.startedAt), iso(r.finishedAt)]);
+  const csv = [head, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `수궁야행_방B_결과_${new Date().toLocaleDateString('sv-SE')}.csv`; a.click();
+};
+
+/* ── 현장 설정 ── */
+async function loadSetup() {
+  const url = `${siteBase()}?kiosk=1`; $('displayUrl').textContent = `${siteBase()}display`; $('kioskUrl').textContent = url; drawQr($('kioskQr'), url);
+  try { const h = await (await fetch(API + '/health', { cache: 'no-store' })).json(); setMsg($('healthMsg'), h.ok ? '정상 연결됨' : '응답 이상', h.ok ? 'ok' : 'err'); }
+  catch (e) { setMsg($('healthMsg'), '서버 없음 (정적 호스팅)', 'err'); }
+}
+$('btnLogout').onclick = () => logout();
+
+function init() { renderCats(); nextId(); }
+</script>
+</body>
+</html>

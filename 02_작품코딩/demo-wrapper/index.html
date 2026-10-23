@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>수궁야행 방 B · 시연</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  // 휴대폰·태블릿(세로로 좁은 화면)에서는 체험 화면을 그대로 띄우고, PC에서는 휴대폰 모양 틀 안에 띄움
+  (function () {
+    var narrow = Math.min(innerWidth, screen.width) < 700 || (matchMedia('(pointer: coarse)').matches && innerWidth < 1024);
+    if (narrow) location.replace('app' + location.search + location.hash);
+  })();
+</script>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(120% 90% at 50% 40%, #16224A 0%, #0A1030 55%, #050818 100%);
+    color: #EFE7D3; font-family: "IBM Plex Sans KR", sans-serif; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; gap: 4vw;
+  }
+  .phone {
+    --h: min(92vh, 900px);
+    height: var(--h); aspect-ratio: 390 / 844; position: relative; flex: none;
+    border-radius: calc(var(--h) * .065); padding: calc(var(--h) * .014);
+    background: linear-gradient(145deg, #2A2F3D, #0E1018 60%, #232836);
+    box-shadow: 0 0 0 1.5px #3A4152 inset, 0 30px 80px rgba(0,0,0,.6), 0 0 120px rgba(244,184,96,.08);
+  }
+  .phone iframe { width: 100%; height: 100%; border: 0; display: block; border-radius: calc(var(--h) * .052); background: #050818; }
+  .side { max-width: 260px; }
+  .side h1 { font: 700 2rem/1.2 "Gowun Batang", serif; color: #F4B860; margin: 0 0 .8rem; text-shadow: 0 0 30px rgba(244,184,96,.35); }
+  .side p { font-size: .9rem; line-height: 1.7; opacity: .75; margin: 0 0 .6rem; }
+  .side a { color: #EFE7D3; }
+  .side .btn { display: inline-block; margin-top: .6rem; padding: .55rem 1rem; border-radius: 999px; border: 1px solid rgba(239,231,211,.35); text-decoration: none; font-size: .85rem; cursor: pointer; background: none; color: #EFE7D3; font-family: inherit; }
+  @media (max-width: 900px) { .side { display: none; } }
+</style>
+</head>
+<body>
+  <div class="phone"><iframe id="app" src="app" title="수궁야행 방 B 체험" allow="camera; fullscreen; screen-wake-lock"></iframe></div>
+  <div class="side">
+    <h1>청사초롱,<br>꿈을 담다</h1>
+    <p>수궁야행 방 B 시연 화면이에요.<br>휴대폰에서 보이는 그대로 체험할 수 있어요.</p>
+    <p>마우스로 꼬리표를 눌러 떼어 보세요.</p>
+    <button class="btn" onclick="document.getElementById('app').src='app?t='+Date.now()">처음부터 다시</button>
+    <p style="margin-top:1.2rem"><a href="display" target="_blank">빔 화면 열기 ↗</a></p>
+  </div>
+</body>
+</html>

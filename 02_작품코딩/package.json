@@ -1,0 +1,17 @@
+{
+  "name": "sugung-roomb",
+  "version": "1.0.0",
+  "private": true,
+  "description": "수궁야행 4조 · 청사초롱, 꿈을 담다 (방 B) — 휴대폰 체험 화면, 빔 화면, 직원 화면",
+  "scripts": {
+    "dev": "wrangler pages dev main --kv ROOMB --port 8788",
+    "serve": "serve main -l 3000",
+    "demo": "node make-demo.mjs",
+    "deploy": "cd main && node setup.mjs --deploy"
+  },
+  "devDependencies": {
+    "serve": "14.2.6",
+    "wrangler": "4.151.2"
+  },
+  "engines": { "node": ">=20" }
+}

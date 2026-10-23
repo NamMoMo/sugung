@@ -1,0 +1,8 @@
+name = "sugung-roomb"
+pages_build_output_dir = "."
+compatibility_date = "2025-09-01"
+
+# 아래 id 는 `npx wrangler kv namespace create ROOMB` 가 알려 주는 값으로 바꿔 넣으세요.
+[[kv_namespaces]]
+binding = "ROOMB"
+id = "51a5c1f9f1714f238c1e8f281c1732a4"

@@ -1,0 +1,207 @@
+// 체험 화면(index.html)의 한국어 / English 문구.
+// 영어 문구를 고치려면 여기서 고치면 됩니다. (항목 이름의 영어는 catalog.js 의 ITEM_EN)
+// 함수로 된 문구는 숫자·번호가 들어가는 자리입니다. 예: n => `... ${n} ...`
+
+export const UI = {
+  ko: {
+    htmlLang: 'ko',
+    title: '청사초롱,<br>꿈을 담다',
+    story: '방 A에서 담아온 것들이 초롱에 매달려 있어.<br>너무 무거워서 아직은 못 떠.<br>덜 중요한 것부터 하나씩 떼어 내면 초롱이 가벼워질 거야.',
+    loading: '불러오는 중…',
+    idLabel: '방 A에서 받은 참여 번호',
+    idPlaceholder: '예: 0417',
+    ok: '확인',
+    start: '시작하기',
+    undo: '하나 되돌리기',
+    keptTitle: '네가 남긴 것',
+    nextTitle: '이번 주에 해볼 일',
+    confirm: '이걸로 정할게요',
+    back: '하나 되돌리기',
+    kioskNext: '다음 사람 시작하기',
+    kioskNextN: n => `다음 사람 시작하기 (${n})`,
+    tapPlay: '화면을 한 번 눌러 카메라를 켜 주세요',
+    errDemo: '카메라 없이 연습하기',
+    rabbitName: '토끼', rabbitPad: '4.4rem',
+    debugSummary: '저장된 기록 보기 (개발용)',
+    count: (on, all) => `남은 것 <b>${on}</b> / ${all}`,
+    loaded: (id, n, sample) => `참여 번호 ${id}의 항목 ${n}개를 불러왔어요.` + (sample ? ' (시험용 샘플)' : ''),
+    askKiosk: '참여 번호를 입력하면 시작할 수 있어요.',
+    askQR: 'A4의 QR로 들어오면 번호가 자동으로 입력돼요. 직접 입력해도 괜찮아요.',
+    badId: '번호를 다시 확인해 주세요.',
+    tooFew: '불러온 항목이 두 개보다 적어요. 방 A의 기록을 확인해 주세요.',
+    notFound: id => `참여 번호 ${id}를 찾지 못했어요. 방 A에서 받은 번호를 다시 확인해 주세요.`,
+    notFoundQR: id => `참여 번호 ${id}를 찾지 못했어요. A4의 QR로 다시 들어와 주세요.`,
+    noServer: '기록 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.',
+    pending: '인터넷이 불안정해서 기록을 이 기기에 잠시 보관했어요. 연결되면 자동으로 보내요.',
+    nextFallback: name => `‘${name}’을(를) 이번 주에 한 번 해 보기`,
+    camOff: '카메라 권한이 꺼져 있어요. 브라우저 설정에서 카메라를 허용하거나, 카메라 없이 연습해 보세요.',
+    camFail: '카메라를 시작하지 못했어요.',
+    nickHeading: '어떤 이름으로 불리고 싶어?',
+    nickGuide: '너의 이름을 적어줘.',
+    nickLabel: '닉네임 · 최대 6글자',
+    nickEmpty: '닉네임을 입력해 줘.',
+    nickNeed: '불리고 싶은 닉네임을 입력해 줘.',
+    nickOk: '이 이름으로 띄울게요',
+    nickRandom: '랜덤 닉네임 생성하기',
+    nickBack: '돌아가기',
+    nickTitle: null,   // 한국어는 index.html 의 nicknameTitle (받침에 따라 이/가)
+    launchHint: '위로 밀어 초롱 날리기',
+    launchBack: '다시 고를래요',
+    saveImg: '내 초롱 저장하기',
+    saveImgTitle: '내 초롱',
+    saveImgSave: '이미지 저장하기',
+    saveImgClose: '닫기',
+    saveImgHint: '저장이 안 되면 그림을 길게 눌러 ‘사진에 저장’을 눌러 주세요.',
+    saveImgMaking: '그림을 만드는 중…',
+    saveImgDone: '갤러리에 저장했어요. (다운로드 앨범)',
+    saveImgFail: '그림을 만들지 못했어요. 화면을 캡처해 주세요.',
+    saveImgCard: { brand: '청사초롱, 꿈을 담다', own: n => `${n}의 초롱`, place: '수궁야행 · 방 B' },
+  },
+  en: {
+    htmlLang: 'en',
+    title: 'Chorong:<br>Holding Your<br>Dreams',   // 제목은 줄마다 금빛으로 그려서, 긴 줄은 직접 나눠 둠
+    story: 'Things from Room A hang on your chorong.<br>Now it’s too heavy to float.<br>Take them off, least important first.',
+    loading: 'Loading…',
+    idLabel: 'Your number from Room A',
+    idPlaceholder: 'e.g. 0417',
+    ok: 'OK',
+    start: 'Start',
+    undo: 'Undo',
+    keptTitle: 'What you kept',
+    nextTitle: 'Try this week',
+    confirm: 'I’ll keep this one',
+    back: 'Undo',
+    kioskNext: 'Next person',
+    kioskNextN: n => `Next person (${n})`,
+    tapPlay: 'Tap to turn on the camera',
+    errDemo: 'Try without camera',
+    rabbitName: 'Rabbit', rabbitPad: '5.4rem',
+    debugSummary: 'Saved record (for staff)',
+    count: (on, all) => `Left <b>${on}</b> / ${all}`,
+    loaded: (id, n, sample) => `${n} items loaded for ${id}.` + (sample ? ' (test sample)' : ''),
+    askKiosk: 'Enter your number to start.',
+    askQR: 'Scan the QR on your A4, or type your number.',
+    badId: 'Please check your number.',
+    tooFew: 'Fewer than two items found.',
+    notFound: id => `Number ${id} not found. Please check it.`,
+    notFoundQR: id => `Number ${id} not found. Scan your QR again.`,
+    noServer: 'Can’t reach the server. Check your internet.',
+    pending: 'Saved here. It will send when online.',
+    nextFallback: name => `Try “${name}” this week`,
+    camOff: 'Camera is off. Allow it, or try without it.',
+    camFail: 'Couldn’t start the camera.',
+    nickHeading: 'What should we call you?',
+    nickGuide: 'Write your name.',
+    nickLabel: 'Nickname · up to 6 letters',
+    nickEmpty: 'Type a nickname.',
+    nickNeed: 'Please type a nickname.',
+    nickOk: 'Send it with this name',
+    nickRandom: 'Random nickname',
+    nickBack: 'Back',
+    nickTitle: name => `What ${name} kept`,
+    launchHint: 'Swipe up to send it',
+    launchBack: 'Choose again',
+    saveImg: 'Save my chorong',
+    saveImgTitle: 'My chorong',
+    saveImgSave: 'Save image',
+    saveImgClose: 'Close',
+    saveImgHint: 'If saving doesn’t work, press and hold the picture, then tap “Save to Photos”.',
+    saveImgMaking: 'Making your picture…',
+    saveImgDone: 'Saved to your gallery (Downloads).',
+    saveImgFail: 'Couldn’t make the picture. Please take a screenshot.',
+    saveImgCard: { brand: 'Chorong: Holding Your Dreams', own: n => `${n}’s chorong`, place: 'Sugung Night Walk · Room B' },
+  },
+};
+
+// 토끼 대사 (한국어는 index.html 의 const RABBIT)
+export const RABBIT_EN = {   // 한 문장씩 줄을 바꿔 보여 주므로, 문장마다 짧게
+  start: 'You brought these from Room A. Your chorong is too heavy. Tap what matters least. Take them off one by one.',
+  scan: 'Fit your whole A4 sheet on screen.',
+  lost: 'I can’t see the paper. Show it again.',
+  first: 'You let one go. It isn’t gone. It’s resting in the sea.',
+  mid: ['Your chorong feels lighter.',
+        'I can’t choose for you. Take your time.',
+        'There’s no right answer. Let go of what matters least.'],
+  two: 'Only two left. The last choice is yours.',
+  undo: 'It’s okay to put it back. Wavering is part of choosing.',
+  end: 'This is what you kept. Try this once this week.',
+  launch: 'Great. Now swipe up. Send it to the sky.',
+  done: 'It flew to the big screen. Look up and find it! Get your A4 stamped at the exit.',
+  found: 'Found it! Let’s raise your chorong.',
+};
+
+// '이번 주에 해볼 일' (한국어는 index.html 의 const NEXT_ACTIONS)
+export const NEXT_ACTIONS_EN = {   // 마무리 판에 한 줄로 들어가도록 짧게
+  '양치하기': 'Brush your teeth before bed',
+  '샤워하기': 'Take a warm 5-minute shower',
+  '물 마시기': 'Drink a glass of water on waking',
+  '밥 챙겨 먹기': 'Sit down for one meal a day',
+  '스트레칭하기': 'Stretch for one minute each morning',
+  '일찍 눕기': 'Turn off the lights 30 minutes earlier',
+  '창문 열기': 'Open a window in the morning',
+  '이불 정리': 'Straighten your blanket once',
+  '옷 갈아입기': 'Change out of your pajamas',
+  '설거지하기': 'Wash just one cup',
+  '화분 돌보기': 'Water a plant, or look at the sky',
+  '산책하기': 'Walk outside for 10 minutes',
+  '햇볕 쬐기': 'Stand in the sun for 5 minutes',
+  '안부 전하기': 'Send one short hello',
+  '노래 듣기': 'Listen to one favorite song',
+};
+
+// 꼬리표를 떼었을 때 자막 (한국어는 index.html 의 const DETACH_LINES). 한 문장씩 줄이 바뀜
+export const DETACH_LINES_EN = {
+  '양치하기': 'I’ll keep brushing safe in the sea. That fresh feeling is yours whenever you want it.',
+  '샤워하기': 'Let the shower rest for now. Warm water will wait for you.',
+  '물 마시기': 'The sea will hold that glass of water. Come back whenever you’re thirsty.',
+  '밥 챙겨 먹기': 'We’ll set the meal aside for now. Eat when you feel hungry. That’s okay.',
+  '스트레칭하기': 'I’ll keep stretching in the sea. Take it out when your body feels stiff.',
+  '일찍 눕기': 'Let going to bed early rest. It doesn’t have to be tonight.',
+  '창문 열기': 'The window can stay closed for now. Fresh air is always out there.',
+  '이불 정리': 'It’s okay to leave the blanket. Messy or not, it’s your place.',
+  '옷 갈아입기': 'Comfy clothes are fine. Changing can wait for later.',
+  '설거지하기': 'The dishes can wait. One cup won’t mind.',
+  '화분 돌보기': 'The sea will look after the plant for now. Green things wait longer than you think.',
+  '산책하기': 'Let the walk wait. The path isn’t going anywhere.',
+  '햇볕 쬐기': 'I’ll keep the sunshine in the sea. The sun will rise tomorrow too.',
+  '안부 전하기': 'Save that hello for now. It’s never too late to send it.',
+  '노래 듣기': 'Let the song pause. Play it again whenever you like.',
+};
+
+// 초롱 소개 장면 (외국인 관람객용: English일 때 '시작하기' 누르면 먼저 나옴, 한 장)
+// 한국어 문구는 번역 검토용으로 함께 둡니다. 한국어 화면에서는 이 장면이 나오지 않습니다.
+export const ABOUT = {
+  ko: {
+    link: '초롱이 뭐예요?',
+    next: '다음', skip: '건너뛰기', go: '초롱 띄우러 가기', close: '닫기',
+    cards: [
+      { h: '초롱이란?',
+        p: '초롱은 한국의 전통 등불이에요.<br>나무나 쇠로 만든 틀에 비단을 씌우고, 안에 불을 밝혀요.<br>이 이야기 속에서는, 밤하늘로 떠오른 초롱이 마음에 담은 소원을 싣고 가 이루어지게 도와준대요.' },
+    ],
+  },
+  en: {
+    link: 'What is a chorong?',
+    next: 'Next', skip: 'Skip', go: 'Let’s raise my chorong', close: 'Close',
+    cards: [
+      { h: 'What is a chorong?',
+        p: 'A chorong is a Korean silk lantern.<br>A soft light glows inside.<br>In our tale, it carries your wish<br>up to the sky and makes it come true.' },
+    ],
+  },
+};
+
+
+// 영어 화면의 랜덤 닉네임 (별주부전 바다·토끼·자라 테마, 6글자 이내)
+export const RANDOM_NICKNAMES_EN = [
+  'Bunny', 'Hare', 'Hopper', 'Turtle', 'Shelly', 'Dragon', 'Prince', 'Sailor', 'Coral', 'Pearl',
+  'Tidal', 'Wave', 'Moon', 'Swift', 'Clever', 'Ocean', 'Kelp', 'Lumi', 'Bubble', 'Reef',
+];
+
+// 초롱 색 고르기 창 ('시작하기'를 누르면 대문 연출 전에) + 날린 뒤 '초롱 색 바꾸기'. 고른 색은 체험 속 초롱과 빔 화면에 그대로
+export const CUSTOM = {
+  ko: { title: '초롱 색 고르기', top: '위', bottom: '아래', go: '이 초롱으로 시작하기',
+        open: '초롱 색 바꾸기', reTitle: '초롱 색 바꾸기', reGo: '이 색으로 바꾸기', cancel: '그대로 둘래요',
+        sent: '빔 화면의 초롱 색도 바뀌었어요.', local: '초롱 색을 바꿨어요.', fail: '색을 보내지 못했어요. 잠시 뒤 다시 눌러 주세요.' },
+  en: { title: 'Choose your colors', top: 'Top', bottom: 'Bottom', go: 'Start with this chorong',
+        open: 'Change colors', reTitle: 'Change colors', reGo: 'Apply these colors', cancel: 'Keep it',
+        sent: 'Your chorong on the big screen changed too.', local: 'Colors changed.', fail: 'Couldn’t send. Please try again.' },
+};
