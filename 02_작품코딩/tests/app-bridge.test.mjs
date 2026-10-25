@@ -81,3 +81,29 @@ test('actual Worker feed includes delayed app entries older than the legacy time
   const body = await response.json();
   assert.deepEqual(body.items.map(i => i.k), ['app/visit-1']);
 });
+
+test('deployed health route checks the real room key and KV without returning participant or secret data', async () => {
+  const f = fixture(); let args;
+  f.env.ROOMB.get = async key => { assert.equal(key, '__sugung_bridge_health__'); return null; };
+  const response = await handleAppBridge(new Request('https://room.example/api/app/health'), f.env, async (_, name, body) => {
+    assert.equal(name, 'get_room_waiting_visits'); args = body; return [];
+  });
+  assert.equal(response.status, 200);
+  assert.equal(args.p_participant_code, 'health-check:no-participant');
+  assert.deepEqual(await response.json(), { ok: true, supabase: true, kv: true, room: 'lantern-dream' });
+});
+
+test('health never reports success for missing config or an invalid Supabase room key', async () => {
+  const f = fixture();
+  const request = () => new Request('https://room.example/api/app/health');
+  assert.equal((await handleAppBridge(request(), {}, f.rpc)).status, 503);
+  const response = await handleAppBridge(request(), f.env, async () => { throw new Error('private room key'); });
+  assert.equal(response.status, 502); assert.doesNotMatch(await response.text(), /private room key/);
+});
+
+test('legacy participant API retains its original six-letter nickname limit', async () => {
+  const response = await worker.fetch(new Request('https://room.example/api/participants/0417/roomB', {
+    method: 'POST', body: JSON.stringify({ nickname: '1234567', kept: { item: '산책하기' } }),
+  }), { ROOMB: {} }, { waitUntil() {} });
+  assert.equal(response.status, 400);
+});

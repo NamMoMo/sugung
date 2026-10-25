@@ -700,7 +700,7 @@
   <canvas class="frame" aria-hidden="true"></canvas>
   <form id="nicknameForm" novalidate>
     <h2 id="nicknameHeading" data-i18n="nickHeading">어떤 이름으로 불리고 싶어?</h2>
-    <label for="nicknameInput" data-i18n="nickLabel">닉네임 · 최대 40자</label>
+    <label for="nicknameInput" data-i18n="nickLabel">닉네임 · 최대 6글자</label>
     <input id="nicknameInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-describedby="nicknameCount nicknameError" required>
     <p class="counter" id="nicknameCount">0 / 6</p>
     <p id="nicknamePreview" aria-live="polite" data-i18n="nickEmpty">닉네임을 입력해 줘.</p>
@@ -845,7 +845,7 @@ const LANG = (() => {
   const first = (navigator.languages && navigator.languages[0]) || navigator.language || 'ko';
   return /^ko\b/i.test(first) ? 'ko' : 'en';
 })();
-const U = () => UI[LANG];
+const U = () => appLaunch ? { ...UI[LANG], nickLabel: LANG === 'en' ? 'Nickname · up to 40 characters' : '닉네임 · 최대 40자' } : UI[LANG];
 const itemName = label => LANG === 'en' ? (ITEM_EN[label] || label) : label;
 const catName = cat => LANG === 'en' ? CAT_NAME_EN[cat] : CAT_NAME[cat];
 const nextActionText = label => (LANG === 'en' ? NEXT_ACTIONS_EN[label] : NEXT_ACTIONS[label]) || U().nextFallback(itemName(label));
@@ -2046,9 +2046,9 @@ function updateNickname() {
   const input = $('nicknameInput');
   // 한글 조합 중(글자를 아직 다 치지 않은 상태)에는 입력칸 값은 건드리지 않고(건드리면 자판 조합이 깨짐) 아래 미리보기·글자 수만 바로 바꿈
   // (예전엔 조합 중이면 아무것도 안 바꿔서 '차차'를 쳐도 아래에 '차'만 보였음)
-  if (!nicknameComposing) input.value = nicknameLetters(input.value).filter((letter, i, all) => all.slice(0, i + 1).join('').length <= 40).join('');
-  const name = input.value.trim();
-  $('nicknameCount').textContent = `${input.value.length} / 40`;
+  if (!nicknameComposing) input.value = appLaunch ? nicknameLetters(input.value).filter((letter, i, all) => all.slice(0, i + 1).join('').length <= 40).join('') : nicknameLetters(input.value).slice(0, 6).join('');
+  const name = appLaunch ? input.value.trim() : nicknameLetters(input.value).slice(0, 6).join('').trim();
+  $('nicknameCount').textContent = appLaunch ? `${input.value.length} / 40` : `${Math.min(6, nicknameLetters(input.value).length)} / 6`;
   $('nicknamePreview').textContent = name ? nicknameTitle(name) : U().nickEmpty;
   $('nicknameDialog').classList.toggle('hasName', !!name);   // 이름이 입력돼 있을 때만 '이 이름으로 띄울게요'가 빛남
   {   // 빛나지 않을 때(이름 입력 전)는 금빛 글씨, 입력하면 흰 글씨 + 금빛 번짐

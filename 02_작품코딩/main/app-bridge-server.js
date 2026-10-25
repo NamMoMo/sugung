@@ -6,13 +6,23 @@ const tokenPattern = /^[a-f0-9]{64}$/;
 
 export async function handleAppBridge(request, env, rpc = callRpc) {
   const path = new URL(request.url).pathname;
-  if (!['/api/app/launch', '/api/app/complete'].includes(path)) return null;
-  if (request.method !== 'POST') return reply({ error: 'METHOD_NOT_ALLOWED' }, 405);
+  if (!['/api/app/health', '/api/app/launch', '/api/app/complete'].includes(path)) return null;
+  const health = path === '/api/app/health';
+  if (request.method !== (health ? 'GET' : 'POST')) return reply({ error: 'METHOD_NOT_ALLOWED' }, 405);
   if (request.headers.get('origin') && request.headers.get('origin') !== new URL(request.url).origin)
     return reply({ error: 'ORIGIN_MISMATCH' }, 403);
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY || !env.ROOM_SIGNAL_KEY || !env.ROOMB)
     return reply({ error: 'BRIDGE_NOT_CONFIGURED' }, 503);
   try {
+    if (health) {
+      // A deliberately impossible participant code checks the room key without reading visitor data.
+      await rpc(env, 'get_room_waiting_visits', {
+        p_room_id: 'lantern-dream', p_signal_key: env.ROOM_SIGNAL_KEY,
+        p_participant_code: 'health-check:no-participant',
+      });
+      await env.ROOMB.get('__sugung_bridge_health__');
+      return reply({ ok: true, supabase: true, kv: true, room: 'lantern-dream' });
+    }
     const text = await request.text();
     if (text.length > 32000) return reply({ error: 'TOO_LARGE' }, 413);
     const body = JSON.parse(text);

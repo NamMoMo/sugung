@@ -84,7 +84,7 @@ async function onRequest({ request: req, env, params }) {
         if (rec.nickname != null && typeof rec.nickname !== "string") return json({ error: "\uB2C9\uB124\uC784 \uD615\uC2DD\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." }, 400);
         const nickname = (rec.nickname || "").trim().normalize("NFC");
         const nicknameLength = typeof Intl.Segmenter === "function" ? Array.from(new Intl.Segmenter("ko", { granularity: "grapheme" }).segment(nickname)).length : Array.from(nickname).length;
-        if (nickname.length > 40 || /[\u0000-\u001f\u007f]/.test(nickname)) return json({ error: "\uB2C9\uB124\uC784\uC740 40\uC790 \uC774\uB0B4\uB85C \uC801\uC5B4 \uC8FC\uC138\uC694." }, 400);
+        if (nicknameLength > 6 || /[\u0000-\u001f\u007f]/.test(nickname)) return json({ error: "\uB2C9\uB124\uC784\uC740 6\uAE00\uC790 \uC774\uB0B4\uB85C \uC801\uC5B4 \uC8FC\uC138\uC694." }, 400);
         const receivedAt = Date.now(), finishedAt = Number(rec.finishedAt) || receivedAt;
         const key = `${id}/${finishedAt}`;
         await kv.put("r:" + key, JSON.stringify({ ...rec, nickname, id, room: "B", receivedAt }));
