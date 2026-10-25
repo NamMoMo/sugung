@@ -1,0 +1,12 @@
+.participant-queue { position: fixed; inset: 0; z-index: 1000; overflow: auto; background: #07151e; color: #f3ead3; display: grid; place-items: center; padding: 32px; box-sizing: border-box; font-family: sans-serif; }
+.participant-queue__panel { width: min(760px, 100%); }
+.participant-queue h1 { font-size: clamp(26px, 4vw, 44px); }
+.participant-queue p { line-height: 1.7; }
+.participant-queue ol { max-height: 50vh; overflow: auto; padding-left: 32px; }
+.participant-queue li { margin: 12px 0; }
+.participant-queue button { padding: 16px 24px; border: 1px solid #b2a477; border-radius: 10px; background: #102a37; color: inherit; font: inherit; cursor: pointer; }
+.participant-queue li button { width: 100%; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; text-align: left; }
+.participant-queue small { margin-left: auto; }
+.participant-queue button:disabled { opacity: .5; cursor: wait; }
+.participant-queue [role=alert] { color: #ffc5ad; }
+.queue-save-retry { position: fixed; bottom: 16px; right: 16px; z-index: 1001; padding: 14px; }

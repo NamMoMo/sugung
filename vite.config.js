@@ -1,3 +1,4 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-export default defineConfig({ plugins: [react()],server:{watch:{ignored:['**/.sites/**','**/.backups/**']}} });
+import { queuePlugin } from './server/queue-plugin.js';
+export default defineConfig({ plugins: [react(), queuePlugin()],server:{watch:{ignored:['**/.sites/**','**/.backups/**']}} });
