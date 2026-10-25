@@ -1,0 +1,45 @@
+# 수궁야행 작품별 대기자 선택 공통 기준
+
+1조의 참가자 선택 기능을 기준으로 다른 조의 연동 시 참고합니다. 다른 조에 자동 적용된 기능은 아닙니다.
+
+## 방 식별자
+
+| GitHub 조 | 작품 | DB room_id |
+| --- | --- | --- |
+| 1조 | 역기능적 믿음 | beliefs |
+| 2조 | 자기 자신에 대한 정보 부족 | self-knowledge |
+| 3조 | 두 갈래 길 | conflict |
+| 4조 | 청사초롱, 꿈을 담다 | lantern-dream |
+
+관람 진행 조건은 조 번호와 별개입니다. beliefs/conflict 완료 후 self-knowledge, 이후 lantern-dream이 열립니다.
+
+## 공통 데이터
+
+- `room_visits`: QR 입장 시 생성되는 원본 방문. `id`가 체험 식별자인 visit_id이며 `visitor_id`, `room_id`, `entered_at`, `status`를 가집니다.
+- `booth_selections`: 방별로 현재 선택한 방문 한 개를 저장합니다. `room_id`가 기본 키, `visit_id`는 고유합니다. 1인 부스에 사용하며 다인 체험에는 별도 선택 모델이 필요합니다.
+- `visitor_profiles`: 표시용 닉네임과 참가자 코드를 조회합니다. 닉네임은 중복될 수 있으므로 매칭에는 visit_id를 사용합니다.
+- `room_completions`: 기존 완료 신호 함수가 저장하는 완료 기록입니다. 모바일 앱의 진행 조건은 이 기록을 따릅니다.
+
+선택한다고 `room_visits.status`를 별도 문자열로 바꾸지 않습니다. 원본은 `active`를 유지하며, `booth_selections`와 연결된 active 방문이 체험자이고 나머지 active 방문이 대기자입니다. 완료·중지된 방문은 대기자에서 제외합니다.
+
+## 순서 및 상태 전이
+
+1. QR 입장 → active 방문 생성.
+2. 대기 명단 → `entered_at ASC, visit_id ASC`로 먼저 온 참가자가 위에 표시됩니다. 같은 시각은 visit_id로 순서를 고정합니다.
+3. 선택 → 서버에서 방 단위 잠금 후 다른 active 선택이 없는지 확인하고 visit_id를 연결합니다. 화면에서만 숨기는 처리는 사용하지 않습니다.
+4. 선택 취소 → 연결만 해제합니다. 원래 입장 시각과 순서를 유지합니다.
+5. 정상 종료 → 선택한 visit_id에 기존 `complete_room_visit`로 결과와 완료를 저장합니다. 완료 응답 재시도는 결과를 덮어쓰지 않습니다.
+6. 다음 참가자 → 선택 창으로 복귀합니다. 새로고침 시 DB에 남은 선택을 먼저 확인하여 중복 체험을 막습니다.
+7. 모바일 중지 → stopped 방문은 완료 처리할 수 없고 선택 가능한 명단에도 나타나지 않습니다.
+
+## 1조 구현 참조
+
+현재 RPC `beliefs_queue_state`, `beliefs_queue_claim`, `beliefs_queue_release`, `beliefs_queue_complete`는 **beliefs 전용**입니다. 다른 조에서 그대로 호출하면 안 됩니다. 후속 연동 시 같은 원칙으로 해당 room_id와 방 전용 signal_key를 확인하는 API를 추가하세요. 다른 조의 기존 선택을 변경하거나 같은 키를 공유하지 않습니다.
+
+브라우저는 전시 PC 로컬 `/api/participant-queue/`에 요청합니다. Supabase private signal_key는 서버 `.env`에만 둡니다. 다른 조의 프런트엔드, QR, URL에 포함하지 않습니다.
+
+4조는 참가자별 모바일 개별 체험이므로 현재의 1인 선택 잠금을 자동 적용하지 않습니다.
+
+## 확인된 검증
+
+2026-10-26 Supabase 검증 PASS: 먼저 입장한 순서, 선택 시 명단 제외, 이중 선택 차단, 선택 취소, 완료 재시도, 다음 참가자, 중지된 방문 완료 거부, 방 신호 키 확인. 검증 데이터는 전부 롤백했습니다. 코드 자동 테스트 80개 및 빌드 통과. 전시 PC 연결 키 설정과 실물 기기 완주는 별도 확인 항목입니다.
