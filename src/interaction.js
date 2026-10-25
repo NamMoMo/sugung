@@ -23,19 +23,25 @@ export class ConfirmController {
  }
 }
 export function newSession() {
-  return { scene: 'standby', count: 0, labels: INITIAL_WORDS.map((text, i) => ({ id: `initial-${i}`, text, slot: i, own: false })) };
+  return { scene: 'standby', count: 0, startedAt: null, finishedAt: null, history: [], labels: INITIAL_WORDS.map((text, i) => ({ id: `initial-${i}`, text, slot: i, own: false })) };
 }
 export function reduceSession(state, action) {
   if (action.type === 'reset') return newSession();
   if (action.type === 'next') {
     const scenes = ['standby', 'intro', 'minigame', 'king', 'glitch', 'rabbitPause', 'rabbit', 'mainReady', 'main', 'photo', 'endingPrelude', 'ending', 'endingWhite', 'escaped'];
-    return { ...state, scene: scenes[Math.min(scenes.indexOf(state.scene) + 1, scenes.length-1)] };
+    const scene = scenes[Math.min(scenes.indexOf(state.scene) + 1, scenes.length-1)];
+    const at = action.at ?? Date.now();
+    return { ...state, scene,
+      startedAt: state.startedAt ?? (state.scene === 'standby' ? at : null),
+      finishedAt: state.finishedAt ?? (scene === 'escaped' ? at : null) };
   }
   if (state.scene !== 'main' || state.count >= LIMIT) return state;
   if (action.type === 'discard') {
     if (!state.labels.some(l => l.id === action.id)) return state;
     const count = state.count + 1;
-    return { ...state, count, scene: count === LIMIT ? 'photo' : 'main', labels: state.labels.filter(l => l.id !== action.id) };
+    const label = state.labels.find(l => l.id === action.id);
+    return { ...state, count, scene: count === LIMIT ? 'photo' : 'main', labels: state.labels.filter(l => l.id !== action.id),
+      history: [...(state.history || []), { sequence: count, type: 'discard', label_id: label.id, text: label.text, source: label.own ? 'participant' : 'initial', at: action.at ?? Date.now() }] };
   }
   if (action.type === 'add') {
     const text = action.text.trim().slice(0, 12);
@@ -44,7 +50,8 @@ export function reduceSession(state, action) {
     const occupied = new Set(state.labels.map(l => l.slot));
     let slot = 0;
     while (occupied.has(slot)) slot++;
-    return { ...state, count, scene: count === LIMIT ? 'photo' : 'main', labels: [...state.labels, { id: action.id, text, slot, own: true }] };
+    return { ...state, count, scene: count === LIMIT ? 'photo' : 'main', labels: [...state.labels, { id: action.id, text, slot, own: true }],
+      history: [...(state.history || []), { sequence: count, type: 'add', label_id: action.id, text, source: 'participant', at: action.at ?? Date.now() }] };
   }
   return state;
 }

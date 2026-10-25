@@ -22,10 +22,22 @@ export async function queueRequest(action = 'state', data, fetcher = fetch) {
 }
 
 export function resultForSession(session) {
+  const history = session.history || [];
+  const finalKeywords = session.labels.map(l => l.text);
+  const iso = value => Number.isFinite(value) ? new Date(value).toISOString() : null;
   return {
-    schema_version: 1, interaction_count: session.count,
+    schema_version: 2, room_id: 'beliefs', team_id: 1,
+    started_at: iso(session.startedAt), finished_at: iso(session.finishedAt),
+    duration_ms: Number.isFinite(session.startedAt) && Number.isFinite(session.finishedAt) ? Math.max(0, session.finishedAt - session.startedAt) : null,
+    completion_mode: 'normal',
+    summary: { keywords: finalKeywords },
+    interaction_count: session.count,
     remaining_keywords: session.labels.filter(l => !l.own).map(l => l.text),
     added_keywords: session.labels.filter(l => l.own).map(l => l.text),
-    final_keywords: session.labels.map(l => l.text),
+    discarded_keywords: history.filter(event => event.type === 'discard').map(event => event.text),
+    discarded_initial_keywords: history.filter(event => event.type === 'discard' && event.source === 'initial').map(event => event.text),
+    all_added_keywords: history.filter(event => event.type === 'add').map(event => event.text),
+    final_keywords: finalKeywords,
+    history: history.map(event => ({ ...event, at: iso(event.at), elapsed_ms: Number.isFinite(session.startedAt) ? Math.max(0, event.at - session.startedAt) : null })),
   };
 }

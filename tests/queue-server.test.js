@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
 import { queuePlugin } from '../server/queue-plugin.js';
+import { resultForSession } from '../src/participant-queue.js';
+import { newSession, reduceSession } from '../src/interaction.js';
 
 test('local bridge keeps the room key on server and rejects external origins and oversized requests', async () => {
   const original = { key: process.env.ROOM_SIGNAL_KEY, url: process.env.SUPABASE_URL, publicKey: process.env.SUPABASE_PUBLISHABLE_KEY, fetch: globalThis.fetch };
@@ -31,6 +33,16 @@ test('local bridge keeps the room key on server and rejects external origins and
     assert.equal(JSON.parse(upstream.options.body).p_signal_key, 'test-only-private-key');
     assert(!JSON.stringify(claimed).includes('test-only-private-key'));
     assert.equal(claimed.headers['Cache-Control'], 'no-store');
+    let session = reduceSession(newSession(), { type: 'next', at: 1000 });
+    session = reduceSession({ ...session, scene: 'main' }, { type: 'discard', id: 'initial-0', at: 2000 });
+    session = reduceSession(session, { type: 'add', id: 'mine', text: '나다움', at: 3000 });
+    const result = resultForSession({ ...session, finishedAt: 5000 });
+    const saved = await request('/complete', 'POST', JSON.stringify({ visit_id: '00000000-0000-0000-0000-000000000001', result }));
+    assert.equal(saved.status, 200);
+    assert(upstream.url.endsWith('/beliefs_queue_complete'));
+    assert.deepEqual(JSON.parse(upstream.options.body).p_result, result);
+    assert.equal(JSON.parse(upstream.options.body).p_result.duration_ms, 4000);
+    assert.deepEqual(JSON.parse(upstream.options.body).p_result.discarded_initial_keywords, ['실력']);
     assert.equal((await request('/', 'GET', '', { origin: 'https://example.org' })).status, 403);
     assert.equal((await request('/', 'GET', '', { host: 'example.org:4173' })).status, 403);
     assert.equal((await request('/claim', 'POST', 'x'.repeat(65537))).status, 502);
