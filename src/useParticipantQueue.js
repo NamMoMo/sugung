@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { orderWaiting, queueRequest, resultForSession } from './participant-queue.js';
+import { orderWaiting, queueRequest, resultForSession, selectionChanged } from './participant-queue.js';
 
 export function useParticipantQueue(onStart, scene, session) {
   const [show, setShow] = useState(true), [state, setState] = useState({ waiting: [], active: null });
@@ -14,11 +14,13 @@ export function useParticipantQueue(onStart, scene, session) {
     const data = await queueRequest();
     if (!alive.current || started !== revision.current || serial !== readSerial.current) return data;
     setState({ ...data, waiting: orderWaiting(data.waiting, data.active?.visit_id) });
-    if (selected.current && data.active?.visit_id !== selected.current.visit_id) {
+    const change = selectionChanged(selected.current?.visit_id, data.active);
+    if (change.stop) {
       selected.current = null; blocked.current = true; setShow(true);
       latest.current.onStart();
       setError('선택한 참가자의 체험이 중지되거나 종료되었습니다. 참가자를 다시 선택해 주세요.');
     }
+    if (change.start) begin(data.active);
     return data;
   };
   useEffect(() => {
@@ -29,7 +31,7 @@ export function useParticipantQueue(onStart, scene, session) {
         try { await refresh(); } catch (e) { if (!disposed) setError(e.message); }
       }
     }
-    void poll(); const timer = setInterval(poll, 4000);
+    void poll(); const timer = setInterval(poll, 2000);
     return () => { disposed = true; alive.current = false; clearInterval(timer); };
   }, []);
   async function run(task) {

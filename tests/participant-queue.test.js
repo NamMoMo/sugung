@@ -1,7 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { orderWaiting, queueRequest, resultForSession } from '../src/participant-queue.js';
+import { orderWaiting, queueRequest, resultForSession, selectionChanged } from '../src/participant-queue.js';
 import { newSession, reduceSession } from '../src/interaction.js';
+
+test('display starts only a selected participant and does not restart on repeated polling', () => {
+  assert.deepEqual(selectionChanged(null, null), { start: false, stop: false });
+  assert.deepEqual(selectionChanged(null, { visit_id: 'one' }), { start: true, stop: false });
+  assert.deepEqual(selectionChanged('one', { visit_id: 'one' }), { start: false, stop: false });
+  assert.deepEqual(selectionChanged('one', null), { start: false, stop: true });
+  assert.deepEqual(selectionChanged('one', { visit_id: 'two' }), { start: true, stop: true });
+});
 
 test('oldest QR entry is first; selected person is removed without changing source', () => {
   const input = [

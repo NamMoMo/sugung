@@ -3,6 +3,13 @@ export function orderWaiting(visits, activeId) {
     Date.parse(a.entered_at) - Date.parse(b.entered_at) || a.visit_id.localeCompare(b.visit_id));
 }
 
+export function selectionChanged(selectedId, active) {
+  return {
+    stop: Boolean(selectedId && selectedId !== active?.visit_id),
+    start: Boolean(active && active.visit_id !== selectedId),
+  };
+}
+
 export async function queueRequest(action = 'state', data, fetcher = fetch) {
   const response = await fetcher(`/api/participant-queue/${action === 'state' ? '' : action}`, {
     method: action === 'state' ? 'GET' : 'POST', cache: 'no-store',

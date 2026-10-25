@@ -10,3 +10,7 @@
 .participant-queue button:disabled { opacity: .5; cursor: wait; }
 .participant-queue [role=alert] { color: #ffc5ad; }
 .queue-save-retry { position: fixed; bottom: 16px; right: 16px; z-index: 1001; padding: 14px; }
+.station-wait { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; color: #f3ead3; background: #07151e url('/assets/loading_BG.png') center / cover; text-align: center; }
+.station-wait h1 { font-size: clamp(28px, 4vw, 64px); }
+.station-wait p { font-size: clamp(16px, 1.6vw, 26px); line-height: 1.8; }
+.station-wait button { padding: 12px 24px; color: inherit; background: #102a37; border: 1px solid #b2a477; border-radius: 8px; font: inherit; }
