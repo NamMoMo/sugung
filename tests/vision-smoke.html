@@ -1,0 +1,17 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>MediaPipe 모델 검증</title><body><h1>MediaPipe 모델 검증</h1><button id="run">모델 로딩 및 추론 검사</button><pre id="result">대기 중</pre><canvas id="frame" width="640" height="360"></canvas><script type="module">
+import { createVision,foregroundMask } from '/src/vision.js';
+document.querySelector('#run').onclick=async()=>{
+ const output=document.querySelector('#result');output.textContent='모델 로딩 중';let model;
+ try{
+  model=await createVision();
+  const c=document.querySelector('#frame'),ctx=c.getContext('2d');ctx.fillStyle='#aaa';ctx.fillRect(0,0,640,360);ctx.fillStyle='#171717';ctx.fillRect(220,150,200,210);ctx.beginPath();ctx.arc(320,100,60,0,7);ctx.fill();
+  const now=performance.now();const hand=model.hands.recognizeForVideo(c,now);
+  let dimensions;
+  model.detailHands.recognize(c);
+  const pose=model.pose.detectForVideo(c,now);
+  model.segmenter.segmentForVideo(c,now,r=>{if(r.confidenceMasks.length!==6)throw new Error('다중 클래스 모델이 아님');const mask=foregroundMask(r);if(!mask)throw new Error('실루엣 마스크 없음');const values=mask.data;let min=1,max=0;for(const value of values){min=Math.min(min,value);max=Math.max(max,value);}dimensions={width:mask.width,height:mask.height,length:values.length,min,max,classes:r.confidenceMasks.length};});
+  if(!dimensions||dimensions.length!==dimensions.width*dimensions.height)throw new Error('마스크 크기 불일치');
+  output.textContent=JSON.stringify({status:'PASS',delegate:model.delegate,hands:hand.landmarks.length,poses:pose.landmarks.length,mask:dimensions},null,2);
+ }catch(e){output.textContent='FAIL: '+e.stack;}finally{model?.hands.close();model?.detailHands.close();model?.segmenter.close();model?.pose.close();}
+};
+</script></body></html>

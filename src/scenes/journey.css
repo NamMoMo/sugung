@@ -1,0 +1,36 @@
+.journey-scenes{position:absolute;inset:0;z-index:1;background:#000;display:none;overflow:hidden}
+.journey-scenes.is-visible{display:block}
+.turtle-scene{position:absolute;inset:0;visibility:hidden;overflow:hidden}
+.turtle-scene.is-visible{visibility:visible}
+.journey-film{position:absolute;inset:0;width:3840px;height:2160px;object-fit:cover;background:#000}
+.king-film{visibility:hidden}.king-film.is-visible{visibility:visible}
+.fish-wall{position:absolute;top:0;overflow:hidden;pointer-events:none;will-change:transform}
+.fish-wall img,.turtle-sprite img{position:absolute;max-width:none;pointer-events:none}
+.fish-right{left:2293px;width:1547px;height:2160px}.fish-right img{height:100%;width:248.09%;left:-148.09%;top:0}
+.fish-left{left:0;width:1733px;height:2161px}.fish-left img{height:100.01%;width:221.58%;left:0;top:0}
+.turtle-sprite{position:absolute;left:0;top:0;width:550px;height:428px;overflow:hidden;will-change:transform;transform:translateY(-1000px)}
+.turtle-sprite img{height:238.86%;width:104.56%;left:-4.56%;top:-68.29%}
+.journey-blackout{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:5}
+.journey-message{position:absolute;left:50%;top:75%;transform:translate(-50%,-50%);z-index:6;font-size:36px;padding:30px 55px;color:#ffedbe;background:#091726ef;border:1px solid #b4a27c}
+.scene-minigame .control-deck,.scene-king .control-deck{display:none}
+.turtle-instructions{position:absolute;top:0;left:0;width:3840px;padding:100px 200px 120px;text-align:center;z-index:3;pointer-events:none;background:linear-gradient(#020d2b9c,transparent);text-shadow:0 3px 16px #00112e,0 0 32px #00112e}
+.turtle-instructions h1{margin:0;color:#fff0c9;font-family:'Noto Serif KR',Batang,serif;font-size:72px;font-weight:500;letter-spacing:3px;line-height:1.6}
+.turtle-instructions p{margin:24px 0 0;color:#e3f5ff;font-size:46px;letter-spacing:3px;line-height:1.6}
+.journey-filter-defs{position:absolute;width:0;height:0;pointer-events:none}
+.fish-wall{filter:url(#fish-water-ripple)}
+.underwater-bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2}
+.water-bubble{position:absolute;bottom:-100px;border:2px solid #d1f7ff80;border-radius:50%;background:radial-gradient(circle at 30% 25%,#e5fcff55 0%,#adf3ff0a 28%,transparent 65%);box-shadow:inset -3px -4px 10px #9edfff25,0 0 14px #a9edff22;animation:bubble-rise var(--duration) linear var(--delay) infinite;will-change:transform,opacity}
+.water-bubble:after{content:'';position:absolute;top:18%;left:23%;width:20%;height:12%;border-radius:50%;background:#efffff9c;transform:rotate(-35deg)}
+@keyframes bubble-rise{0%{transform:translate(0,40px);opacity:0}8%{opacity:.55}50%{transform:translate(var(--sway),-1150px);opacity:.4}90%{opacity:.3}100%{transform:translate(0,-2400px);opacity:0}}
+.turtle-scene:not(.is-visible) .water-bubble{animation-play-state:paused}
+
+
+/* A white-gold core, soft yellow halo, and fine radial rays; no stock artwork. */
+.sea-wrist-cursor{position:absolute;left:0;top:0;width:0;height:0;z-index:4;opacity:0;pointer-events:none;will-change:transform}
+.sea-cursor-glow{position:absolute;left:-180px;top:-180px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,#fffff4 0%,#fffbc9 4%,#fff575e6 9%,#ffe44091 18%,#ecca1545 32%,#d7ad1214 52%,transparent 70%);animation:sea-light-breathe 2.8s ease-in-out infinite}
+.sea-cursor-core{position:absolute;left:145px;top:145px;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,#fffef2 12%,#fffac3 42%,#ffe75888 72%,transparent 100%);box-shadow:0 0 24px 12px #fff6a099,0 0 70px 20px #ffe33766}
+.sea-cursor-rays{position:absolute;inset:42px;border-radius:50%;background:repeating-conic-gradient(from 7deg,transparent 0deg 12deg,#fff47f66 13deg,#ffe83211 14deg,transparent 16deg 24deg);mask-image:radial-gradient(circle,transparent 7%,#0009 17%,#0006 35%,transparent 70%);animation:sea-light-rays 22s linear infinite}
+@keyframes sea-light-breathe{0%,100%{transform:scale(.94);opacity:.88}50%{transform:scale(1.06);opacity:1}}
+@keyframes sea-light-rays{to{transform:rotate(360deg)}}
+.turtle-scene:not(.is-visible) .sea-cursor-glow,.turtle-scene:not(.is-visible) .sea-cursor-rays{animation-play-state:paused}
+.turtle-instructions .turtle-instructions-en{margin-top:12px;font-size:36px;letter-spacing:1.5px;color:#d5eaf7}

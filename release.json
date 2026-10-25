@@ -1,0 +1,53 @@
+{
+  "version": "1차최종",
+  "saved_at": "2026-10-25T23:59:02.798489+09:00",
+  "shared_preview_version": 18,
+  "github_repository": "https://github.com/NamMoMo/sugung",
+  "github_branch": "1조",
+  "stage": {
+    "width": 3840,
+    "height": 2160
+  },
+  "videos": [
+    {
+      "file": "public/videos/opening_VD.mp4",
+      "width": 3840,
+      "height": 2160,
+      "fps": 24,
+      "bytes": 32523903,
+      "sha256": "dedcde5ebf8113a73a3230f0076ff2e9756934ee7a09ff3780278303aeb2c8a2"
+    },
+    {
+      "file": "public/videos/deepsea_VD.mp4",
+      "width": 3840,
+      "height": 2160,
+      "fps": 24,
+      "bytes": 48925228,
+      "sha256": "b01f25022838cc7ad895360583c36b67dd3d5ac8f9fd2bde8d4dd5680f8ad078"
+    },
+    {
+      "file": "public/videos/king_VD.mp4",
+      "width": 3840,
+      "height": 2160,
+      "fps": 24,
+      "bytes": 38210316,
+      "sha256": "70d405667945c980f395df2d208e28263b959cef0c8edb33d997fb373c66702c"
+    },
+    {
+      "file": "public/videos/rabbit_VD.mp4",
+      "width": 3840,
+      "height": 2160,
+      "fps": 24,
+      "bytes": 41255472,
+      "sha256": "f785613ef3cca0fbdf2e0f8ea0f2868af9f7bab6234e046077ab25d0768073d4"
+    },
+    {
+      "file": "public/videos/ending_VD.mp4",
+      "width": 3840,
+      "height": 2160,
+      "fps": 24,
+      "bytes": 29560904,
+      "sha256": "0cd12059d11dcf797d3d1fb3c89910f5e93f48b89b8835b75eb840443c2b494d"
+    }
+  ]
+}

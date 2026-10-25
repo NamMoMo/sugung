@@ -1,0 +1,19 @@
+.arrival-scene{display:none;position:absolute;inset:0;z-index:0;background:#000}
+.arrival-scene.is-visible{display:block}
+.standby-design,.standby-background{position:absolute;inset:0;width:100%;height:100%}
+.standby-background{object-fit:cover}
+.standby-hand{position:absolute;left:1620px;top:698px;width:600px;height:600px;overflow:hidden;z-index:2}
+.standby-hand img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none;pointer-events:none}
+.opening-film{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.opening-film.is-visible{display:block}
+.arrival-setup{position:absolute;bottom:125px;left:50%;transform:translateX(-50%);width:2000px;text-align:center;font-size:30px;color:#aebdc9}
+.arrival-setup>div{display:flex;justify-content:center;gap:30px}
+.arrival-setup button,.opening-play{padding:25px 45px;border:1px solid #bca573;background:#0a1623ed;color:#f1dfb2;font-size:34px;border-radius:4px}
+.arrival-setup p{margin:28px 0 0;line-height:1.7}
+.opening-play,.opening-notice{position:absolute;left:50%;top:75%;transform:translate(-50%,-50%);z-index:4}
+.opening-notice{font-size:36px;padding:30px;background:#08111bed;color:#ffdab9}
+.arrival-cursor{position:absolute;width:140px;height:140px;transform:translate(-50%,-50%);border:4px solid #ffedb9;border-radius:50%;background:#b58c341f;box-shadow:0 0 0 5px #07101bcc,0 0 34px #efce7790,inset 0 0 26px #a5dfff55;pointer-events:none;z-index:120;isolation:isolate}
+.arrival-cursor i{position:absolute;inset:41%;border-radius:50%;background:#fff4d3;box-shadow:0 0 25px #fff0ad}
+.scene-standby .control-deck,.scene-intro .control-deck{display:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.scene-standby .arrival-cursor{z-index:150;mix-blend-mode:normal}

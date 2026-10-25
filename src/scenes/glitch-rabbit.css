@@ -1,0 +1,8 @@
+.glitch-rabbit-scenes{position:absolute;inset:0;z-index:2;background:#000;display:none;overflow:hidden}
+.glitch-rabbit-scenes.is-visible{display:block}
+.quadrant-camera,.rabbit-film{position:absolute;inset:0;width:3840px;height:2160px;display:none;object-fit:cover;background:#000}
+.quadrant-camera.is-visible,.rabbit-film.is-visible{display:block}
+.glitch-message{position:absolute;left:50%;top:75%;transform:translate(-50%,-50%);z-index:4;padding:30px 55px;background:#100a14eb;border:1px solid #e0b18a;color:#ffe8c5;font-size:36px}
+.scene-glitch .control-deck,.scene-rabbit .control-deck{display:none}
+
+.glitch-wrist-cursor{position:absolute;width:96px;height:96px;border-radius:50%;background:#000;border:4px solid #000;box-shadow:0 0 0 3px #e3e7eb77;transform:translate(-50%,-50%);z-index:3;pointer-events:none;will-change:left,top}

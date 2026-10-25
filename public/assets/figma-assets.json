@@ -1,0 +1,11 @@
+{
+  "main_BG": {
+    "fileKey": "ocBVTVp6iZD3LmzZ7tq7NO",
+    "frameId": "61:24",
+    "nodeId": "62:30",
+    "path": "/assets/main_BG.png",
+    "sourceDimensions": [4096, 2298],
+    "designSlot": {"x": 0, "y": 3, "width": 3840, "height": 2154},
+    "fit": "cover"
+  }
+}
