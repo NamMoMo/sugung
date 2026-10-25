@@ -236,7 +236,7 @@ export default function App() {
   const photo=session.scene==='photo',main=session.scene==='main',ready=session.scene==='mainReady';
   return <main className="app">
     {queue.show&&<section className="station-wait" aria-label="체험 준비">
-      <div><h1>잠시만 기다려 주세요</h1><p>{queue.busy?'체험 결과를 저장하고 있습니다.':'관리자가 참가자를 선택하면 체험이 시작됩니다.'}</p>
+      <div><p>{queue.busy?'체험 결과를 저장하고 있습니다.':'관리자가 참가자를 선택하면 체험이 시작됩니다.'}</p>
         {mode==='idle'&&<button onClick={startCamera} disabled={starting}>{starting?'카메라 준비 중…':'웹캠 인식 켜기'}</button>}
         {error&&<p role="alert">{error}</p>}
         {queue.error&&<p role="alert">{queue.error}</p>}
