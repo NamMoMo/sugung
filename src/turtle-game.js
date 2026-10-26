@@ -2,6 +2,7 @@ export const GAME_ENTRY_SECONDS=3.2;
 export const SEA_PLAYBACK_RATE=.8;
 export const GAME_FADE_MS=2000;
 export const KING_REVEAL_MS=650;
+export const journeyFadeProgress=(now,startedAt)=>Math.max(0,Math.min(1,(now-startedAt)/GAME_FADE_MS));
 export const GAME_SLOTS={
  left:{x:0,y:0,w:1733,h:2161},right:{x:2293,y:0,w:1547,h:2160},jara:{w:550,h:428},
 };

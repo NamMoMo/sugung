@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {GAME_ENTRY_SECONDS,GAME_SLOTS,LanePressure,JourneyCursor,seaSpriteBrightness,journeyCursorPoint,turtleFrame} from '../src/turtle-game.js';
+import {journeyFadeProgress,GAME_ENTRY_SECONDS,GAME_SLOTS,LanePressure,JourneyCursor,seaSpriteBrightness,journeyCursorPoint,turtleFrame} from '../src/turtle-game.js';
 test('jara descends from above and settles near the lower edge',()=>{
  const start=turtleFrame(0),end=turtleFrame(GAME_ENTRY_SECONDS);
  assert.ok(start.jara.y+GAME_SLOTS.jara.h/2<0);
@@ -70,3 +70,5 @@ test('bubble lane closes much further with movement, including vertical movement
  const trapped=c.update(null,1100,closed);assert.ok(trapped.x-180>=closed.left&&trapped.x+180<=closed.right);
  const normal=turtleFrame(10,{duration});assert.ok(normal.right-normal.left>closed.right-closed.left+500);
 });
+
+test("ended events arriving after an RAF timestamp never make media volume exceed one",()=>{assert.equal(journeyFadeProgress(1000,1019.2),0);assert.equal(journeyFadeProgress(2019.2,1019.2),.5);assert.equal(journeyFadeProgress(4019.2,1019.2),1);});

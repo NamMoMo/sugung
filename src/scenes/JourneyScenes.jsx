@@ -1,92 +1,73 @@
 import React,{forwardRef,useEffect,useImperativeHandle,useRef,useState} from 'react';
-import {GAME_FADE_MS,KING_REVEAL_MS,SEA_PLAYBACK_RATE,GAME_SLOTS,LanePressure,JourneyCursor,turtleFrame,seaSpriteBrightness} from '../turtle-game.js';
-import {FishAudioController} from '../fish-audio.js';
+import {journeyFadeProgress,KING_REVEAL_MS} from '../turtle-game.js';
+import {SplashGame} from '../splash-game.js';
 import './journey.css';
 
-
-const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handRef,enabled,onAdvance},ref){
- const sea=useRef(null),king=useRef(null),left=useRef(null),right=useRef(null),jara=useRef(null),cursor=useRef(null),black=useRef(null);
+const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handsRef,enabled,mode,onAdvance},ref){
+ const sea=useRef(null),king=useRef(null),black=useRef(null),game=useRef(new SplashGame());
  const live=useRef({scene,onAdvance});live.current={scene,onAdvance};
- const endAt=useRef(null),kingAt=useRef(null),fired=useRef(false);
- const fishSound=useRef(null),fishAudio=useRef(null),ambienceSound=useRef(null),ambienceAudio=useRef(null);
- const cursorMotion=useRef(new JourneyCursor()),lanePressure=useRef(new LanePressure());
- const [fishBlocked,setFishBlocked]=useState(false);
- const [problem,setProblem]=useState({}),[blocked,setBlocked]=useState(null);
+ const endAt=useRef(null),kingAt=useRef(null),fired=useRef(false),foam=useRef([]),serial=useRef(0),testTime=useRef(0);
+ const [ui,setUi]=useState({turns:0,rate:1,foam:[]}),[problem,setProblem]=useState({}),[blocked,setBlocked]=useState(null);
  const active=scene==='minigame'||scene==='king';
- async function play(name){
-  const v=name==='minigame'?sea.current:king.current;if(!v)return;
-  setBlocked(null);v.muted=false;v.volume=1;v.playbackRate=name==='minigame'?SEA_PLAYBACK_RATE:1;
-  try{await v.play();if(name==='minigame'&&live.current.scene===name){fishAudio.current?.start();ambienceAudio.current?.start();}}catch(e){if(live.current.scene!==name)return;if(e.name==='NotAllowedError')setBlocked(name);else if(e.name!=='AbortError')setProblem(p=>({...p,[name]:'영상을 재생하지 못했습니다. 원본 MP4 파일을 확인해 주세요.'}));}
+ function apply(events,now){
+  if(!events.length)return;
+  sea.current.playbackRate=game.current.rate;
+  for(const event of events)foam.current.push({id:serial.current++,side:event.id==='Left'?-1:1,time:now});
+  foam.current=foam.current.slice(-12);
+  setUi({turns:game.current.turns,rate:game.current.rate,foam:[...foam.current]});
  }
- useImperativeHandle(ref,()=>({finish(){if(live.current.scene==='minigame'&&endAt.current===null){sea.current.pause();endAt.current=performance.now();}},prime(){
-  fishAudio.current?.prime();ambienceAudio.current?.prime();
-  for(const [name,v] of [['minigame',sea.current],['king',king.current]]){
+ async function play(name){
+  const v=name==='minigame'?sea.current:king.current;
+  setBlocked(null);v.muted=false;v.volume=1;v.playbackRate=name==='minigame'?game.current.rate:1;v.preservesPitch=true;
+  try{await v.play();}catch(e){if(live.current.scene!==name)return;if(e.name==='NotAllowedError')setBlocked(name);else if(e.name!=='AbortError')setProblem(p=>({...p,[name]:'영상을 재생하지 못했습니다. MP4 파일을 확인해 주세요.'}));}
+ }
+ useImperativeHandle(ref,()=>({
+  finish(){if(live.current.scene==='minigame'&&endAt.current===null){sea.current.pause();endAt.current=performance.now();}},
+  testTurn(){
+   if(mode!=='demo'||live.current.scene!=='minigame'||endAt.current!==null)return;
+   const now=performance.now(),events=[];testTime.current=Math.max(testTime.current+1400,now);
+   for(const [id,delay] of [['Left',1000],['Right',500]]){
+    for(const [dt,y] of [[0,.5],[120,.38],[240,.5]])events.push(...game.current.update([{id,x:id==='Left'?.35:.65,y,sampleAt:testTime.current-delay+dt}],testTime.current-delay+dt));
+   }
+   apply(events,now);
+  },
+  prime(){for(const [name,v] of [['minigame',sea.current],['king',king.current]]){
    if(!v||v.readyState<1||live.current.scene===name)continue;
-   v.volume=0;v.play()?.then(()=>{if(live.current.scene!==name){v.pause();v.currentTime=0;}v.volume=1;}).catch(()=>{v.volume=1;});
-  }
- }}));
- useEffect(()=>{
-  fishAudio.current=new FishAudioController(fishSound.current,e=>{if(live.current.scene!=='minigame')return;if(e.name==='NotAllowedError')setFishBlocked(true);else setProblem(p=>({...p,fish:'fish_A 오디오를 재생할 수 없습니다. 원본 파일을 확인해 주세요.'}));});
-  ambienceAudio.current=new FishAudioController(ambienceSound.current,e=>{if(live.current.scene!=='minigame')return;if(e.name==='NotAllowedError')setFishBlocked(true);else setProblem(p=>({...p,fish:'수중 배경음을 재생할 수 없습니다.'}));},{volume:.18,loop:true,limit:Infinity});
-  let raf;function tick(now){fishAudio.current.tick(now);ambienceAudio.current.tick(now);fishSound.current.dataset.volume=String(Math.round(fishSound.current.volume*100));ambienceSound.current.dataset.volume=String(Math.round(ambienceSound.current.volume*100));raf=requestAnimationFrame(tick);}raf=requestAnimationFrame(tick);
-  return()=>{cancelAnimationFrame(raf);fishAudio.current.stop();ambienceAudio.current.stop();};
- },[]);
+   v.volume=0;v.play()?.then(()=>{if(live.current.scene!==name){v.pause();v.currentTime=0;v.volume=1;}}).catch(()=>{});
+  }}
+ }));
  useEffect(()=>{
   endAt.current=null;fired.current=false;kingAt.current=scene==='king'?performance.now():null;
+  game.current.reset();foam.current=[];setUi({turns:0,rate:1,foam:[]});setBlocked(null);
   if(black.current)black.current.style.opacity=scene==='king'?'1':'0';
-  if(scene==='standby'){fishAudio.current?.stop();ambienceAudio.current?.stop();}
-  else if(scene!=='minigame'){fishAudio.current?.fadeOut(performance.now());ambienceAudio.current?.fadeOut(performance.now());}
-  if(cursor.current)cursor.current.style.opacity='0';
-  cursorMotion.current.reset();lanePressure.current.reset();
-  setFishBlocked(false);
-  for(const [name,v] of [['minigame',sea.current],['king',king.current]]){
-   v.pause();v.currentTime=0;if(scene===name)play(name);
-  }
-  setBlocked(null);
- },[scene,runKey]);
+  for(const [name,v] of [['minigame',sea.current],['king',king.current]]){v.pause();v.currentTime=0;if(scene===name)play(name);}
+  return()=>{sea.current?.pause();king.current?.pause();};
+ },[scene,runKey,mode]);
  useEffect(()=>{
-  if(!active)return;
-  let raf;
+  if(!active)return;let raf;
   function frame(now){
    if(live.current.scene==='minigame'){
-    const pressure=lanePressure.current.update(enabled?handRef.current:null,now);
-    const f=turtleFrame(sea.current.currentTime,{duration:sea.current.duration||19.958333,...pressure});
-    sea.current.dataset.laneWidth=String(f.right-f.left);sea.current.dataset.leftPressure=String(pressure.leftPressure);sea.current.dataset.rightPressure=String(pressure.rightPressure);
-    const brightness=seaSpriteBrightness(sea.current.currentTime,sea.current.duration);
-    jara.current.firstElementChild.style.filter=`brightness(${brightness})`;
-    const point=cursorMotion.current.update(enabled?handRef.current:null,now,f);
-    cursor.current.style.opacity=String(point?.opacity??0);
-    if(point)cursor.current.style.transform=`translate(${point.x}px,${point.y}px)`;
-    left.current.style.transform=`translateX(${f.left}px)`;right.current.style.transform=`translateX(${f.right}px)`;
-    jara.current.style.transform=`translate(${f.jara.x-GAME_SLOTS.jara.w/2}px,${f.jara.y-GAME_SLOTS.jara.h/2}px)`;
-    if(endAt.current!==null){const p=Math.min(1,(now-endAt.current)/GAME_FADE_MS);black.current.style.opacity=String(p);fishAudio.current?.transition(p);ambienceAudio.current?.transition(p);
-     if(p===1&&!fired.current){fired.current=true;live.current.onAdvance('minigame');}
-    }
+    const v=sea.current;
+    if(enabled&&mode==='camera'&&endAt.current===null&&!v.paused&&!v.seeking)apply(game.current.update(handsRef?.current||[],now),now);
+    const remaining=foam.current.filter(b=>now-b.time<2100);
+    if(remaining.length!==foam.current.length){foam.current=remaining;setUi({turns:game.current.turns,rate:game.current.rate,foam:[...remaining]});}
+    v.dataset.turns=String(game.current.turns);v.dataset.rate=String(game.current.rate);v.dataset.strokes=String(game.current.strokeCount);
+    if(endAt.current!==null){const p=journeyFadeProgress(now,endAt.current);black.current.style.opacity=String(p);v.volume=1-p;if(p===1&&!fired.current){fired.current=true;live.current.onAdvance('minigame');}}
    }else if(live.current.scene==='king'&&kingAt.current!==null)black.current.style.opacity=String(Math.max(0,1-(now-kingAt.current)/KING_REVEAL_MS));
    raf=requestAnimationFrame(frame);
   }
   raf=requestAnimationFrame(frame);return()=>cancelAnimationFrame(raf);
- },[scene,active,enabled,handRef]);
- return <section className={`journey-scenes ${active?'is-visible':''}`} aria-label={scene==='king'?'03. 용왕':'02. 자라미니게임'}>
-  <audio ref={fishSound} src="/audio/fish_A-25s.wav" preload="auto" aria-label="미니게임 물고기 음성 fish_A" onEnded={()=>fishAudio.current?.stop()} onError={()=>setProblem(p=>({...p,fish:'public/audio/fish_A-25s.wav 파일을 재생할 수 없습니다.'}))}/>
-  <audio ref={ambienceSound} src="/audio/underwater-ambience.mp3" preload="auto" loop aria-label="수중 배경음 underwater-ambience" onError={()=>setProblem(p=>({...p,fish:'underwater-ambience.mp3 파일을 확인해 주세요.'}))}/>
-  <div className={`turtle-scene ${scene==='minigame'?'is-visible':''}`} data-figma-node="57:14">
-   <video ref={sea} src="/videos/deepsea_VD.mp4" className="journey-film" playsInline preload="auto" aria-label="deepsea_VD 심해 영상" data-figma-node="57:11" onLoadedMetadata={()=>{sea.current.playbackRate=SEA_PLAYBACK_RATE;setProblem(p=>({...p,minigame:null}));}} onError={()=>setProblem(p=>({...p,minigame:'public/videos/deepsea_VD.mp4 원본 영상을 확인해 주세요.'}))} onEnded={()=>{if(live.current.scene==='minigame'&&endAt.current===null)endAt.current=performance.now();}}/>
-   {[[left,-1,'왼쪽'],[right,1,'오른쪽']].map(([ref,side,label])=><div key={side} ref={ref} className="bubble-wall" aria-label={`${label} 버블 길 경계`}>{Array.from({length:90},(_,i)=>{
-    const row=i%30,column=Math.floor(i/30),size=170+(i*47)%105,r=size/2;
-    return <span key={i} className={`path-bubble ${i%4===0?'warm':''}`} style={{left:side*(r+column*165+(i*13)%23),top:row*82-65+column*29,width:size,height:size,'--bob':`${7+i%9}px`,'--bubble-duration':`${3.2+(i%7)*.37}s`,'--bubble-delay':`${-(i%13)*.41}s`}}><i/><b/></span>;
-   })}</div>)}
-   <div ref={jara} className="turtle-sprite" data-figma-node="57:17"><img src="/assets/jara.png" alt="길을 안내하는 자라"/></div>
-   <div ref={cursor} className="sea-wrist-cursor" aria-label="손목을 따라오는 금빛 커서"><div className="sea-cursor-glow"><i className="sea-cursor-rays"/><i className="sea-cursor-core"/></div></div>
-   <div className="underwater-bubbles" aria-hidden="true">{Array.from({length:42},(_,i)=><i key={i} className="water-bubble" style={{left:`${(i*37.7)%100}%`,width:22+(i*17)%52,height:22+(i*17)%52,'--duration':`${8+(i*1.13)%7}s`,'--delay':`${-(i*1.79)%15}s`,'--sway':`${(i%2?-1:1)*(35+i%6*12)}px`}}/>)}</div>
-   <header className="turtle-instructions"><h1>자라를 따라 용궁으로 깊은 곳으로 떠나보아요</h1><p>손을 움직여 빛과 함께 길을 따라가보세요</p><p className="turtle-instructions-en" lang="en">Move your hand and follow the path with the light.</p></header>
+ },[scene,active,enabled,mode,handsRef]);
+ return <section className={`journey-scenes ${active?'is-visible':''}`} aria-label={scene==='king'?'03. 용왕':'02. 첨벙첨벙 자라미니게임'}>
+  <div className={`turtle-scene splash-scene ${scene==='minigame'?'is-visible':''}`}>
+   <video ref={sea} src="/videos/jara01.mp4" className="journey-film" playsInline preload="auto" aria-label="jara01 첨벙첨벙 영상" onLoadedMetadata={()=>setProblem(p=>({...p,minigame:null}))} onError={()=>setProblem(p=>({...p,minigame:'public/videos/jara01.mp4 영상을 확인해 주세요.'}))} onEnded={()=>{if(live.current.scene==='minigame'&&endAt.current===null)endAt.current=performance.now();}}/>
+   <div className="splash-foam" aria-hidden="true">{ui.foam.map(b=><div key={b.id} className={`foam-burst ${b.side<0?'from-left':'from-right'}`}>{Array.from({length:20},(_,i)=><i key={i} style={{'--x':`${80+(i*53)%360}px`,'--y':`${250+(i*163)%1700}px`,'--drift':`${(b.side<0?1:-1)*(100+(i*47)%270)}px`,'--rise':`${220+(i*97)%650}px`,'--size':`${22+(i*23)%88}px`,'--delay':`${i%5*.035}s`}}/>)}</div>)}</div>
+   <header className="turtle-instructions splash-instructions"><h1>양팔을 번갈아 첨벙첨벙, 자라와 함께 용궁으로!</h1><p>왼팔·오른팔을 한 번씩 위아래로 흔들어 물살에 힘을 더해주세요.</p><p className="turtle-instructions-en">Splash your arms up and down, alternating left and right.</p><div className="splash-progress" aria-live="polite"><span>첨벙 <b>{ui.turns}턴</b></span><strong>{ui.rate.toFixed(1)}×</strong><small>{ui.rate>=2?'최대 물살에 도달했어요!':'양팔을 번갈아 3턴마다 물살이 더 빨라져요'}</small></div></header>
   </div>
-  <video ref={king} src="/videos/king_VD.mp4" className={`king-film journey-film ${scene==='king'?'is-visible':''}`} playsInline preload="auto" aria-label="king_VD 용왕 영상" onEnded={()=>{if(live.current.scene==='king')live.current.onAdvance('king');}} data-figma-node="57:8" onLoadedMetadata={()=>setProblem(p=>({...p,king:null}))} onError={()=>setProblem(p=>({...p,king:'public/videos/king_VD.mp4 원본 영상을 확인해 주세요.'}))}/>
+  <video ref={king} src="/videos/king_VD.mp4" className={`king-film journey-film ${scene==='king'?'is-visible':''}`} playsInline preload="auto" aria-label="king_VD 용왕 영상" onEnded={()=>{if(live.current.scene==='king')live.current.onAdvance('king');}} onError={()=>setProblem(p=>({...p,king:'king_VD.mp4 영상을 확인해 주세요.'}))}/>
   <div ref={black} className="journey-blackout" aria-hidden="true"/>
   {active&&problem[scene]&&<div className="journey-message" role="alert">{problem[scene]}</div>}
-  {active&&blocked===scene&&!problem[scene]&&<button className="journey-message" onClick={()=>play(scene)}>영상 재생</button>}
-  {scene==='minigame'&&problem.fish&&<div className="journey-message" role="alert">{problem.fish}</div>}
-  {scene==='minigame'&&fishBlocked&&!problem.fish&&<button className="journey-message" onClick={()=>{setFishBlocked(false);fishAudio.current?.start();ambienceAudio.current?.start();}}>소리 재생</button>}
+  {active&&blocked===scene&&!problem[scene]&&<button className="journey-message" onClick={()=>play(scene)}>영상과 소리 재생</button>}
  </section>;
 });
 export default JourneyScenes;

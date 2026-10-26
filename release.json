@@ -1,7 +1,7 @@
 {
   "version": "현장수정-2026-10-26",
   "saved_at": "2026-10-25T23:59:02.798489+09:00",
-  "shared_preview_version": 22,
+  "shared_preview_version": 23,
   "github_repository": "https://github.com/NamMoMo/sugung",
   "github_branch": "1조",
   "stage": {
@@ -16,14 +16,6 @@
       "fps": 24,
       "bytes": 32523903,
       "sha256": "dedcde5ebf8113a73a3230f0076ff2e9756934ee7a09ff3780278303aeb2c8a2"
-    },
-    {
-      "file": "public/videos/deepsea_VD.mp4",
-      "width": 3840,
-      "height": 2160,
-      "fps": 24,
-      "bytes": 48925228,
-      "sha256": "b01f25022838cc7ad895360583c36b67dd3d5ac8f9fd2bde8d4dd5680f8ad078"
     },
     {
       "file": "public/videos/king_VD.mp4",
@@ -48,6 +40,14 @@
       "fps": 24,
       "bytes": 29560904,
       "sha256": "0cd12059d11dcf797d3d1fb3c89910f5e93f48b89b8835b75eb840443c2b494d"
+    },
+    {
+      "file": "public/videos/jara01.mp4",
+      "width": 3840,
+      "height": 2160,
+      "fps": 24,
+      "bytes": 103262794,
+      "sha256": "faea639366863b076cf545481d887e5aff3deeef7a0930e563de5b662ef1cf40"
     }
   ],
   "baseline_tag": "1차최종",
@@ -64,11 +64,12 @@
   "interaction_limit": 7,
   "ending_hit_min_speed": 1.3,
   "minigame_path": {
-    "type": "bubble_corridor",
-    "bubbles_per_side": 90,
-    "initial_width": 2100,
-    "end_width_without_movement": 800,
-    "min_width": 600,
-    "movement_pressure_cap": 1000
+    "type": "alternating_arm_splash",
+    "video": "jara01.mp4",
+    "turn": "one left and one right full up/down cycle, alternating",
+    "turns_per_rate_step": 3,
+    "rate_step": 0.1,
+    "initial_rate": 1,
+    "max_rate": 2
   }
 }

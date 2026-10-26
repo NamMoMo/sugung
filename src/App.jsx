@@ -138,11 +138,11 @@ export default function App() {
       if(!mounted.current)return;
       const current=sessionRef.current, demoMode=modeRef.current==='demo';
       let detected=[];
-      if(modeRef.current==='camera'&&!['intro','king','rabbitPause','rabbit','endingPrelude','endingWhite','escaped'].includes(current.scene)&&vision.current&&video.current.readyState>=2&&now-lastInference>(['glitch','ending'].includes(current.scene)?45:85)&&video.current.currentTime!==lastFrame){
+      if(modeRef.current==='camera'&&!['intro','king','rabbitPause','rabbit','endingPrelude','endingWhite','escaped'].includes(current.scene)&&vision.current&&video.current.readyState>=2&&now-lastInference>(['glitch','ending','minigame'].includes(current.scene)?45:85)&&video.current.currentTime!==lastFrame){
         lastInference=now;lastFrame=video.current.currentTime;
         try{
-          detected=search.detect(vision.current,video.current,now,{detail:current.scene!=='ending'});
-          if(current.scene==='ending'){
+          detected=search.detect(vision.current,video.current,now,{detail:!['ending','minigame'].includes(current.scene)});
+          if(['ending','minigame'].includes(current.scene)){
             if(now-lastEndingPose>=85){
               lastEndingPose=now;
               try{
@@ -251,7 +251,7 @@ export default function App() {
         <img className="scene-background main-background" src="/assets/main_BG.png" alt="" data-figma-node="62:30" style={{visibility:main||ready?'visible':'hidden'}}/>
         <img className="scene-background result-background" src="/assets/result_BG.png" alt="" data-figma-node="69:35" style={{visibility:photo?'visible':'hidden'}}/>
         <ArrivalScene ref={arrival} scene={session.scene} mode={mode} starting={starting} status={status} error={error} onCamera={startCamera} onDemo={()=>demo()} onEnded={()=>advanceFrom('intro')}/>
-        <JourneyScenes ref={journey} runKey={journeyRun} scene={session.scene} handRef={pointer} enabled={mode==='camera'||mode==='demo'} onAdvance={advanceFrom}/>
+        <JourneyScenes ref={journey} runKey={journeyRun} scene={session.scene} handRef={pointer} handsRef={allWrists} mode={mode} enabled={mode==='camera'||mode==='demo'} onAdvance={advanceFrom}/>
         <GlitchRabbitScenes ref={glitchRabbit} runKey={journeyRun} scene={session.scene} handRef={pointer} handsRef={allWrists} cameraRef={video} maskRef={glitchMask} mode={mode} onAdvance={advanceFrom}/>
         <EndingScenes ref={ending} runKey={journeyRun} scene={session.scene} handRef={pointer} handsRef={allWrists} mode={mode} onAdvance={advanceFrom} onReset={reset}/>
         <canvas ref={canvas} style={{visibility:main||photo?'visible':'hidden'}} className="art" aria-label={t("관객 실루엣과 빛 입자")}/>
@@ -279,7 +279,7 @@ export default function App() {
     </footer>
     <div className="utility"><button onClick={()=>setDebug(!debug)}>{t('운영')} {debug?'−':'+'}</button></div>
     {starting&&<button className="cancel-camera" onClick={()=>{startVersion.current++;setStarting(false);setStatus('웹캠 연결을 취소했습니다.');stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;}}>카메라 권한 대기 취소</button>}
-    {debug&&<section className="debug-panel"><strong>운영 · 테스트</strong><p>0 다음 씬 · 1 처음으로 (입력창에서는 비활성)</p><p>{status}</p><p>배경음악 · {ui.musicPlaying?'재생 중':'대기'} · {ui.musicVolume??0}%</p>{audioError&&<p className="error">{t(audioError)}</p>}<p>{stageNames[session.scene]} · 인식 {ui.fps}fps · {ui.hands[0]?.id||'손 대기'} · {ui.hands[0]?.gesture||'—'}</p><div><button onClick={requestNext}>다음 씬 [0]</button><button onClick={reset}>처음 [1]</button><button onClick={()=>demo()} disabled={starting}>00 마우스 테스트</button><button onClick={()=>demo('minigame')} disabled={starting}>02 미니게임 테스트</button><button onClick={()=>demo('king')} disabled={starting}>03 용왕 테스트</button><button onClick={()=>demo('glitch')} disabled={starting}>04 글리치 테스트</button><button onClick={()=>demo('rabbit')} disabled={starting}>05 토끼 테스트</button><button onClick={()=>demo('endingPrelude')} disabled={starting}>7.5 엔딩전 테스트</button><button onClick={()=>demo('ending')} disabled={starting}>08 엔딩 테스트</button>{session.scene==='ending'&&<button onClick={()=>ending.current?.testSwing()}>엔딩 타격 검증 (가상 손목)</button>}<button onClick={openMain} disabled={starting}>5.5 메인시작</button><button onClick={startCamera} disabled={starting}>웹캠 연결</button><button onClick={()=>setPreview(!preview)}>웹캠 미리보기</button><button onClick={()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}>전체 화면</button></div>{error&&<p className="error">{error}</p>}</section>}
+    {debug&&<section className="debug-panel"><strong>운영 · 테스트</strong><p>0 다음 씬 · 1 처음으로 (입력창에서는 비활성)</p><p>{status}</p><p>배경음악 · {ui.musicPlaying?'재생 중':'대기'} · {ui.musicVolume??0}%</p>{audioError&&<p className="error">{t(audioError)}</p>}<p>{stageNames[session.scene]} · 인식 {ui.fps}fps · {ui.hands[0]?.id||'손 대기'} · {ui.hands[0]?.gesture||'—'}</p><div><button onClick={requestNext}>다음 씬 [0]</button><button onClick={reset}>처음 [1]</button><button onClick={()=>demo()} disabled={starting}>00 마우스 테스트</button><button onClick={()=>demo('minigame')} disabled={starting}>02 미니게임 테스트</button>{session.scene==='minigame'&&<button onClick={()=>journey.current?.testTurn()}>첨벙 턴 검증 (가상 양손)</button>}<button onClick={()=>demo('king')} disabled={starting}>03 용왕 테스트</button><button onClick={()=>demo('glitch')} disabled={starting}>04 글리치 테스트</button><button onClick={()=>demo('rabbit')} disabled={starting}>05 토끼 테스트</button><button onClick={()=>demo('endingPrelude')} disabled={starting}>7.5 엔딩전 테스트</button><button onClick={()=>demo('ending')} disabled={starting}>08 엔딩 테스트</button>{session.scene==='ending'&&<button onClick={()=>ending.current?.testSwing()}>엔딩 타격 검증 (가상 손목)</button>}<button onClick={openMain} disabled={starting}>5.5 메인시작</button><button onClick={startCamera} disabled={starting}>웹캠 연결</button><button onClick={()=>setPreview(!preview)}>웹캠 미리보기</button><button onClick={()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}>전체 화면</button></div>{error&&<p className="error">{error}</p>}</section>}
     </div>
   </main>;
 }
