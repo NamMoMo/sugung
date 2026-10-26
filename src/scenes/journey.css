@@ -10,10 +10,22 @@
 .turtle-instructions h1{margin:0;color:#fff0c9;font-family:'Noto Serif KR',Batang,serif;font-size:76px;font-weight:500;letter-spacing:3px;line-height:1.6}
 .turtle-instructions p{margin:20px 0 0;color:#e3f5ff;font-size:46px;letter-spacing:2px;line-height:1.6}
 .turtle-instructions .turtle-instructions-en{margin-top:10px;font-size:34px;letter-spacing:1px;color:#d5eaf7}
-.splash-progress{display:flex;justify-content:center;align-items:center;gap:38px;margin-top:34px;color:#e5f7ff;font-size:40px}
-.splash-progress b{color:#ffe0a0;font-weight:500}.splash-progress strong{font-family:Georgia,serif;font-size:64px;font-weight:400;color:#ffe0a0;text-shadow:0 0 25px #e9c77b80}.splash-progress small{font-size:31px;color:#c6dce8}
 .splash-foam{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
 .foam-burst{position:absolute;inset:0}.foam-burst i{position:absolute;top:var(--y);width:var(--size);height:var(--size);border-radius:50%;border:3px solid #d5faffb3;background:radial-gradient(circle at 30% 24%,#fff8 0%,#c8f2ff26 30%,transparent 70%);box-shadow:inset -6px -7px 14px #9de4ff55,0 0 18px #c6f4ff66;animation:splash-foam-rise 1.8s ease-out var(--delay) both;will-change:transform,opacity}
 .from-left i{left:var(--x)}.from-right i{right:var(--x)}
 .foam-burst i:after{content:'';position:absolute;top:18%;left:23%;width:22%;height:12%;border-radius:50%;background:#ffffffe6;rotate:-30deg}
 @keyframes splash-foam-rise{0%{opacity:0;transform:translate(0,70px) scale(.3)}12%{opacity:.85}100%{opacity:0;transform:translate(var(--drift),calc(-1 * var(--rise))) scale(1.25)}}
+
+.splash-instructions>p:not(.turtle-instructions-en){font-size:64px;line-height:1.6;margin-top:24px;color:#f0fbff}
+.splash-wrist{position:absolute;left:0;top:0;width:0;height:0;z-index:4;opacity:0;pointer-events:none;will-change:transform,opacity}
+.splash-droplet{position:absolute;left:-63px;top:-85px;width:126px;height:164px;overflow:visible;filter:drop-shadow(0 0 17px #a3efffcc) drop-shadow(0 0 32px #8cdfff66)}
+.splash-wrist:before{content:'';position:absolute;left:-95px;top:-95px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,#b1f4ff44,transparent 70%)}
+.wrist-bubbles{position:absolute;left:0;top:0}.wrist-bubbles i{position:absolute;left:calc(var(--bubble-drift) * -.2);top:-16px;width:var(--bubble-size);height:var(--bubble-size);border:2px solid #e0fbffb3;border-radius:50%;background:radial-gradient(circle at 30% 23%,#ffffffe0 0%,#c4f4ff33 23%,#8bd7fa11 65%);box-shadow:inset -3px -3px 6px #9ee7ff55,0 0 8px #bcefff55;animation:wrist-bubble-rise var(--bubble-time) ease-out var(--bubble-phase) infinite}
+@keyframes wrist-bubble-rise{0%{opacity:0;transform:translate(-50%,0) scale(.35)}15%{opacity:.85}100%{opacity:0;transform:translate(var(--bubble-drift),calc(-1 * var(--bubble-rise))) scale(1.05)}}
+.splash-speed-effect{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;animation:water-speed-wash .85s ease-out both;background:radial-gradient(ellipse at center,transparent 25%,#8de6ff1c 70%,#d4f8ff22)}
+.splash-speed-effect>i{position:absolute;left:50%;top:55%;width:var(--streak-length);height:4px;transform-origin:left center;rotate:var(--angle);background:linear-gradient(90deg,transparent,#c8faffbb,#fff1ba55,transparent);box-shadow:0 0 12px #bcefff66;animation:water-speed-streak .8s ease-out both}
+.speed-water-ring{position:absolute;left:50%;top:55%;width:950px;height:550px;border:5px solid #d4faff88;border-radius:50%;box-shadow:0 0 35px #a9e9ff55,inset 0 0 20px #c2f4ff44;animation:water-speed-ring .8s ease-out both}
+@keyframes water-speed-streak{0%{opacity:0;translate:0 0;transform:translateX(180px) scaleX(.15)}20%{opacity:1}100%{opacity:0;transform:translateX(var(--reach)) scaleX(1.7)}}
+@keyframes water-speed-ring{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}15%{opacity:.7}100%{opacity:0;transform:translate(-50%,-50%) scale(3.5)}}
+@keyframes water-speed-wash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+.turtle-scene:not(.is-visible) .wrist-bubbles i{animation-play-state:paused}
