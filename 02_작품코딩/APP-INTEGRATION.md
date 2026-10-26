@@ -11,6 +11,12 @@
 
 `ROOM_SIGNAL_KEY`는 서버에서만 사용하며 `VITE_` 접두사를 붙이지 않습니다. `.env`와 `node_modules`, `dist`는 Git에 올리지 않습니다. 공개 키는 클라이언트 공개용 키이며 service_role 키는 사용하지 않습니다.
 
+CLI 로그인 후에는 SQL Editor 대신 코드 폴더에서 아래 명령으로 같은 파일을 적용할 수 있습니다. CLI의 로컬 연결 캐시는 Git에서 제외합니다.
+
+```sh
+npx supabase@2.122.0 db query --linked --project-ref gdkrsirsiijdkhiwsltf --file ../supabase/202610260008_treasure_station.sql
+```
+
 ## 흐름
 
 - 전시 PC에서 모바일 QR 입장 안내를 표시합니다. 입장이 확인되기 전에는 작품 조작을 활성화하지 않습니다.
