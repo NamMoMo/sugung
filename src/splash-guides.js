@@ -36,7 +36,7 @@ export class SplashGuides{
 }
 
 export function splashAudioFade(video,transition=0){
- const remaining=(video.duration-video.currentTime)/Math.max(1,video.playbackRate);
+ const remaining=(video.duration-video.currentTime)/Math.max(.1,video.playbackRate||1);
  const tail=Number.isFinite(remaining)?Math.max(0,Math.min(1,1-remaining/3)):0;
  return Math.max(tail,Math.max(0,Math.min(1,transition)));
 }

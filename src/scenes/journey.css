@@ -9,7 +9,7 @@
 .turtle-instructions{position:absolute;top:0;left:0;width:3840px;padding:95px 200px 100px;text-align:center;z-index:3;pointer-events:none;background:linear-gradient(#020d2bce,transparent);text-shadow:0 3px 16px #00112e,0 0 32px #00112e}
 .turtle-instructions h1{margin:0;color:#fff0c9;font-family:'Noto Serif KR',Batang,serif;font-size:76px;font-weight:500;letter-spacing:3px;line-height:1.6}
 .turtle-instructions p{margin:20px 0 0;color:#e3f5ff;font-size:46px;letter-spacing:2px;line-height:1.6}
-.turtle-instructions .turtle-instructions-en{margin-top:10px;font-size:34px;letter-spacing:1px;color:#d5eaf7}
+.turtle-instructions .turtle-instructions-en{margin-top:10px;font-size:48px;letter-spacing:1px;color:#d5eaf7}
 .splash-foam{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
 .foam-burst{position:absolute;inset:0}.foam-burst i{position:absolute;top:var(--y);width:var(--size);height:var(--size);border-radius:50%;border:3px solid #d5faffb3;background:radial-gradient(circle at 30% 24%,#fff8 0%,#c8f2ff26 30%,transparent 70%);box-shadow:inset -6px -7px 14px #9de4ff55,0 0 18px #c6f4ff66;animation:splash-foam-rise 1.8s ease-out var(--delay) both;will-change:transform,opacity}
 .from-left i{left:var(--x)}.from-right i{right:var(--x)}
@@ -32,3 +32,6 @@
 @keyframes water-speed-ring{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}15%{opacity:.7}100%{opacity:0;transform:translate(-50%,-50%) scale(3.5)}}
 @keyframes water-speed-wash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
 .turtle-scene:not(.is-visible) .wrist-bubbles i{animation-play-state:paused}
+.splash-white-entrance{position:absolute;inset:0;background:#fff;z-index:5;pointer-events:none;opacity:1}
+.splash-white-entrance.is-playing{animation:splash-white-arrival 1.5s ease-out both}
+@keyframes splash-white-arrival{from{opacity:1}to{opacity:0}}

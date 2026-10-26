@@ -58,3 +58,5 @@
 
 /* Keep the introduction language switch within easy reach. */
 .scene-mainReady .language-toggle{right:300px;top:270px}
+
+.scene-photo .confirm-button{right:300px;bottom:320px}

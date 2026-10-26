@@ -2,15 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {SplashGame,splashRate} from '../src/splash-game.js';
 function stroke(game,id,time){let events=[];for(const [dt,y] of [[0,.5],[120,.38],[240,.5]])events.push(...game.update([{id,x:id==='Left'?.3:.7,y,sampleAt:time+dt}],time+dt));return events;}
-test('three alternating left-right turns increase by 0.1 and speed never exceeds 2',()=>{
- const game=new SplashGame();assert.equal(game.rate,1);
+test('starts at 0.8 and three alternating left-right turns increase by 0.2, capped at 2',()=>{
+ const game=new SplashGame();assert.equal(game.rate,.8);
  for(let turn=0;turn<40;turn++){
   const time=1000+turn*1400;
   stroke(game,'Left',time);assert.equal(game.turns,turn);
   stroke(game,'Right',time+500);assert.equal(game.turns,turn+1);
-  assert.equal(game.rate,Math.min(2,1+Math.floor((turn+1)/3)/10));
+  assert.equal(game.rate,[.8,1,1.2,1.4,1.6,1.8,2][Math.min(6,Math.floor((turn+1)/3))]);
  }
- assert.equal(splashRate(1000),2);game.reset();assert.equal(game.rate,1);assert.equal(game.turns,0);
+ assert.equal(splashRate(1000),2);game.reset();assert.equal(game.rate,.8);assert.equal(game.turns,0);
 });
 test('one arm alone, held hands and tiny jitter cannot count turns',()=>{
  const game=new SplashGame();

@@ -3,7 +3,7 @@
 .ending-door,.ending-film{position:absolute;inset:0;width:3840px;height:2160px;object-fit:cover}
 .ending-instructions{position:absolute;top:65px;left:0;width:100%;text-align:center;pointer-events:none;color:#fff9de;text-shadow:0 4px 20px #002d44,0 0 45px #001c39;z-index:3}
 .ending-instructions h1{margin:0;font-family:'Noto Serif KR',Batang,serif;font-weight:500;font-size:76px;letter-spacing:4px;line-height:1.5}
-.ending-instructions p{margin:18px 0 0;font-size:45px;letter-spacing:3px;color:#e2f9ff}
+.ending-instructions p{margin:18px 0 0;font-size:56px;letter-spacing:3px;color:#e2f9ff}
 .ending-instructions span{display:inline-block;margin-top:24px;font-size:36px;letter-spacing:10px;color:#fff1b7}
 .ending-crack{position:absolute;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(circle,#fff9ccba 0%,#c9faff5c 23%,#87e7fa24 50%,transparent 73%);box-shadow:0 0 40px #b6efff38;transition:opacity .22s;will-change:transform,opacity}
 .ending-crack i{position:absolute;inset:17%;border:3px solid #efffffaa;border-radius:50%;box-shadow:0 0 18px #d2f8ff77,inset 0 0 30px #e5fbff44;animation:crack-ripple 2.2s ease-out infinite}

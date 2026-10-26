@@ -1,6 +1,6 @@
 export const SPLASH_AMPLITUDE=.075;
 export const SPLASH_TURNS_PER_STEP=3;
-export function splashRate(turns){return Math.min(2,1+Math.floor(Math.max(0,turns)/SPLASH_TURNS_PER_STEP)/10);}
+export function splashRate(turns){return Math.min(2,(8+2*Math.floor(Math.max(0,turns)/SPLASH_TURNS_PER_STEP))/10);}
 // A complete excursion and return counts as one stroke. Two alternating
 // anatomical arms make one turn; held hands and simultaneous lifts do not.
 export class SplashGame {

@@ -11,7 +11,8 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handsRef,ena
  const fishAudio=useRef(null),fish=useRef(null);
  const live=useRef({scene,onAdvance});live.current={scene,onAdvance};
  const endAt=useRef(null),kingAt=useRef(null),fired=useRef(false),foam=useRef([]),serial=useRef(0);
- const [ui,setUi]=useState({turns:0,rate:1,foam:[],targets:game.current.targets}),[problem,setProblem]=useState({}),[blocked,setBlocked]=useState(null);
+ const [ui,setUi]=useState({turns:0,rate:.8,foam:[],targets:game.current.targets}),[problem,setProblem]=useState({}),[blocked,setBlocked]=useState(null);
+ const [entranceStarted,setEntranceStarted]=useState(false);
  const cursorNodes=useRef({}),cursorDisplay=useRef(new EndingCursorDisplay()),demoHands=useRef([]),whoosh=useRef(null);
  if(!whoosh.current)whoosh.current=createWaterWhoosh();
  const [boost,setBoost]=useState(0);
@@ -51,7 +52,7 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handsRef,ena
  },[]);
  useEffect(()=>{
   endAt.current=null;fired.current=false;kingAt.current=scene==='king'?performance.now():null;
-  game.current.reset();cursorDisplay.current=new EndingCursorDisplay();demoHands.current=[];setBoost(0);whoosh.current.stop();fish.current?.stop();foam.current=[];setUi({turns:0,rate:1,foam:[],targets:game.current.targets});setBlocked(null);
+  game.current.reset();cursorDisplay.current=new EndingCursorDisplay();demoHands.current=[];setBoost(0);setEntranceStarted(false);whoosh.current.stop();fish.current?.stop();foam.current=[];setUi({turns:0,rate:game.current.rate,foam:[],targets:game.current.targets});setBlocked(null);
   if(black.current)black.current.style.opacity=scene==='king'?'1':'0';
   for(const [name,v] of [['minigame',sea.current],['king',king.current]]){v.pause();v.currentTime=0;if(scene===name)play(name);}
   return()=>{sea.current?.pause();king.current?.pause();fish.current?.stop();};
@@ -78,7 +79,7 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handsRef,ena
  },[scene,active,enabled,mode,handsRef]);
  return <section className={`journey-scenes ${active?'is-visible':''}`} aria-label={scene==='king'?'03. 용왕':'02. 첨벙첨벙 자라미니게임'}>
   <div className={`turtle-scene splash-scene ${scene==='minigame'?'is-visible':''}`}>
-   <video ref={sea} src="/videos/jara01.mp4" className="journey-film" playsInline preload="auto" aria-label="jara01 첨벙첨벙 영상" onLoadedMetadata={()=>setProblem(p=>({...p,minigame:null}))} onError={()=>setProblem(p=>({...p,minigame:'public/videos/jara01.mp4 영상을 확인해 주세요.'}))} onEnded={()=>{if(live.current.scene==='minigame'&&endAt.current===null)endAt.current=performance.now();}}/>
+   <video ref={sea} src="/videos/jara01.mp4" className="journey-film" playsInline preload="auto" aria-label="jara01 첨벙첨벙 영상" onPlaying={()=>{if(live.current.scene==='minigame')setEntranceStarted(true);}} onLoadedMetadata={()=>setProblem(p=>({...p,minigame:null}))} onError={()=>setProblem(p=>({...p,minigame:'public/videos/jara01.mp4 영상을 확인해 주세요.'}))} onEnded={()=>{if(live.current.scene==='minigame'&&endAt.current===null)endAt.current=performance.now();}}/>
    <div className="splash-foam" aria-hidden="true">{ui.foam.map(b=><div key={b.id} className="foam-burst at-target" style={{left:b.x*100+'%',top:b.y*100+'%'}}>{Array.from({length:24},(_,i)=><i key={i} style={{'--x':`${-140+(i*53)%280}px`,'--y':`${-100+(i*47)%200}px`,'--drift':`${(i%2?-1:1)*(80+(i*47)%190)}px`,'--rise':`${180+(i*97)%400}px`,'--size':`${30+(i*23)%85}px`,'--delay':`${i%5*.025}s`}}/>)}</div>)}</div>
    <div className="splash-targets" aria-label="양손 대각선 터치 가이드">{ui.targets.filter(t=>!t.hit).map(t=><div key={t.id} className="ending-crack splash-target" data-target-id={t.id} style={{left:t.x*100+'%',top:t.y*100+'%',width:t.r*4320,height:t.r*4320}} aria-label="손으로 터치할 빛"><i/><i/><b/></div>)}</div>
    {boost>0&&<div key={boost} className="splash-speed-effect" aria-hidden="true"><div className="speed-water-ring"/>{Array.from({length:24},(_,i)=><i key={i} style={{'--angle':`${i*15+7}deg`,'--reach':`${750+(i*113)%1150}px`,'--streak-length':`${180+(i*47)%300}px`}}/>)}</div>}
@@ -87,6 +88,7 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handsRef,ena
     <div className="ending-wrist splash-common-cursor" aria-hidden="true"/>
    </div>)}
    <header className="turtle-instructions splash-instructions"><h1>자라와 함께 용궁 속으로 떠나보아요</h1><p>양손으로 두 빛을 터치하고, 반대쪽 빛을 따라 첨벙첨벙 헤엄쳐보세요.</p><p className="turtle-instructions-en">Touch both lights with your hands, then follow the opposite pair.</p></header>
+   {scene==='minigame'&&<div key={runKey} className={`splash-white-entrance ${entranceStarted?'is-playing':''}`} aria-hidden="true"/>}
   </div>
   <audio ref={fishAudio} src="/audio/fish_A.wav" preload="auto" aria-label="fish_A 자라미니게임 오디오" onError={()=>setProblem(p=>({...p,minigame:'fish_A.wav 오디오를 확인해 주세요.'}))}/>
   <video ref={king} src="/videos/king_VD.mp4" className={`king-film journey-film ${scene==='king'?'is-visible':''}`} playsInline preload="auto" aria-label="king_VD 용왕 영상" onEnded={()=>{if(live.current.scene==='king')live.current.onAdvance('king');}} onError={()=>setProblem(p=>({...p,king:'king_VD.mp4 영상을 확인해 주세요.'}))}/>

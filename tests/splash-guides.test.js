@@ -19,9 +19,9 @@ test('three complete diagonal round trips increase speed; one pair cannot trigge
  for(let pair=0;pair<80;pair++){
   const at=1000+pair*500,points=g.targets.map((t,i)=>hand(i?'Right':'Left',t,at));
   g.update(points,at);assert.equal(g.pairs,pair+1);
-  assert.equal(g.rate,Math.min(2,1+Math.floor(Math.floor((pair+1)/2)/3)/10));
+  assert.equal(g.rate,[.8,1,1.2,1.4,1.6,1.8,2][Math.min(6,Math.floor((pair+1)/6))]);
  }
- g.reset();assert.equal(g.rate,1);assert.equal(g.pairs,0);
+ g.reset();assert.equal(g.rate,.8);assert.equal(g.pairs,0);
 });
 test('stale, invalid or single-hand samples cannot advance; continuous crossing is accepted',()=>{
  const g=new SplashGuides(),t=g.targets[0];
@@ -34,6 +34,8 @@ test('stale, invalid or single-hand samples cannot advance; continuous crossing 
 test('fish audio fades in the last three real seconds at any video speed and during operator fade',()=>{
  assert.equal(splashAudioFade({duration:40,currentTime:20,playbackRate:2}),0);
  assert.equal(splashAudioFade({duration:40,currentTime:37,playbackRate:2}),.5);
+ assert.ok(splashAudioFade({duration:40,currentTime:37.6,playbackRate:.8})<.00001);
+ assert.ok(Math.abs(splashAudioFade({duration:40,currentTime:38.8,playbackRate:.8})-.5)<.00001);
  assert.equal(splashAudioFade({duration:40,currentTime:20,playbackRate:1},.7),.7);
  assert.equal(splashAudioFade({duration:40,currentTime:40,playbackRate:1}),1);
  assert.equal(splashAudioFade({duration:NaN,currentTime:0,playbackRate:1}),0);
