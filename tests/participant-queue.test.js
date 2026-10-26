@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { orderWaiting, queueRequest, resultForSession, selectionChanged } from '../src/participant-queue.js';
+import { queueRequest, resultForSession, selectionChanged } from '../src/participant-queue.js';
 import { newSession, reduceSession } from '../src/interaction.js';
 
 test('display starts only a selected participant and does not restart on repeated polling', () => {
@@ -11,18 +11,6 @@ test('display starts only a selected participant and does not restart on repeate
   assert.deepEqual(selectionChanged('one', { visit_id: 'two' }), { start: true, stop: true });
 });
 
-test('oldest QR entry is first; selected person is removed without changing source', () => {
-  const input = [
-    { visit_id: 'c', entered_at: '2026-10-26T10:02:00Z' },
-    { visit_id: 'b', entered_at: '2026-10-26T10:01:00Z' },
-    { visit_id: 'a', entered_at: '2026-10-26T10:00:00Z' },
-  ];
-  assert.deepEqual(orderWaiting(input, 'b').map(v => v.visit_id), ['a', 'c']);
-  assert.equal(input.length, 3);
-});
-test('equal entry times have deterministic order', () => {
-  assert.deepEqual(orderWaiting([{ visit_id: 'b', entered_at: '2026-10-26' }, { visit_id: 'a', entered_at: '2026-10-26' }]).map(v => v.visit_id), ['a', 'b']);
-});
 test('completion captures actual remaining and own words, not discarded words', () => {
   let state = { ...newSession(), scene: 'main' };
   state = reduceSession(state, { type: 'discard', id: 'initial-0' });
@@ -75,11 +63,11 @@ test('ignored actions never create result history', () => {
 });
 test('station calls carry visit id only, and surface server failure', async () => {
   let sent;
-  await queueRequest('claim', { visit_id: 'v1' }, async (url, options) => {
+  await queueRequest('release', { visit_id: 'v1' }, async (url, options) => {
     sent = { url, options }; return { ok: true, json: async () => ({ visit_id: 'v1' }) };
   });
-  assert.equal(sent.url, '/api/participant-queue/claim');
+  assert.equal(sent.url, '/api/participant-queue/release');
   assert.deepEqual(JSON.parse(sent.options.body), { visit_id: 'v1' });
   assert.equal(sent.options.cache, 'no-store');
-  await assert.rejects(queueRequest('claim', { visit_id: 'v1' }, async () => ({ ok: false, json: async () => ({ error: 'STATION_BUSY' }) })), /STATION_BUSY/);
+  await assert.rejects(queueRequest('release', { visit_id: 'v1' }, async () => ({ ok: false, json: async () => ({ error: 'STATION_BUSY' }) })), /STATION_BUSY/);
 });

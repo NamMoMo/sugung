@@ -22,7 +22,7 @@ export function queuePlugin() {
       let action, body = {};
       try {
         if (req.method === 'GET' && req.url === '/') action = 'state';
-        else if (req.method === 'POST' && ['/claim', '/release', '/complete'].includes(req.url)) {
+        else if (req.method === 'POST' && ['/release', '/complete'].includes(req.url)) {
           action = req.url.slice(1);
           let raw = '';
           for await (const chunk of req) { raw += chunk; if (Buffer.byteLength(raw) > 65536) throw new Error('TOO_LARGE'); }
@@ -36,9 +36,9 @@ export function queuePlugin() {
           method: 'POST', headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(args), signal: AbortSignal.timeout(12000),
         });
-        if (!upstream.ok) return send(409, { error: '대기 상태가 바뀌었거나 DB 설정을 확인해야 합니다. 새로고침 후 다시 시도해 주세요.' });
+        if (!upstream.ok) return send(409, { error: '체험 상태가 바뀌었거나 DB 설정을 확인해야 합니다. 새로고침 후 다시 시도해 주세요.' });
         send(200, await upstream.json());
-      } catch { send(502, { error: '대기 명단 서버에 연결하지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요.' }); }
+      } catch { send(502, { error: '체험 서버에 연결하지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요.' }); }
     });
   }
 }

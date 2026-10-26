@@ -1,8 +1,3 @@
-export function orderWaiting(visits, activeId) {
-  return visits.filter(v => v.visit_id !== activeId).sort((a, b) =>
-    Date.parse(a.entered_at) - Date.parse(b.entered_at) || a.visit_id.localeCompare(b.visit_id));
-}
-
 export function selectionChanged(selectedId, active) {
   return {
     stop: Boolean(selectedId && selectedId !== active?.visit_id),

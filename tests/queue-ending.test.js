@@ -5,11 +5,11 @@ import { create } from 'react-test-renderer';
 import { useParticipantQueue } from '../src/useParticipantQueue.js';
 import { LIMIT, newSession } from '../src/interaction.js';
 
-async function fixture() {
+async function fixture(initialActive = { visit_id: 'participant-one', nickname: '테스트' }) {
   const original = { fetch: globalThis.fetch, setInterval: globalThis.setInterval, clearInterval: globalThis.clearInterval, act: globalThis.IS_REACT_ACT_ENVIRONMENT };
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   let poll, queue, renderer, starts = 0, completions = 0, failResponse = false;
-  let active = { visit_id: 'participant-one', nickname: '테스트' };
+  let active = initialActive;
   globalThis.setInterval = fn => { poll = fn; return 1; };
   globalThis.clearInterval = () => {};
   globalThis.fetch = async (url, options) => {
@@ -53,7 +53,7 @@ test('09 remains visible after successful DB completion and subsequent queue pol
   } finally { await f.close(); }
 });
 
-test('new admin selection exits the held 09 and starts only the new participant', async () => {
+test('new QR admission exits the held 09 and starts only the new participant', async () => {
   const f = await fixture();
   try {
     await f.end(); await f.next();
@@ -80,5 +80,16 @@ test('operator test ending remains visible without awarding completion; explicit
     assert.equal(f.completions, 0); assert.equal(f.queue.show, false); assert(f.queue.error);
     await act(async () => { await f.queue.release(); });
     assert.equal(f.queue.show, true); assert.equal(f.completions, 0);
+  } finally { await f.close(); }
+});
+
+test('empty station has no waiting list or manual selection; QR admission activates it once', async () => {
+  const f = await fixture(null);
+  try {
+    assert.equal(f.starts, 0); assert.equal(f.queue.show, true);
+    assert.equal('select' in f.queue, false); assert.equal('waiting' in f.queue.state, false);
+    await f.next(); await f.poll();
+    assert.equal(f.starts, 1); assert.equal(f.queue.show, false);
+    assert.equal(f.queue.blocked.current, false);
   } finally { await f.close(); }
 });

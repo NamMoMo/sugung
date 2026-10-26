@@ -28,7 +28,7 @@ test('local bridge keeps the room key on server and rejects external origins and
         Promise.resolve(middleware(req, res)).catch(reject);
       });
     }
-    const claimed = await request('/claim', 'POST', JSON.stringify({ visit_id: '00000000-0000-0000-0000-000000000001', p_signal_key: 'forged' }));
+    const claimed = await request('/release', 'POST', JSON.stringify({ visit_id: '00000000-0000-0000-0000-000000000001', p_signal_key: 'forged' }));
     assert.equal(claimed.status, 200);
     assert.equal(JSON.parse(upstream.options.body).p_signal_key, 'test-only-private-key');
     assert(!JSON.stringify(claimed).includes('test-only-private-key'));
@@ -45,8 +45,9 @@ test('local bridge keeps the room key on server and rejects external origins and
     assert.deepEqual(JSON.parse(upstream.options.body).p_result.discarded_initial_keywords, ['실력']);
     assert.equal((await request('/', 'GET', '', { origin: 'https://example.org' })).status, 403);
     assert.equal((await request('/', 'GET', '', { host: 'example.org:4173' })).status, 403);
-    assert.equal((await request('/claim', 'POST', 'x'.repeat(65537))).status, 502);
-    assert.equal((await request('/claim', 'POST', '{bad json')).status, 502);
+    assert.equal((await request('/release', 'POST', 'x'.repeat(65537))).status, 502);
+    assert.equal((await request('/release', 'POST', '{bad json')).status, 502);
+    assert.equal((await request('/claim', 'POST', '{}')).status, 404);
     globalThis.fetch = async () => ({ ok: false });
     const failed = await request('/');
     assert.equal(failed.status, 409);

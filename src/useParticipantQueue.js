@@ -1,9 +1,9 @@
 import {LIMIT} from './interaction.js';
 import { useEffect, useRef, useState } from 'react';
-import { orderWaiting, queueRequest, resultForSession, selectionChanged } from './participant-queue.js';
+import { queueRequest, resultForSession, selectionChanged } from './participant-queue.js';
 
 export function useParticipantQueue(onStart, scene, session) {
-  const [show, setShow] = useState(true), [state, setState] = useState({ waiting: [], active: null });
+  const [show, setShow] = useState(true), [state, setState] = useState({ active: null });
   const [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const [completionError, setCompletionError] = useState(false);
   const selected = useRef(null), blocked = useRef(true), valid = useRef(true), working = useRef(false);
@@ -15,12 +15,12 @@ export function useParticipantQueue(onStart, scene, session) {
     const serial = ++readSerial.current;
     const data = await queueRequest();
     if (!alive.current || started !== revision.current || serial !== readSerial.current) return data;
-    setState({ ...data, waiting: orderWaiting(data.waiting, data.active?.visit_id) });
+    setState({ active: data.active });
     const change = selectionChanged(selected.current?.visit_id, data.active);
     if (change.stop && !endingVisible.current) {
       selected.current = null; blocked.current = true; setShow(true);
       latest.current.onStart();
-      setError('선택한 참가자의 체험이 중지되거나 종료되었습니다. 참가자를 다시 선택해 주세요.');
+      setError('');
     }
     if (change.start) begin(data.active);
     return data;
@@ -47,15 +47,8 @@ export function useParticipantQueue(onStart, scene, session) {
     endingVisible.current = false;
     setCompletionError(false);
     latest.current.onStart(); selected.current = person; valid.current = true;
-    setState(current => ({ active: person, waiting: orderWaiting(current.waiting, person.visit_id) }));
+    setState({ active: person });
     blocked.current = false; setShow(false); setError('');
-  }
-  function select(person) {
-    return run(async () => { const claimed = await queueRequest('claim', { visit_id: person.visit_id }); begin(claimed); });
-  }
-  function resume() {
-    if (selected.current && latest.current.session.scene === 'escaped') return;
-    return run(async () => { const data = await refresh(); if (data.active) begin(data.active); });
   }
   function release() {
     if (working.current) return;
@@ -74,7 +67,7 @@ export function useParticipantQueue(onStart, scene, session) {
     // 09 is part of the artwork. Saving completion must not cover it with the waiting screen.
     setShow(false);
     if (!valid.current || latest.current.session.count !== LIMIT) {
-      setError('관리자 장면 이동 또는 테스트 체험입니다. 완료 기록 없이 선택을 취소해 주세요.'); return;
+      setError('관리자 장면 이동 또는 테스트 체험입니다. 완료 기록 없이 초기화해 주세요.'); return;
     }
     return run(async () => {
       try {
@@ -84,6 +77,6 @@ export function useParticipantQueue(onStart, scene, session) {
     });
   }
   useEffect(() => { if (scene === 'escaped') void finish(); }, [scene]);
-  return { show, state, error, busy, completionError, blocked, valid, working, select, resume, release,
+  return { show, state, error, busy, completionError, blocked, valid, working, release,
     refresh: () => run(refresh), retryFinish: finish };
 }

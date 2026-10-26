@@ -1,7 +1,7 @@
 # 수궁야행 · 현장 수정본
 
 Vite + React + MediaPipe 기반 1인 관객 인터랙티브 미디어아트입니다.
-참가자 선택 및 Supabase 연결을 위한 최초 설정은 [APP-INTEGRATION.md](APP-INTEGRATION.md)를 먼저 확인하세요. QR 입장 대기자 중 한 명을 선택한 뒤 아래 기존 작품 흐름을 시작합니다.
+QR 즉시 입장 및 Supabase 연결을 위한 최초 설정은 [APP-INTEGRATION.md](APP-INTEGRATION.md)를 먼저 확인하세요. 빈 부스에서 QR을 인증하면 아래 기존 작품 흐름이 활성화됩니다. 체험 중에는 다른 관객의 입장을 거절하며 대기자 명단을 만들지 않습니다.
 이 버전은 00~09 전체 흐름과 4K 원본 영상 5개를 포함합니다. 전시 PC에서 로컬 서버로 실행합니다.
 
 ## 담당자 실행 방법 (Windows)
