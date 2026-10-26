@@ -92,7 +92,7 @@ export default function App() {
   const station = useTreasureStation({ enabled: import.meta.env.VITE_TREASURE_STATION_ENABLED === 'true' && !sharedRoute, onReset: resetArtwork });
   const resetVisit = useCallback(() => { if (station.enabled) void station.reset(); else resetArtwork(); }, [station.enabled, station.reset, resetArtwork]);
   const { remaining, continueVisit } = useIdleReset(engaged && (!station.enabled || station.active) && !station.busy && page !== "trap" && page !== "chest-light", resetVisit);
-  const obscured = Boolean(modal || remaining !== null || (station.enabled && !station.active));
+  const obscured = Boolean(modal || remaining !== null || (station.enabled && (!station.active || station.pairingRequired)));
   useEffect(() => {
     if (!station.enabled || !station.active || page !== 'result' || !escaped) return;
     try { station.submit(recorder.current.snapshot(answers, lightPlacements, language)); }

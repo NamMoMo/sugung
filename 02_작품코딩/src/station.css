@@ -3,3 +3,6 @@
 .station-gate p { line-height: 1.8; }.station-gate [role=alert] { color: #ffcfba; }
 .station-gate button,.station-sync button { color: inherit; background: #17303e; border: 1px solid #b6a579; border-radius: 8px; padding: 10px 16px; font: inherit; cursor: pointer; }
 .station-sync { position: fixed; bottom: 12px; left: 16px; z-index: 3000; max-width: min(600px,85vw); display: flex; gap: 12px; align-items: center; padding: 8px 12px; border-radius: 8px; background: #071321ed; color: #e0d2b1; font: 12px/1.6 sans-serif; }
+.station-pair { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; margin: 28px 0; }
+.station-pair label { width: 100%; }.station-pair input { width: min(240px,60vw); padding: 12px; color: #f1dfbb; background: #102330; border: 1px solid #b6a579; border-radius: 8px; font: 20px monospace; letter-spacing: 3px; }
+.station-install-help { font-size: 12px; opacity: .75; margin-top: 24px; }

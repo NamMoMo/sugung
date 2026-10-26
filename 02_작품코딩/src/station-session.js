@@ -11,7 +11,7 @@ export async function stationRequest(action = 'state', data, fetcher = fetch) {
 export function createStationSession({ request = stationRequest, onChange = () => {}, onActivate = () => {}, onReset = () => {} } = {}) {
   let disposed = false, serial = 0, epoch = 0, person = null, pending = null, saving = false, resetting = false;
   let holdResult = false, savedRevision = 0, resetRequested = false;
-  let state = { ready: false, active: false, busy: false, completed: false, error: '', participant: null };
+  let state = { ready: false, active: false, busy: false, completed: false, error: '', participant: null, pairingRequired: false, pairingBusy: false };
   const emit = patch => { if (!disposed) { state = { ...state, ...patch }; onChange(state); } };
   function clear() {
     epoch++; person = pending = null; holdResult = false; savedRevision = 0; resetRequested = false;
@@ -24,12 +24,22 @@ export function createStationSession({ request = stationRequest, onChange = () =
       const data = await request();
       if (disposed || read !== serial || version !== epoch) return;
       const active = data.active;
-      emit({ ready: true, ...(pending ? {} : { error: '' }) });
+      emit({ ready: true, pairingRequired: false, ...(pending ? {} : { error: '' }) });
       if (active && active.visit_id !== person?.visit_id) {
         epoch++; person = active; pending = null; holdResult = false; savedRevision = 0;
         onActivate(active); emit({ active: true, completed: false, participant: active, error: '' });
       } else if (!active && person && (!holdResult || data.last?.status === 'stopped')) clear();
-    } catch (error) { emit({ error: error.message }); }
+    } catch (error) { emit({ error: error.message, ...(error.code === 'STATION_PAIRING_REQUIRED' ? { pairingRequired: true } : {}) }); }
+  }
+  async function pair(code) {
+    if (disposed || state.pairingBusy) return;
+    serial++; emit({ pairingBusy: true, error: '' });
+    try {
+      const reply = await request('pair', { code: String(code).trim() });
+      if (!reply.ok) throw new Error('기기 연결을 확인하지 못했습니다.');
+      emit({ pairingRequired: false, error: '' }); await sync();
+    } catch (error) { emit({ pairingRequired: true, error: error.message }); }
+    finally { emit({ pairingBusy: false }); }
   }
   async function flush() {
     if (saving || resetting || disposed || !pending || !person) return;
@@ -70,6 +80,6 @@ export function createStationSession({ request = stationRequest, onChange = () =
     } catch (error) { emit({ error: error.message }); }
     finally { resetting = false; emit({ busy: false }); }
   }
-  return { sync, submit, reset, retry: flush, get state() { return state; },
+  return { sync, submit, reset, pair, retry: flush, get state() { return state; },
     dispose() { disposed = true; epoch++; serial++; } };
 }

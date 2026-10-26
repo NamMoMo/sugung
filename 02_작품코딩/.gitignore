@@ -12,3 +12,6 @@ test-results/
 .tools/
 playwright-report/
 supabase/.temp/
+.wrangler/
+.dev.vars*
+.station-pairing-code

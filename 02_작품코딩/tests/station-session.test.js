@@ -4,6 +4,16 @@ import { createStationSession } from '../src/station-session.js';
 import { treasureFixture } from './helpers/treasure-fixture.js';
 
 const drain = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
+test('cloud pairing is required before activation; successful pairing resumes the existing admission flow', async () => {
+  let paired = false, starts = 0;
+  const session = createStationSession({ onActivate: () => starts++, async request(action, body) {
+    if (action === 'pair') { assert.equal(body.code, '123456789012'); paired = true; return { ok: true }; }
+    if (!paired) throw Object.assign(new Error('기기 연결 필요'), { code: 'STATION_PAIRING_REQUIRED' });
+    return { active: { visit_id: 'one' } };
+  } });
+  await session.sync(); assert.equal(session.state.pairingRequired, true); assert.equal(starts, 0);
+  await session.pair('123456789012'); assert.equal(session.state.pairingRequired, false); assert.equal(starts, 1);
+});
 function setup() {
   let active = { visit_id: 'one', nickname: '점검' }, last = active, starts = 0, resets = 0, saved = 0;
   let saveHandler;

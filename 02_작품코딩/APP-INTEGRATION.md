@@ -49,7 +49,22 @@ npx supabase@2.122.0 db query --linked --project-ref gdkrsirsiijdkhiwsltf --file
 
 ## 운영 범위
 
-DB 모드는 전시 PC의 Vite 개발/preview 서버에 포함된 로컬 API가 필요합니다. `dist`만 정적 호스팅하면 DB 모드가 동작하지 않습니다. DB 설정이 누락되거나 연결이 끊겨도 다른 관객으로 임의 연결하지 않습니다.
+### 공개 PWA
+
+- 공개 주소: `https://sugung-room2.pages.dev/`
+- Chrome 메뉴의 앱 설치 또는 화면의 ‘앱 설치’로 독립 창에 설치합니다. 가로 화면을 기준으로 합니다.
+- 공개 버전에서는 처음 한 번 12자리 기기 연결 코드를 입력합니다. 연결은 Secure/HttpOnly 쿠키로 1년간 유지되며, 브라우저 데이터를 지우거나 기기 인증 비밀값을 바꾸면 재연결합니다.
+- 최초 연결 코드는 운영 PC의 Git 제외 파일 `.station-pairing-code`에 보관합니다. 참가자에게 배포하는 부스 코드 `1003`과 별개입니다.
+- Cloudflare Secrets에 `ROOM_SIGNAL_KEY`, `STATION_PAIRING_CODE`, `STATION_SESSION_SECRET`을 설정합니다. 이 값은 코드·manifest·서비스 워커에 포함하지 않습니다.
+- Worker가 DB API를 처리하므로 공개 PWA를 실행할 때 원래 로컬 PC 서버를 켜둘 필요가 없습니다. 작품의 한 부스에는 전시 기기 한 대를 사용합니다.
+- 기존 결과지 링크는 기기 연결 없이 읽기 전용으로 열립니다. 공개 주소에서 생성한 결과 QR은 다른 기기에서도 열 수 있습니다.
+- 오프라인에서는 연결 안내를 표시합니다. 입장·완료·수정 결과 저장에는 인터넷이 필요하며, API 응답이나 참가자 정보를 서비스 워커에 캐시하지 않습니다. 업데이트는 진행 중인 체험을 강제로 새로고침하지 않습니다.
+
+코드 폴더에서 `npm run build` 후 `wrangler pages deploy dist --project-name sugung-room2 --branch 2조`로 배포합니다. `wrangler.toml`에는 공개 설정만 넣고, 비밀값은 Cloudflare Secrets로 별도 저장합니다.
+
+### 로컬 전시 PC
+
+로컬 DB 모드는 전시 PC의 Vite 개발/preview 서버에 포함된 로컬 API가 필요합니다. 공개 배포는 생성된 `_worker.js`까지 지원하는 Cloudflare Pages 구성이 필요하며, 일반 정적 파일 서버에 `dist`만 올리면 DB API가 동작하지 않습니다. DB 설정이 누락되거나 연결이 끊겨도 다른 관객으로 임의 연결하지 않습니다.
 
 환경변수를 설정하지 않은 기본 빌드는 기존 독립 체험입니다. 기존 `#treasures=v1.…` 결과 링크는 DB와 연결하지 않는 읽기 전용 화면을 유지합니다. 로컬 실행으로 생성한 QR의 localhost 주소는 관객 휴대전화에서 열 수 없으므로, 결과지 QR의 공개 주소 운영은 별도 배포 설정이 필요합니다.
 

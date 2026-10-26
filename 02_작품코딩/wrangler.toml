@@ -1,0 +1,7 @@
+name = "sugung-room2"
+pages_build_output_dir = "./dist"
+compatibility_date = "2025-09-01"
+
+[vars]
+SUPABASE_URL = "https://gdkrsirsiijdkhiwsltf.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IWZAvZi3mH_S0-UvHYt5Hg_G75uNh7x"
