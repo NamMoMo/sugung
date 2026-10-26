@@ -104,3 +104,10 @@ test('an idle loop seek never blocks the next hit, but impact playback still doe
  s.hit();assert.equal(endingAcceptsHit(v,s),false);s.boundary(5);assert.equal(endingAcceptsHit(v,s),true);
  v.paused=true;assert.equal(endingAcceptsHit(v,s),false);
 });
+
+test('touching or a short fast jitter cannot punch; a deliberate fast stroke can',()=>{
+ const c=CRACKS[0];
+ const gentle=new CrackHits();gentle.update([{id:'Left',x:c.x-.03,y:c.y}],1000);assert.equal(gentle.update([{id:'Left',x:c.x+.03,y:c.y}],1200),null);
+ const jitter=new CrackHits();jitter.update([{id:'Left',x:c.x,y:c.y}],1000);assert.equal(jitter.update([{id:'Left',x:c.x+.015,y:c.y}],1020),null);
+ const fast=new CrackHits();fast.update([{id:'Right',x:c.x-.06,y:c.y}],1000);assert.equal(fast.update([{id:'Right',x:c.x+.06,y:c.y}],1100)?.count,1);
+});

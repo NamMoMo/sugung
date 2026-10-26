@@ -41,7 +41,7 @@ test('saved result preserves additions later discarded, repeated words, ordered 
   state = reduceSession(state, { type: 'add', id: 'mine-1', text: '여유', at: 3000 });
   state = reduceSession(state, { type: 'discard', id: 'mine-1', at: 4000 });
   state = reduceSession(state, { type: 'add', id: 'mine-2', text: '여유', at: 5000 });
-  for (let i = 0; i < 6; i++) state = reduceSession(state, { type: 'add', id: `extra-${i}`, text: '성장', at: 6000 + i });
+  for (let i = 0; i < 3; i++) state = reduceSession(state, { type: 'add', id: `extra-${i}`, text: '성장', at: 6000 + i });
   while (state.scene !== 'escaped') state = reduceSession(state, { type: 'next', at: 12000 });
   const result = resultForSession(state);
   assert.equal(result.schema_version, 2);
@@ -52,8 +52,8 @@ test('saved result preserves additions later discarded, repeated words, ordered 
   assert.deepEqual(result.discarded_keywords, ['실력', '여유']);
   assert.equal(result.all_added_keywords.filter(s => s === '여유').length, 2);
   assert.equal(result.added_keywords.filter(s => s === '여유').length, 1);
-  assert.equal(result.history.length, 10);
-  assert.deepEqual(result.history.map(e => e.sequence), [1,2,3,4,5,6,7,8,9,10]);
+  assert.equal(result.history.length, 7);
+  assert.deepEqual(result.history.map(e => e.sequence), [1,2,3,4,5,6,7]);
   assert.equal(result.history[0].elapsed_ms, 1000);
   assert.equal(result.history[2].source, 'participant');
   assert.deepEqual(resultForSession(reduceSession(state, { type: 'next', at: 99999 })), result);

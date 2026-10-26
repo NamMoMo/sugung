@@ -3,7 +3,7 @@ export const ENDING_PRELUDE_MS=6000;
 export const ENDING_WHITE_MS=2000;
 export const HIT_COOLDOWN_MS=400;
 // Speed uses screen heights/second, correcting x for the 16:9 stage.
-export const HIT_MIN_SPEED=.55;
+export const HIT_MIN_SPEED=1.3;
 export const CRACKS=[
  {id:'upper',x:.19,y:.36,r:480/2160},
  {id:'right',x:.81,y:.40,r:480/2160},
@@ -52,7 +52,7 @@ export class CrackHits{
    if(!enabled||success||!continuous||at-old.at<8||now-this.lastHit<HIT_COOLDOWN_MS)continue;
    const anchor=trail[0]||old,movement=distance(anchor,p),speed=movement/((at-anchor.at)/1000);
    // Ignore implausible jumps after a tracking swap; reacquisition needs a new entry.
-   if(movement<.035||speed<HIT_MIN_SPEED||speed>12)continue;
+   if(movement<.085||speed<HIT_MIN_SPEED||speed>12)continue;
    // Large targets can already contain the wrist. A real fast stroke inside
    // them is valid too; an unmoving/slowly resting wrist still cannot hit.
    const target=this.cracks.find(c=>!this.hit.has(c.id)&&crosses(anchor,p,c));
