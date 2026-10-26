@@ -1,3 +1,4 @@
+import {LIMIT} from './interaction.js';
 import { smoothMask,maskAlpha } from './mask.js';
 import {createLightEffects} from './light-effects.js';
 export const W = 1280, H = 720;
@@ -70,7 +71,7 @@ export function createRenderer(canvas) {
   const demoMask={data:demoData,width:640,height:360};
   function draw({ time, count, demo, bursts, phase, bodyFrame }) {
     canvas.dataset.renderTime=String(time);
-    const p = count/10, t=time/1000;
+    const p = Math.min(1,count/LIMIT), t=time/1000;
     const final=phase==='photo',center=bodyFrame?{x:bodyFrame.x,y:bodyFrame.shoulderY+.105}:{x:.5,y:.565};
     ctx.clearRect(0,0,W,H);
     for (const s of stars) {ctx.globalAlpha=.15+.28*(.5+.5*Math.sin(t*.6+s.x));ctx.fillStyle=s.x%2?'#e8c987':'#75c9ee';ctx.beginPath();ctx.arc(s.x,(s.y-t*4+H*10)%H,s.s,0,7);ctx.fill();} ctx.globalAlpha=1;

@@ -21,13 +21,13 @@ test('confirmation requires 3s and cannot repeat while fist stays closed',()=>{
  const g=new GripController();const s=t=>({...sample(t,'fist','confirm'),duration:3000});
  g.update(sample(0,'open','confirm'));g.update(s(100));assert.equal(g.update(s(3099)),null);assert.equal(g.update(s(3100)).type,'confirm');assert.equal(g.update(s(7000)),null);
 });
-test('ten combined actions transition once, photo is immutable and reset restores words',()=>{
+test('seven combined actions transition once, photo is immutable and reset restores words',()=>{
  let s={...newSession(),scene:'main'};assert.equal(s.labels.length,7);
  for(let i=0;i<4;i++)s=reduceSession(s,{type:'discard',id:`initial-${i}`});
  s=reduceSession(s,{type:'add',text:'   ',id:'blank'});assert.equal(s.count,4);
  s=reduceSession(s,{type:'discard',id:'missing'});assert.equal(s.count,4);
- for(let i=0;i<6;i++)s=reduceSession(s,{type:'add',text:'나의 기준',id:`own-${i}`});
- assert.equal(s.count,10);assert.equal(s.scene,'photo');assert.equal(s.labels.length,9);
+ for(let i=0;i<3;i++)s=reduceSession(s,{type:'add',text:'나의 기준',id:`own-${i}`});
+ assert.equal(s.count,7);assert.equal(s.scene,'photo');assert.equal(s.labels.length,6);
  assert.equal(reduceSession(s,{type:'add',text:'ignored',id:'extra'}),s);
  s=reduceSession(s,{type:'reset'});assert.equal(s.scene,'standby');assert.equal(s.count,0);assert.equal(s.labels.length,7);
 });

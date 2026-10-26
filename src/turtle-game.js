@@ -33,14 +33,32 @@ export class JourneyCursor{
   return {...this.position,opacity};
  }
 }
-export function turtleFrame(seconds){
- const t=Math.max(0,seconds),entry=ease(t/GAME_ENTRY_SECONDS);
- const opening=ease(t/1.4);
- const offset=(220*Math.sin(t*.85)+100*Math.sin(t*1.7))*opening;
- // Walls travel outward, preserving coverage at either outer edge of the TV.
- const widening=(420+100*Math.sin(t*.65+.5))*opening;
- const leftOffset=offset-widening,rightOffset=offset+widening;
- const left=1733+leftOffset,right=2293+rightOffset,center=(left+right)/2;
- const jara={x:center+4*Math.sin(t*1.05)*entry,y:-428+(1880+428)*entry+9*Math.sin(t*1.4)*entry};
- return {entry,left,right,offset,leftOffset,rightOffset,jara};
+export class LanePressure {
+ constructor(){this.reset();}
+ reset(){this.previous=null;this.last=null;this.left=0;this.right=0;this.leftTarget=0;this.rightTarget=0;}
+ update(point,now){
+  const dt=this.last===null?16:clamp(now-this.last,0,100);this.last=now;
+  if(point&&Number.isFinite(point.x)){
+   const previous=this.previous;
+   if(previous&&now-previous.time<350&&previous.id===point.id){
+    const dx=point.x-previous.x;
+    if(Math.abs(dx)>.002&&Math.abs(dx)<.22){
+     const room=Math.max(0,320-this.leftTarget-this.rightTarget),push=Math.min(room,Math.abs(dx)*900);
+     if(dx<0)this.leftTarget+=push;else this.rightTarget+=push;
+    }
+   }
+   this.previous={x:point.x,time:now,id:point.id};
+  }else if(this.previous&&now-this.previous.time>350)this.previous=null;
+  const alpha=1-Math.exp(-dt/700);this.left+=(this.leftTarget-this.left)*alpha;this.right+=(this.rightTarget-this.right)*alpha;
+  return {leftPressure:this.left,rightPressure:this.right};
+ }
+}
+export function turtleFrame(seconds,{duration=19.958333,leftPressure=0,rightPressure=0}={}){
+ const t=Math.max(0,seconds),entry=ease(t/GAME_ENTRY_SECONDS),progress=ease(t/duration);
+ const offset=(85*Math.sin(t*.85)+35*Math.sin(t*1.7))*ease(t/1.4);
+ const width=1900-800*progress,center=1920+offset;
+ const left=clamp(center-width/2+clamp(leftPressure,0,320),0,1733);
+ const right=clamp(center+width/2-clamp(rightPressure,0,320),2293,3840);
+ const jara={x:(left+right)/2+4*Math.sin(t*1.05)*entry,y:-428+(1880+428)*entry+9*Math.sin(t*1.4)*entry};
+ return {entry,left,right,offset,leftOffset:left-1733,rightOffset:right-2293,jara};
 }

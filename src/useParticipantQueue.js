@@ -1,3 +1,4 @@
+import {LIMIT} from './interaction.js';
 import { useEffect, useRef, useState } from 'react';
 import { orderWaiting, queueRequest, resultForSession, selectionChanged } from './participant-queue.js';
 
@@ -72,7 +73,7 @@ export function useParticipantQueue(onStart, scene, session) {
     blocked.current = true; endingVisible.current = true;
     // 09 is part of the artwork. Saving completion must not cover it with the waiting screen.
     setShow(false);
-    if (!valid.current || latest.current.session.count !== 10) {
+    if (!valid.current || latest.current.session.count !== LIMIT) {
       setError('관리자 장면 이동 또는 테스트 체험입니다. 완료 기록 없이 선택을 취소해 주세요.'); return;
     }
     return run(async () => {

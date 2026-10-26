@@ -1,5 +1,5 @@
 import React,{forwardRef,useEffect,useImperativeHandle,useRef,useState} from 'react';
-import {GAME_FADE_MS,KING_REVEAL_MS,SEA_PLAYBACK_RATE,GAME_SLOTS,JourneyCursor,turtleFrame,seaSpriteBrightness} from '../turtle-game.js';
+import {GAME_FADE_MS,KING_REVEAL_MS,SEA_PLAYBACK_RATE,GAME_SLOTS,LanePressure,JourneyCursor,turtleFrame,seaSpriteBrightness} from '../turtle-game.js';
 import {FishAudioController} from '../fish-audio.js';
 import './journey.css';
 
@@ -10,7 +10,7 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handRef,enab
  const endAt=useRef(null),kingAt=useRef(null),fired=useRef(false);
  const fishSound=useRef(null),fishAudio=useRef(null),ambienceSound=useRef(null),ambienceAudio=useRef(null);
  const ripple=useRef(null);
- const cursorMotion=useRef(new JourneyCursor());
+ const cursorMotion=useRef(new JourneyCursor()),lanePressure=useRef(new LanePressure());
  const [fishBlocked,setFishBlocked]=useState(false);
  const [problem,setProblem]=useState({}),[blocked,setBlocked]=useState(null);
  const active=scene==='minigame'||scene==='king';
@@ -38,7 +38,7 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handRef,enab
   if(scene==='standby'){fishAudio.current?.stop();ambienceAudio.current?.stop();}
   else if(scene!=='minigame'){fishAudio.current?.fadeOut(performance.now());ambienceAudio.current?.fadeOut(performance.now());}
   if(cursor.current)cursor.current.style.opacity='0';
-  cursorMotion.current.reset();
+  cursorMotion.current.reset();lanePressure.current.reset();
   setFishBlocked(false);
   for(const [name,v] of [['minigame',sea.current],['king',king.current]]){
    v.pause();v.currentTime=0;if(scene===name)play(name);
@@ -50,7 +50,9 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handRef,enab
   let raf;
   function frame(now){
    if(live.current.scene==='minigame'){
-    const f=turtleFrame(sea.current.currentTime);
+    const pressure=lanePressure.current.update(enabled?handRef.current:null,now);
+    const f=turtleFrame(sea.current.currentTime,{duration:sea.current.duration||19.958333,...pressure});
+    sea.current.dataset.laneWidth=String(f.right-f.left);sea.current.dataset.leftPressure=String(pressure.leftPressure);sea.current.dataset.rightPressure=String(pressure.rightPressure);
     const brightness=seaSpriteBrightness(sea.current.currentTime,sea.current.duration);
     for(const element of [left.current,right.current,jara.current])element.firstElementChild.style.filter=`brightness(${brightness})`;
     const point=cursorMotion.current.update(enabled?handRef.current:null,now,f);

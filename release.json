@@ -1,7 +1,7 @@
 {
   "version": "현장수정-2026-10-26",
   "saved_at": "2026-10-25T23:59:02.798489+09:00",
-  "shared_preview_version": 20,
+  "shared_preview_version": 21,
   "github_repository": "https://github.com/NamMoMo/sugung",
   "github_branch": "1조",
   "stage": {
@@ -60,5 +60,7 @@
     "pulse_seconds": 3,
     "pulse_count": 2,
     "duration_seconds": 6
-  }
+  },
+  "interaction_limit": 7,
+  "ending_hit_min_speed": 1.3
 }

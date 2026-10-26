@@ -1,5 +1,5 @@
 export const INITIAL_WORDS = ['실력', '자유', '연봉', '명예', '봉사', '성장', '안정'];
-export const LIMIT = 10;
+export const LIMIT = 7;
 export const GRAB_MS = 2000;
 export const CONFIRM_MS = 3000;
 // Confirmation is independent from grab arming: entering with an existing fist is valid.
