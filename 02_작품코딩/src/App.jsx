@@ -1,5 +1,5 @@
 import { useI18n, LanguageSwitch } from "./i18n";
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, CircleHelp, RotateCcw, Shell, Volume2, VolumeX, X } from "./icons";
 import { chests as rawChests, countAnswers, emptyAnswers, STORAGE_KEY } from "./journey";
 import Entrance from "./Entrance";
@@ -11,6 +11,9 @@ import useIdleReset from "./useIdleReset";
 import { earnedLights, placeLight } from "./seal-transfer.js";
 import useExhibitionAudio from "./useExhibitionAudio";
 import { musicStage } from "./exhibition-audio.js";
+import { createTreasureRecorder } from './treasure-result.js';
+import { useTreasureStation } from './useTreasureStation.js';
+import StationNotice from './StationNotice.jsx';
 
 const DualScenes = lazy(() => import("./DualScenes"));
 const Result = lazy(() => import("./Result"));
@@ -21,7 +24,9 @@ function clearPreviousVisit() {
 }
 
 export default function App() {
-  const { t, localize, setLanguage } = useI18n();
+  const { t, localize, setLanguage, language } = useI18n();
+  const recorder = useRef(null);
+  if (!recorder.current) recorder.current = createTreasureRecorder();
   const chests = localize(rawChests);
   const [sharedRoute, setSharedRoute] = useState(() => sharedResultFromHash(window.location.hash));
   const [trapped, setTrapped] = useState(false);
@@ -57,9 +62,10 @@ export default function App() {
   const playLightArrival = useCallback(quick => music.engine.current?.pair(quick), [music.engine]);
   const escapeRevealed = useCallback(() => setEscapeFree(true), []);
   const enterRoom = useCallback(() => { setEntered(true); setEngaged(true); setTrapped(true); setPage("trap"); }, []);
-  const engage = useCallback(() => setEngaged(true), []);
+  const engage = useCallback(() => { recorder.current.start(); setEngaged(true); }, []);
 
-  const resetVisit = useCallback(() => {
+  const resetArtwork = useCallback(() => {
+    recorder.current.reset();
     setLanguage("ko");
     setTrapped(false);
     setEscaped(false);
@@ -83,8 +89,15 @@ export default function App() {
 
     clearPreviousVisit();
   }, [setLanguage, music.reset]);
-  const { remaining, continueVisit } = useIdleReset(engaged && page !== "trap" && page !== "chest-light", resetVisit);
-  const obscured = Boolean(modal || remaining !== null);
+  const station = useTreasureStation({ enabled: import.meta.env.VITE_TREASURE_STATION_ENABLED === 'true' && !sharedRoute, onReset: resetArtwork });
+  const resetVisit = useCallback(() => { if (station.enabled) void station.reset(); else resetArtwork(); }, [station.enabled, station.reset, resetArtwork]);
+  const { remaining, continueVisit } = useIdleReset(engaged && (!station.enabled || station.active) && !station.busy && page !== "trap" && page !== "chest-light", resetVisit);
+  const obscured = Boolean(modal || remaining !== null || (station.enabled && !station.active));
+  useEffect(() => {
+    if (!station.enabled || !station.active || page !== 'result' || !escaped) return;
+    try { station.submit(recorder.current.snapshot(answers, lightPlacements, language)); }
+    catch { notify('체험 결과를 확인하지 못했습니다. 운영자에게 알려 주세요.'); }
+  }, [station.enabled, station.active, station.submit, page, escaped, answers, lightPlacements, language, notify]);
 
   useEffect(clearPreviousVisit, []);
   useEffect(() => {
@@ -122,6 +135,7 @@ export default function App() {
   function returnToRoom() { setModal(null); setPage("home"); }
   function choose(index, id) {
     if (!chest.scenes[index].options.some(option => option[0] === id)) return;
+    recorder.current.choose(chest.id, index, id);
     const next = { ...answers, [chest.id]: answers[chest.id].map((old, i) => i === index ? id : old) };
     setAnswers(next);
     if (next[chest.id].every(Boolean)) {
@@ -161,6 +175,7 @@ export default function App() {
   );
   return (
     <div data-audio-stage={audioStage} data-audio-playing={music.playing} className={`kiosk-app palace-theme ${entered && page === "home" ? "is-room" : ""}`}>
+      <StationNotice station={station} language={language} />
       {(!entered || ["trap", "chest-light", "escape"].includes(page)) && soundControl(true)}
       <a className="audio-source-credit" href="/audio/credits.txt" target="_blank" rel="noreferrer">{t("음원 출처")}</a>
       <div className="kiosk-stage" inert={obscured} aria-hidden={obscured ? true : undefined}>
