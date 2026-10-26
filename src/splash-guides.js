@@ -1,7 +1,7 @@
 import {splashRate} from './splash-game.js';
 
 // Positions use mirrored screen coordinates; radii use screen-height units.
-const diagonals=[[[.27,.41],[.73,.76]],[[.27,.76],[.73,.41]]];
+const diagonals=[[[.31,.41],[.69,.76]],[[.31,.76],[.69,.41]]];
 export class SplashGuides{
  constructor(){this.reset();}
  reset(){this.pairs=0;this.hits=new Map();this.previous=new Map();this.strokeCount=0;}
