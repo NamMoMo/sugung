@@ -46,7 +46,7 @@ test('video segments follow intro, loop 2–3, hits 4–5, loop 6–7, third hit
  assert.equal(s.hit(),false);assert.equal(s.boundary(5),6);assert.deepEqual(s.range,[6,7]);
  assert.equal(s.boundary(7),6);assert.equal(s.hit(),true);assert.deepEqual(s.range,[4,5]);
  assert.equal(s.boundary(5),6);assert.equal(s.hit(),true);assert.deepEqual(s.range,[7,Infinity]);
- assert.equal(s.boundary(14),null);assert.equal(s.hit(),false);assert.equal(ENDING_PRELUDE_MS,3000);
+ assert.equal(s.boundary(14),null);assert.equal(s.hit(),false);assert.equal(ENDING_PRELUDE_MS,6000);
 });
 test('operator advance plays the escape footage rather than jumping past it',()=>{
  const s=new EndingSegments();s.forceEscape();assert.equal(s.hits,3);assert.deepEqual(s.range,[7,Infinity]);
