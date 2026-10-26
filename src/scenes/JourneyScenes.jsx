@@ -9,7 +9,6 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handRef,enab
  const live=useRef({scene,onAdvance});live.current={scene,onAdvance};
  const endAt=useRef(null),kingAt=useRef(null),fired=useRef(false);
  const fishSound=useRef(null),fishAudio=useRef(null),ambienceSound=useRef(null),ambienceAudio=useRef(null);
- const ripple=useRef(null);
  const cursorMotion=useRef(new JourneyCursor()),lanePressure=useRef(new LanePressure());
  const [fishBlocked,setFishBlocked]=useState(false);
  const [problem,setProblem]=useState({}),[blocked,setBlocked]=useState(null);
@@ -54,12 +53,11 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handRef,enab
     const f=turtleFrame(sea.current.currentTime,{duration:sea.current.duration||19.958333,...pressure});
     sea.current.dataset.laneWidth=String(f.right-f.left);sea.current.dataset.leftPressure=String(pressure.leftPressure);sea.current.dataset.rightPressure=String(pressure.rightPressure);
     const brightness=seaSpriteBrightness(sea.current.currentTime,sea.current.duration);
-    for(const element of [left.current,right.current,jara.current])element.firstElementChild.style.filter=`brightness(${brightness})`;
+    jara.current.firstElementChild.style.filter=`brightness(${brightness})`;
     const point=cursorMotion.current.update(enabled?handRef.current:null,now,f);
     cursor.current.style.opacity=String(point?.opacity??0);
     if(point)cursor.current.style.transform=`translate(${point.x}px,${point.y}px)`;
-    ripple.current.setAttribute('scale',String(f.entry*42));
-    left.current.style.transform=`translateX(${f.leftOffset}px)`;right.current.style.transform=`translateX(${f.rightOffset}px)`;
+    left.current.style.transform=`translateX(${f.left}px)`;right.current.style.transform=`translateX(${f.right}px)`;
     jara.current.style.transform=`translate(${f.jara.x-GAME_SLOTS.jara.w/2}px,${f.jara.y-GAME_SLOTS.jara.h/2}px)`;
     if(endAt.current!==null){const p=Math.min(1,(now-endAt.current)/GAME_FADE_MS);black.current.style.opacity=String(p);fishAudio.current?.transition(p);ambienceAudio.current?.transition(p);
      if(p===1&&!fired.current){fired.current=true;live.current.onAdvance('minigame');}
@@ -72,11 +70,12 @@ const JourneyScenes=forwardRef(function JourneyScenes({scene,runKey,handRef,enab
  return <section className={`journey-scenes ${active?'is-visible':''}`} aria-label={scene==='king'?'03. 용왕':'02. 자라미니게임'}>
   <audio ref={fishSound} src="/audio/fish_A-25s.wav" preload="auto" aria-label="미니게임 물고기 음성 fish_A" onEnded={()=>fishAudio.current?.stop()} onError={()=>setProblem(p=>({...p,fish:'public/audio/fish_A-25s.wav 파일을 재생할 수 없습니다.'}))}/>
   <audio ref={ambienceSound} src="/audio/underwater-ambience.mp3" preload="auto" loop aria-label="수중 배경음 underwater-ambience" onError={()=>setProblem(p=>({...p,fish:'underwater-ambience.mp3 파일을 확인해 주세요.'}))}/>
-  <svg className="journey-filter-defs" aria-hidden="true"><defs><filter id="fish-water-ripple" x="-10%" y="0%" width="120%" height="100%" colorInterpolationFilters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.00001 0.002" numOctaves="1" seed="8" result="noise"><animate attributeName="baseFrequency" values="0.00001 0.002;0.00001 0.003;0.00001 0.002" dur="8s" repeatCount="indefinite"/></feTurbulence><feColorMatrix in="noise" type="matrix" values="1 0 0 0 0  0 0 0 0 .5  0 0 1 0 0  0 0 0 1 0" result="horizontal"/><feDisplacementMap ref={ripple} in="SourceGraphic" in2="horizontal" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
   <div className={`turtle-scene ${scene==='minigame'?'is-visible':''}`} data-figma-node="57:14">
    <video ref={sea} src="/videos/deepsea_VD.mp4" className="journey-film" playsInline preload="auto" aria-label="deepsea_VD 심해 영상" data-figma-node="57:11" onLoadedMetadata={()=>{sea.current.playbackRate=SEA_PLAYBACK_RATE;setProblem(p=>({...p,minigame:null}));}} onError={()=>setProblem(p=>({...p,minigame:'public/videos/deepsea_VD.mp4 원본 영상을 확인해 주세요.'}))} onEnded={()=>{if(live.current.scene==='minigame'&&endAt.current===null)endAt.current=performance.now();}}/>
-   <div ref={right} className="fish-wall fish-right" data-figma-node="57:18"><img src="/assets/fish_right.png" alt="오른쪽 물고기 길"/></div>
-   <div ref={left} className="fish-wall fish-left" data-figma-node="57:19"><img src="/assets/fish_left.png" alt="왼쪽 물고기 길"/></div>
+   {[[left,-1,'왼쪽'],[right,1,'오른쪽']].map(([ref,side,label])=><div key={side} ref={ref} className="bubble-wall" aria-label={`${label} 버블 길 경계`}>{Array.from({length:90},(_,i)=>{
+    const row=i%30,column=Math.floor(i/30),size=170+(i*47)%105,r=size/2;
+    return <span key={i} className={`path-bubble ${i%4===0?'warm':''}`} style={{left:side*(r+column*165+(i*13)%23),top:row*82-65+column*29,width:size,height:size,'--bob':`${7+i%9}px`,'--bubble-duration':`${3.2+(i%7)*.37}s`,'--bubble-delay':`${-(i%13)*.41}s`}}><i/><b/></span>;
+   })}</div>)}
    <div ref={jara} className="turtle-sprite" data-figma-node="57:17"><img src="/assets/jara.png" alt="길을 안내하는 자라"/></div>
    <div ref={cursor} className="sea-wrist-cursor" aria-label="손목을 따라오는 금빛 커서"><div className="sea-cursor-glow"><i className="sea-cursor-rays"/><i className="sea-cursor-core"/></div></div>
    <div className="underwater-bubbles" aria-hidden="true">{Array.from({length:42},(_,i)=><i key={i} className="water-bubble" style={{left:`${(i*37.7)%100}%`,width:22+(i*17)%52,height:22+(i*17)%52,'--duration':`${8+(i*1.13)%7}s`,'--delay':`${-(i*1.79)%15}s`,'--sway':`${(i%2?-1:1)*(35+i%6*12)}px`}}/>)}</div>

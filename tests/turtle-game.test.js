@@ -8,8 +8,8 @@ test('jara descends from above and settles near the lower edge',()=>{
 });
 test('moving fish lane covers screen edges and jara follows with subtle motion',()=>{
  for(let t=4;t<120;t+=.13){const f=turtleFrame(t);
-  assert.ok(f.right-f.left>=700&&f.right-f.left<=1900);
-  assert.ok(f.leftOffset<=0&&f.rightOffset>=0);
+  assert.ok(f.right-f.left>=600-1e-6&&f.right-f.left<=2100);
+  assert.ok(f.left>=0&&f.right<=3840);
   assert.ok(f.jara.x-275>=f.left&&f.jara.x+275<=f.right);
   assert.ok(Math.abs(f.jara.y-1880)<=9);
  }
@@ -45,15 +45,28 @@ test('fish and turtle brightness decreases gently to 62 percent without reaching
  assert.equal(seaSpriteBrightness(30,NaN),.62);assert.ok(seaSpriteBrightness(10,20)>.62);
 });
 
-test('lane starts wide and narrows with time; wrist direction pushes only its wall inward smoothly',()=>{
+test('lane starts wide and narrows with time; wrist direction pushes bubble boundaries inward smoothly',()=>{
  const start=turtleFrame(0),end=turtleFrame(20);assert.ok(start.right-start.left>end.right-end.left+700);
- const p=new LanePressure();p.update({id:'Left',x:.5},1000);const left=p.update({id:'Left',x:.4},1100);
+ const p=new LanePressure();p.update({id:'Left',y:.5,x:.5},1000);const left=p.update({id:'Left',y:.5,x:.4},1100);
  assert.ok(left.leftPressure>0&&left.leftPressure<90);assert.equal(left.rightPressure,0);
- const baseline=turtleFrame(10),pressed=turtleFrame(10,left);assert.ok(pressed.left>baseline.left);assert.equal(pressed.right,baseline.right);
- const right=p.update({id:'Left',x:.5},1200);assert.ok(right.rightPressure>0);assert.ok(turtleFrame(10,right).right<baseline.right);
- const before=p.rightTarget;p.update({id:'Left',x:.5},1300);assert.equal(p.rightTarget,before);
- for(let i=0;i<200;i++)p.update({id:'Left',x:i%2?.6:.4},1400+i*50);
- assert.ok(p.leftTarget+p.rightTarget<=320+1e-6);
- for(let t=0;t<25;t+=.1){const f=turtleFrame(t,{leftPressure:p.left,rightPressure:p.right});assert.ok(f.right-f.left>=700);assert.ok(journeyCursorPoint({x:0,y:.5},f).x+180<f.right);}
+ const baseline=turtleFrame(10),pressed=turtleFrame(10,left);assert.ok(pressed.left>baseline.left);assert.ok(pressed.right<baseline.right);
+ const right=p.update({id:'Left',y:.5,x:.5},1200);assert.ok(right.rightPressure>0);assert.ok(turtleFrame(10,right).right<baseline.right);
+ const before=p.rightTarget;p.update({id:'Left',y:.5,x:.5},1300);assert.equal(p.rightTarget,before);
+ for(let i=0;i<200;i++)p.update({id:'Left',y:.5,x:i%2?.6:.4},1400+i*50);
+ assert.ok(p.leftTarget+p.rightTarget<=1000+1e-6);
+ for(let t=0;t<25;t+=.1){const f=turtleFrame(t,{leftPressure:p.left,rightPressure:p.right});assert.ok(f.right-f.left>=600-1e-6);assert.ok(journeyCursorPoint({x:0,y:.5},f).x+180<f.right);}
  p.reset();assert.equal(p.left,0);assert.equal(p.right,0);
+});
+
+test('bubble lane closes much further with movement, including vertical movement, without crushing the cursor',()=>{
+ const duration=20,wide=turtleFrame(0,{duration}),late=turtleFrame(20,{duration});
+ assert.equal(wide.right-wide.left,2100);assert.ok(Math.abs(late.right-late.left-800)<1e-6);
+ const p=new LanePressure();p.update({id:'Right',x:.5,y:.3},1000);p.update({id:'Right',x:.5,y:.4},1100);
+ assert.ok(p.leftTarget>0&&p.rightTarget>0);
+ let moving;
+ for(let i=0;i<120;i++)moving=p.update({id:'Right',x:i%2?.6:.4,y:.5},1200+i*50);
+ const closed=turtleFrame(10,{duration,...moving});assert.ok(closed.right-closed.left<=601);
+ const c=new JourneyCursor();c.update({x:0,y:.5},1000,wide);
+ const trapped=c.update(null,1100,closed);assert.ok(trapped.x-180>=closed.left&&trapped.x+180<=closed.right);
+ const normal=turtleFrame(10,{duration});assert.ok(normal.right-normal.left>closed.right-closed.left+500);
 });

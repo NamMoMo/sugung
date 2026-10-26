@@ -11,8 +11,7 @@ export function seaSpriteBrightness(seconds,duration){
  const progress=clamp(seconds/(Number.isFinite(duration)&&duration>0?duration:19.958333),0,1);
  return 1-.38*ease(progress);
 }
-// Clamp the complete 360px glow inside the animated lane, including the 42px
-// displacement filter's largest horizontal excursion.
+// Keep the complete breathing glow safely inside the visible bubble corridor.
 export function journeyCursorPoint(point,frame=turtleFrame(0)){
  if(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y))return null;
  return {x:clamp(point.x*3840,frame.left+222,frame.right-222),y:clamp(point.y*2160,180,1980)};
@@ -38,27 +37,29 @@ export class LanePressure {
  reset(){this.previous=null;this.last=null;this.left=0;this.right=0;this.leftTarget=0;this.rightTarget=0;}
  update(point,now){
   const dt=this.last===null?16:clamp(now-this.last,0,100);this.last=now;
-  if(point&&Number.isFinite(point.x)){
+  if(point&&Number.isFinite(point.x)&&Number.isFinite(point.y)){
    const previous=this.previous;
    if(previous&&now-previous.time<350&&previous.id===point.id){
-    const dx=point.x-previous.x;
-    if(Math.abs(dx)>.002&&Math.abs(dx)<.22){
-     const room=Math.max(0,320-this.leftTarget-this.rightTarget),push=Math.min(room,Math.abs(dx)*900);
-     if(dx<0)this.leftTarget+=push;else this.rightTarget+=push;
+    const dx=point.x-previous.x,dy=point.y-previous.y,movement=Math.hypot(dx*16/9,dy);
+    if(movement>.004&&movement<.4){
+     const room=Math.max(0,1000-this.leftTarget-this.rightTarget),push=Math.min(room,movement*1700);
+     const share=movement?Math.abs(dx*16/9)/movement:0;
+     this.leftTarget+=push*(dx<0?(1+share)/2:(1-share)/2);this.rightTarget+=push*(dx<0?(1-share)/2:(1+share)/2);
     }
    }
-   this.previous={x:point.x,time:now,id:point.id};
+   this.previous={x:point.x,y:point.y,time:now,id:point.id};
   }else if(this.previous&&now-this.previous.time>350)this.previous=null;
-  const alpha=1-Math.exp(-dt/700);this.left+=(this.leftTarget-this.left)*alpha;this.right+=(this.rightTarget-this.right)*alpha;
+  const alpha=1-Math.exp(-dt/450);this.left+=(this.leftTarget-this.left)*alpha;this.right+=(this.rightTarget-this.right)*alpha;
   return {leftPressure:this.left,rightPressure:this.right};
  }
 }
 export function turtleFrame(seconds,{duration=19.958333,leftPressure=0,rightPressure=0}={}){
- const t=Math.max(0,seconds),entry=ease(t/GAME_ENTRY_SECONDS),progress=ease(t/duration);
- const offset=(85*Math.sin(t*.85)+35*Math.sin(t*1.7))*ease(t/1.4);
- const width=1900-800*progress,center=1920+offset;
- const left=clamp(center-width/2+clamp(leftPressure,0,320),0,1733);
- const right=clamp(center+width/2-clamp(rightPressure,0,320),2293,3840);
+ const t=Math.max(0,seconds),entry=ease(t/GAME_ENTRY_SECONDS),progress=Math.pow(clamp(t/(Number.isFinite(duration)&&duration>0?duration:19.958333),0,1),.8);
+ const offset=(48*Math.sin(t*.85)+20*Math.sin(t*1.7))*ease(t/1.4);
+ const pressure=clamp(leftPressure+rightPressure,0,1000);
+ const width=Math.max(600,2100-1300*progress-pressure);
+ const center=1920+offset+clamp((leftPressure-rightPressure)*.12,-100,100);
+ const left=center-width/2,right=center+width/2;
  const jara={x:(left+right)/2+4*Math.sin(t*1.05)*entry,y:-428+(1880+428)*entry+9*Math.sin(t*1.4)*entry};
  return {entry,left,right,offset,leftOffset:left-1733,rightOffset:right-2293,jara};
 }
