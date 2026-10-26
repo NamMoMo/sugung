@@ -1,7 +1,7 @@
 {
-  "version": "1차최종",
+  "version": "현장수정-2026-10-26",
   "saved_at": "2026-10-25T23:59:02.798489+09:00",
-  "shared_preview_version": 18,
+  "shared_preview_version": 19,
   "github_repository": "https://github.com/NamMoMo/sugung",
   "github_branch": "1조",
   "stage": {
@@ -49,5 +49,11 @@
       "bytes": 29560904,
       "sha256": "0cd12059d11dcf797d3d1fb3c89910f5e93f48b89b8835b75eb840443c2b494d"
     }
-  ]
+  ],
+  "baseline_tag": "1차최종",
+  "ending_narration": {
+    "start_scene": "endingPrelude",
+    "playback_rate": 1.3,
+    "crack_reveal_seconds_before_voice_end": 3
+  }
 }
