@@ -1,0 +1,140 @@
+/* English exhibit typography: wrap words rather than shrinking important copy. */
+html[lang="en"] { --exhibit-body: 20px; --exhibit-secondary: 17px; --exhibit-action: 20px; }
+html[lang="en"] .palace-theme :is(h1,h2,h3,p,strong,button,a) { word-break: normal; overflow-wrap: normal; hyphens: none; }
+html[lang="en"] .palace-theme :is(h1,h2,h3) { text-wrap: balance; }
+html[lang="en"] .palace-theme :is(p,.living-person-action strong) { text-wrap: pretty; }
+html[lang="en"] .palace-theme .text-button { font-size: var(--exhibit-secondary); }
+html[lang="en"] .palace-theme .button { font-size: 20px; line-height: 1.4; min-height: 60px; white-space: normal; }
+html[lang="en"] .palace-theme .kiosk-header { gap: 20px; }
+html[lang="en"] .kiosk-progress { font-size: 20px; }
+html[lang="en"] .kiosk-progress small { font-size: 16px; }
+html[lang="en"] .palace-theme .kiosk-tool { font-size: 17px; }
+html[lang="en"] .palace-theme .kiosk-steps { display: none; }
+/* Story screens keep a generous reading measure and explicit existing sentence breaks. */
+html[lang="en"] .palace-theme .fog-invitation { width: min(1100px,calc(100% - 80px)); }
+html[lang="en"] .palace-theme .fog-invitation h1 { font-size: clamp(38px,3.4vw,60px); line-height: 1.3; letter-spacing: 0; }
+html[lang="en"] .palace-theme .fog-invitation p { font-size: 24px; line-height: 1.6; }
+html[lang="en"] .palace-theme .fog-hand > span { font-size: 20px; }
+html[lang="en"] .palace-theme .fog-bottom { width: min(680px,calc(100% - 48px)); }
+html[lang="en"] .palace-theme .fog-bottom > span { font-size: 16px; letter-spacing: .5px; }
+html[lang="en"] .palace-theme .fog-bottom > button { font-size: 18px; min-height: 52px; }
+html[lang="en"] .royal-door-invitation { max-width: min(1100px,94vw); left: 50%; transform: translateX(-50%); margin-inline: 0; }
+html[lang="en"] .royal-door-invitation p,html[lang="en"] .royal-door-touch { font-size: 22px; line-height: 1.5; }
+html[lang="en"] .entrapment-copy { max-width: 1080px; margin-top: 130px; padding: 30px 42px; }
+html[lang="en"] .entrapment-copy h1 { font-size: 46px; line-height: 1.3; }
+html[lang="en"] .entrapment-copy p { font-size: 22px; line-height: 1.65; max-width: 950px; }
+html[lang="en"] :is(.chest-mission-copy,.escape-success) p { font-size: 22px; line-height: 1.6; }
+html[lang="en"] .escape-success { max-width: min(1100px,92vw); }
+html[lang="en"] .escape-forming h1 { max-width: 1000px; font-size: 36px; line-height: 1.5; }
+/* Room prompts and the light transfer remain legible over the palace image. */
+html[lang="en"] .royal-room-heading h1 { font-size: 34px; line-height: 1.3; }
+html[lang="en"] .royal-room-heading p { font-size: var(--exhibit-body); line-height: 1.5; max-width: 1000px; margin-inline: auto; }
+html[lang="en"] .room-found-count,html[lang="en"] .room-found-count strong { font-size: 18px; }
+html[lang="en"] .royal-chest-label strong { font-size: 24px; line-height: 1.3; }
+html[lang="en"] .royal-chest-label > span { font-size: 17px; line-height: 1.4; }
+html[lang="en"] .royal-room-footer { font-size: var(--exhibit-secondary); line-height: 1.5; }
+html[lang="en"] .door-seal-caption,html[lang="en"] .door-seal-caption strong { font-size: 18px; }
+html[lang="en"] .light-drag-guidance { font-size: 18px; }
+html[lang="en"] .light-award-copy strong { font-size: 34px; }
+html[lang="en"] .light-award-copy > span,html[lang="en"] .light-award-skip > span { font-size: 20px; }
+/* The picture remains continuous. Larger labels may wrap to two lines. */
+html[lang="en"] .palace-theme .kiosk-scene-heading { display: grid; grid-template-columns: 230px minmax(0,1fr) 230px; gap: 18px; }
+html[lang="en"] .palace-theme .current-situation { min-width: 0; }
+html[lang="en"] .palace-theme .current-situation h1 { font-size: 38px; line-height: 1.2; margin: 6px 0; }
+html[lang="en"] .palace-theme .current-situation p { font-size: 20px; line-height: 1.4; }
+html[lang="en"] .kiosk-scene-instruction { font-size: 17px; line-height: 1.4; }
+html[lang="en"] .touch-journey .scene-moments button { font-size: 17px; line-height: 1.4; max-width: 46%; white-space: normal; }
+html[lang="en"] .palace-theme .touch-journey .immersive-stage { grid-template-columns: minmax(0,1fr) 390px; max-width: min(100%,calc((100svh - 325px)*1.5 + 390px)); }
+html[lang="en"] .palace-theme .touch-journey .scene-context { padding: 20px 22px; }
+html[lang="en"] .touch-journey .scene-context > small { font-size: 15px; line-height: 1.4; }
+html[lang="en"] .palace-theme .touch-journey .scene-context h2 { font-size: 26px; }
+html[lang="en"] .palace-theme .touch-journey .scene-story { font-size: var(--exhibit-body); line-height: 1.5; margin-bottom: 16px; }
+html[lang="en"] .action-at-a-glance { gap: 12px; }
+html[lang="en"] .action-at-a-glance li > div { min-width: 0; }
+html[lang="en"] .action-at-a-glance small { font-size: 14px; }
+html[lang="en"] .action-at-a-glance strong { font-size: var(--exhibit-action); line-height: 1.4; word-break: normal; }
+html[lang="en"] .palace-theme .touch-journey .living-person-action { padding: 8px 12px; width: max-content; max-width: 110%; border-radius: 16px; }
+html[lang="en"] .palace-theme .touch-journey .living-person-action > strong { font-size: var(--exhibit-action); line-height: 1.3; }
+html[lang="en"] .choice-feedback,html[lang="en"] .touch-journey .scene-change-note { font-size: 17px; line-height: 1.45; }
+html[lang="en"] .cancel-choice { min-height: 44px; }
+/* Six results stay together; smaller artwork makes room for readable meanings. */
+html[lang="en"] .palace-theme .kiosk-result .result-heading h1 { font-size: 34px; }
+html[lang="en"] .palace-theme .kiosk-result .result-heading p { font-size: 20px; line-height: 1.4; }
+html[lang="en"] .palace-theme .kiosk-result .results-body { grid-template-columns: minmax(0,1fr) 310px; gap: 22px; }
+html[lang="en"] .palace-theme .kiosk-result .treasure-result-groups { gap: 20px; }
+html[lang="en"] .palace-theme .kiosk-result .treasure-group-heading { gap: 8px; min-height: 70px; }
+html[lang="en"] .palace-theme .kiosk-result .treasure-group-heading h2 { font-size: 24px; }
+html[lang="en"] .palace-theme .treasure-group-heading .text-button { font-size: 16px; }
+html[lang="en"] .palace-theme .kiosk-result .treasure-result-card { grid-template-columns: 96px minmax(0,1fr); column-gap: 12px; padding: 14px; }
+html[lang="en"] .palace-theme .kiosk-result .treasure-art.treasure-photo { width: 96px; height: 96px; }
+html[lang="en"] .palace-theme .kiosk-result .treasure-choice-label { font-size: 16px; line-height: 1.3; padding: 4px 8px; }
+html[lang="en"] .palace-theme .kiosk-result .treasure-result-card h3 { font-size: 23px; line-height: 1.3; }
+html[lang="en"] .palace-theme .kiosk-result .treasure-meaning { font-size: 18px; line-height: 1.5; margin-top: 10px; }
+html[lang="en"] .result-qr { padding: 18px 16px; }
+html[lang="en"] .result-qr h2 { font-size: 24px; line-height: 1.3; }
+html[lang="en"] .result-qr p { font-size: 18px; line-height: 1.5; }
+html[lang="en"] .result-qr small { font-size: 16px; line-height: 1.4; }
+html[lang="en"] .qr-links > * { font-size: 16px; line-height: 1.4; }
+html[lang="en"] .palace-theme .result-disclaimer { font-size: 16px; line-height: 1.4; }
+html[lang="en"] .palace-theme .modal { width: min(900px,calc(100vw - 48px)); }
+html[lang="en"] .palace-theme .kiosk-guide p { font-size: 20px; line-height: 1.6; }
+html[lang="en"] .palace-theme .kiosk-guide h3 { font-size: 23px; }
+@media (min-width: 1101px) and (max-height: 950px) {
+ html[lang="en"] { --exhibit-body: 18px; --exhibit-action: 18px; --exhibit-secondary: 16px; }
+ html[lang="en"] .palace-theme .current-situation h1 { font-size: 32px; }
+ html[lang="en"] .palace-theme .current-situation p { font-size: 18px; }
+ html[lang="en"] .palace-theme .kiosk-scene-heading { grid-template-columns: 190px minmax(0,1fr) 190px; gap: 12px; }
+ html[lang="en"] .palace-theme .touch-journey .immersive-stage { grid-template-columns: minmax(0,1fr) 350px; max-width: min(100%,calc((100svh - 290px)*1.5 + 350px)); }
+ html[lang="en"] .palace-theme .touch-journey .scene-context { padding: 14px 18px; }
+ html[lang="en"] .action-at-a-glance { gap: 8px; }
+ html[lang="en"] .action-at-a-glance small { font-size: 13px; }
+ html[lang="en"] .choice-feedback,html[lang="en"] .touch-journey .scene-change-note { font-size: 16px; }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-group-heading h2 { font-size: 21px; }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-result-card h3 { font-size: 21px; }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-meaning { font-size: 17px; line-height: 1.45; }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-art.treasure-photo { width: 84px; height: 84px; }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-result-card { grid-template-columns: 84px minmax(0,1fr); padding: 12px; }
+ html[lang="en"] .palace-theme .kiosk-result .results-body { grid-template-columns: minmax(0,1fr) 290px; gap: 18px; }
+ html[lang="en"] .result-qr p { font-size: 17px; }
+ html[lang="en"] .result-qr .qr-picture { width: 220px; height: 220px; margin-bottom: 12px; }
+ html[lang="en"] .result-qr .qr-picture img { width: 216px; height: 216px; }
+ html[lang="en"] .royal-room-heading h1 { font-size: 30px; }
+ html[lang="en"] .royal-chest-label strong { font-size: 22px; }
+}
+@media (max-width: 1100px) {
+ html[lang="en"] .palace-theme .kiosk-scene-heading { display: flex; flex-wrap: wrap; }
+ html[lang="en"] .palace-theme .current-situation { width: 100%; order: 2; }
+ html[lang="en"] .palace-theme .touch-journey .immersive-stage { max-width: 100%; grid-template-columns: 1fr; }
+ html[lang="en"] .palace-theme .kiosk-result .results-body { display: flex; flex-direction: column; }
+ html[lang="en"] .result-qr { position: static; align-self: center; max-width: 500px; }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-result-groups { grid-template-columns: 1fr; width: 100%; }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-result-cards { grid-template-columns: repeat(2,minmax(0,1fr)); }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-result-card { display: flex; flex-direction: column; }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-art.treasure-photo { width: 136px; height: 136px; }
+}
+@media (max-width: 600px) {
+ html[lang="en"] { --exhibit-body: 18px; --exhibit-action: 16px; }
+ html[lang="en"] .palace-theme .fog-invitation { width: calc(100% - 32px); }
+ html[lang="en"] .palace-theme .fog-invitation h1 { font-size: 32px; }
+ html[lang="en"] .palace-theme .fog-invitation p { font-size: 20px; }
+ html[lang="en"] .entrapment-copy { padding: 24px 20px; }
+ html[lang="en"] .entrapment-copy h1 { font-size: 30px; }
+ html[lang="en"] .entrapment-copy p { font-size: 18px; }
+ html[lang="en"] .palace-theme .current-situation h1 { font-size: 28px; }
+ html[lang="en"] .palace-theme .touch-journey .living-person-action > strong { font-size: 12px; }
+ html[lang="en"] .palace-theme .kiosk-result .treasure-result-cards { grid-template-columns: 1fr; }
+}
+@media (min-width: 1101px) {
+ html[lang="en"] .room-transferring:not(.room-awarding) .light-drag-guidance { font-size: 18px; }
+ html[lang="en"] .touch-journey .kiosk-scene-instruction { white-space: normal; font-size: 17px; line-height: 1.4; }
+ html[lang="en"] .current-situation .eyebrow { display: block; text-align: center; letter-spacing: 1px; }
+}
+@media (min-width: 1101px) and (max-height: 950px) {
+ html[lang="en"] .result-qr { padding: 14px; }
+ html[lang="en"] .result-qr .qr-picture { width: 200px; height: 200px; margin-bottom: 8px; }
+ html[lang="en"] .result-qr .qr-picture img { width: 196px; height: 196px; }
+ html[lang="en"] .result-qr h2 { margin: 8px 0; }
+ html[lang="en"] .qr-links { margin-top: 10px; }
+ html[lang="en"] .qr-links > * { min-height: 52px; padding: 6px; }
+ html[lang="en"] .result-qr small { margin-top: 10px; }
+}

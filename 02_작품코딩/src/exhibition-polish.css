@@ -1,0 +1,105 @@
+/* Localized motion keeps action labels and the shared room completely still. */
+.living-motion-layer { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.animal-breath { position:absolute; background-repeat:no-repeat; mask-image:radial-gradient(ellipse,#000 30%,transparent 70%); transform-origin:50% 75%; animation:animal-small-gesture 4.8s ease-in-out var(--animal-delay) infinite; }
+@keyframes animal-small-gesture { 0%,100% { transform:translateY(0) rotate(0); } 50% { transform:translateY(-1.5px) rotate(.3deg); } }
+.motion-paused .animal-breath { animation-play-state:paused; }
+.chest-phase-briefing .chest-pull-lid { display:none; }
+@keyframes chest-lid-arrives { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
+.chest-floor-light { position:absolute; z-index:2; pointer-events:none; left:var(--pull-x); top:calc(var(--pull-y) + 8svh); width:30vw; height:7svh; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(ellipse,#ffe1a38c,transparent 70%); filter:blur(12px); mix-blend-mode:screen; animation:chest-floor-warms .8s ease-out both; }
+@keyframes chest-floor-warms { from { opacity:0; scale:.35; } to { opacity:.8; scale:1; } }
+.chest-phase-portal .chest-floor-light { opacity:0; animation:none; transition:opacity .25s; }
+.light-drag-trail { position:absolute; inset:0; width:100%; height:100%; z-index:9; pointer-events:none; overflow:visible; }
+.light-drag-trail circle { fill:#fff0bb; filter:drop-shadow(0 0 5px #ffe09d); animation:light-trail-fades .5s ease-out both; }
+@keyframes light-trail-fades { from { opacity:.8; r:5; } to { opacity:0; r:1; } }
+.seal-transfer-layer .seal-nearby { box-shadow:0 0 24px #ffe7b366; border-radius:50%; }
+.seal-nearby::before { content:""; position:absolute; inset:-12px; border:1px solid #ffe6a7; border-radius:50%; animation:seal-ready-pulse .65s ease-in-out infinite alternate; }
+@keyframes seal-ready-pulse { to { opacity:.3; scale:1.12; } }
+.seal-drop-hint { position:absolute; left:50%; top:-25px; transform:translateX(-50%); white-space:nowrap; font-size:16px; color:#fff0c7; text-shadow:0 2px 8px #000; }
+.seal-absorption { position:absolute; inset:5%; background:radial-gradient(circle,#fff6dc,#ffe0a98c 30%,transparent 68%); opacity:0; pointer-events:none; }
+.rune-breaking .seal-absorption { animation:seal-drinks-light .32s ease-in both; }
+@keyframes seal-drinks-light { 0% { opacity:1; scale:1.8; } 80% { opacity:1; scale:.2; } 100% { opacity:0; scale:.1; } }
+.rune-breaking .rune-crack,.rune-breaking .rune-ring,.rune-breaking i { animation-delay:.18s; }
+.escape-copy-dock { animation:escape-message-arrives .6s ease-out both; }
+@keyframes escape-message-arrives { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
+.treasure-result-card { position:relative; }
+.treasure-inspect-button { position:absolute; z-index:3; inset:0; width:100%; height:100%; border:1px solid transparent; border-radius:inherit; background:transparent; padding:0; cursor:pointer; }
+.treasure-inspect-button:hover,.treasure-inspect-button:focus-visible { border-color:#ffe2a8; outline:2px solid #ffe2a844; outline-offset:3px; box-shadow:inset 0 0 30px #f9d79615,0 0 24px #dcb56d22; }
+.palace-theme .result-heading .treasure-touch-hint { color:#dcc493; font-size:16px; margin-top:6px; }
+.treasure-inspection { display:grid; grid-template-columns:minmax(220px,.8fr) minmax(0,1.2fr); gap:36px; align-items:center; }
+.palace-theme .treasure-inspection .treasure-art.treasure-photo { width:min(300px,30vw); height:min(300px,30vw); margin:24px auto; }
+.treasure-inspection p { font-size:24px; line-height:1.8; color:#d2dfeb; text-wrap:pretty; }
+.treasure-inspection nav { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:28px; }
+.treasure-inspection nav .button { font-size:18px; min-height:56px; padding:12px 20px; }
+.treasure-inspection nav > span { color:#e4c990; white-space:nowrap; }
+@media(max-width:700px) { .treasure-inspection { grid-template-columns:1fr; gap:10px; }.palace-theme .treasure-inspection .treasure-art.treasure-photo { width:220px; height:220px; margin:10px auto; }.treasure-inspection p { font-size:19px; line-height:1.7; }.treasure-inspection nav .button { font-size:16px; padding:10px 14px; }.seal-drop-hint { font-size:12px; } }
+@media(prefers-reduced-motion:reduce) { .animal-breath,.chest-phase-briefing .chest-pull-lid,.chest-floor-light,.light-drag-trail circle,.seal-nearby::before,.rune-breaking .seal-absorption,.escape-copy-dock { animation:none; }.animal-breath,.light-drag-trail,.seal-absorption { display:none; }.rune-breaking .rune-crack,.rune-breaking .rune-ring,.rune-breaking i { animation-delay:0s; } }
+
+.treasure-inspection nav .button:not(.button-gold) { background:#152b40; border:1px solid #c5a66a; color:#f1d8a5; }
+.palace-theme .treasure-inspection .treasure-art.treasure-photo { width:min(300px,100%); height:auto; aspect-ratio:1; }
+@media(max-width:700px) { .modal:has(.treasure-inspection) .modal-header { display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:8px; }.modal:has(.treasure-inspection) .modal-header > .eyebrow { display:none; }.modal:has(.treasure-inspection) .modal-header .language-switch { flex-shrink:1; }.palace-theme .treasure-inspection .treasure-art.treasure-photo { width:220px; height:220px; } }
+/* Inspection sizing wins over the compact English result-card rules. */
+html[lang] .kiosk-app.palace-theme .treasure-inspection .treasure-art.treasure-photo { width:min(300px,100%); max-width:100%; height:auto; aspect-ratio:1; }
+@media(max-width:700px) { html[lang] .kiosk-app.palace-theme .treasure-inspection .treasure-art.treasure-photo { width:220px; height:220px; } }
+
+/* Preserve the result cards; add the exact action chosen in the scene. */
+.palace-theme .treasure-result-card .treasure-selected-action { grid-column:1 / -1; grid-row:3; margin:7px 0 0; font-size:17px; line-height:1.55; color:#e0ca9f; overflow-wrap:anywhere; }
+.palace-theme .treasure-result-card .treasure-meaning { grid-row:4; }
+.treasure-selected-action span { color:#aebdca; }
+.treasure-inspection .treasure-selected-action { font-size:19px; line-height:1.6; color:#e0ca9f; }
+@media(max-width:600px) { .palace-theme .treasure-result-card .treasure-selected-action { font-size:16px; } }
+
+/* Keep the palace full bleed on first entry, return, resize and fullscreen.
+   Photo and all hit targets share one undistorted coordinate plane. */
+.kiosk-app.is-room .kiosk-shell { height:100vh; height:100dvh; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+.kiosk-app.is-room .kiosk-header { flex:0 0 auto; }
+.kiosk-app.is-room .kiosk-home { flex:1 1 0; min-height:0; width:100%; padding:0; max-width:none; display:flex; }
+.kiosk-app.is-room .kiosk-home > .kiosk-page { flex:1 1 0; min-height:0; width:100%; display:flex; animation:none; }
+.kiosk-app.is-room .royal-room { position:relative; flex:1 1 0; width:100%; min-height:0; padding:0; overflow:hidden; isolation:isolate; }
+.royal-room-viewport { position:absolute; inset:0; overflow:hidden; background:#071321; }
+.royal-room-viewport::before { content:""; position:absolute; inset:-15px; background:linear-gradient(#04101c99,#04101c55),url('/art/palace-room.webp') center/cover; filter:blur(10px); }
+.kiosk-app.is-room .royal-room-canvas { position:absolute; left:50%; top:50%; translate:-50% -50%; width:var(--room-art-width,100%); height:var(--room-art-height,100%); aspect-ratio:1875/839; margin:0; border:0; box-shadow:none; }
+.kiosk-app.is-room .royal-room-heading { position:absolute; top:0; left:0; right:0; z-index:10; padding:12px 24px 16px; background:linear-gradient(#04101ce8,#04101c99 70%,transparent); pointer-events:none; }
+.kiosk-app.is-room .royal-room-heading > .eyebrow { font-size:10px; }
+.kiosk-app.is-room .royal-room-heading h1 { font-size:clamp(21px,2vw,32px); line-height:1.3; margin:5px auto 8px; max-width:1200px; text-wrap:balance; }
+.kiosk-app.is-room .royal-room-heading p { font-size:clamp(15px,1.15vw,20px); line-height:1.45; margin:0 auto 6px; max-width:1000px; text-wrap:balance; }
+.kiosk-app.is-room .room-found-count { margin:0; font-size:13px; }
+.kiosk-app.is-room .royal-room-footer { position:absolute; bottom:0; left:0; right:0; z-index:10; margin:0; padding:8px 16px; min-height:52px; gap:20px; background:linear-gradient(transparent,#04101ce8 40%); font-size:14px; }
+.kiosk-app.is-room .royal-room-footer .text-button { min-height:42px; font-size:15px; }
+@media(max-height:650px) and (min-aspect-ratio:6/5) { .kiosk-app.is-room .royal-room-heading > .eyebrow { display:none; }.kiosk-app.is-room .royal-room-heading { padding-top:6px; }.kiosk-app.is-room .royal-room-heading h1 { font-size:22px; }.kiosk-app.is-room .royal-room-heading p { font-size:15px; }.kiosk-app.is-room .royal-room-footer { min-height:40px; padding-block:2px; } }
+@media(max-width:600px) { .kiosk-app.is-room .royal-room-heading { padding:14px 16px 22px; }.kiosk-app.is-room .royal-room-heading h1 { font-size:23px; }.kiosk-app.is-room .royal-room-footer { flex-wrap:wrap; gap:4px 12px; font-size:12px; } }
+
+/* Chest briefing stays photographic and closed; only the chosen outline glows. */
+.chest-selection-halo { position:absolute; z-index:3; pointer-events:none; left:var(--pull-x); top:calc(var(--pull-y) + 1svh); width:max(17vw,38svh); height:max(8vw,18svh); transform:translate(-50%,-30%); border-radius:38% 38% 18% 18%; box-shadow:0 0 25px 5px #e7bf684d,inset 0 0 25px #e6be6826; background:radial-gradient(ellipse,transparent 55%,#eccb6d15 75%,transparent 80%); animation:chosen-chest-breath 2.8s ease-in-out infinite alternate; }
+@keyframes chosen-chest-breath { to { box-shadow:0 0 38px 10px #e7bf6866,inset 0 0 28px #e6be6833; } }
+.chest-dive { position:absolute; inset:0; z-index:5; pointer-events:none; opacity:0; }
+.chest-dive canvas { width:100%; height:100%; display:block; }
+.chest-phase-portal .chest-dive.dive-running { opacity:1; transition:opacity .3s ease; }
+.chest-phase-portal .chest-pull-world { animation:none; transform:none; transition:opacity .3s; }
+.chest-phase-portal:has(.dive-running) .chest-pull-world { opacity:0; }
+.chest-phase-portal .chest-selection-halo { opacity:0; animation:none; transition:opacity .25s; }
+.scene-from-chest3d.kiosk-scene::after { display:none; }
+.scene-from-chest3d.kiosk-scene .kiosk-page { animation:chest-mission-handoff .45s ease-out both; }
+@keyframes chest-mission-handoff { from { opacity:.8; } to { opacity:1; } }
+@media(prefers-reduced-motion:reduce) { .chest-selection-halo { animation:none; } .chest-dive { display:none; } .scene-from-chest3d.kiosk-scene .kiosk-page { animation:none; } }
+.chest-mission-opening { position:fixed; inset:0; z-index:35; }
+.chest-phase-portal .chest-mission-copy { pointer-events:none; }
+
+/* A short photographic opening followed by light rushing out, without a camera dive. */
+.chest-dive.chest-light-transition { opacity:1; --light-y:calc(50% + max(7.5vw,16.8svh)); }
+.chest-light-opened-photo { position:absolute; inset:0; width:100%; height:100%; opacity:0; transition:opacity .3s ease-out; }
+.chest-light-transition:not([data-stage=closed]) .chest-light-opened-photo { opacity:1; }
+.chest-light-core { position:absolute; z-index:2; left:var(--pull-x); top:var(--light-y); width:24vmin; height:18vmin; margin:-9vmin -12vmin; border-radius:50%; opacity:0; background:radial-gradient(ellipse,#fff9e6 0%,#fff0bfeb 18%,#edc77488 42%,#dfa23c22 64%,transparent 75%); transform:scale(.25); pointer-events:none; }
+.chest-light-transition[data-stage=opening] .chest-light-core { opacity:.65; transition:opacity .18s; }
+.chest-light-transition[data-stage=rush] .chest-light-core,.chest-light-transition[data-stage=handoff] .chest-light-core { animation:chest-light-flies-out .8s cubic-bezier(.34,0,.34,1) both; }
+@keyframes chest-light-flies-out { 0% { opacity:.65; left:var(--pull-x); top:var(--light-y); transform:scale(.25); } 30% { opacity:1; } 100% { opacity:1; left:50%; top:50%; transform:scale(32); } }
+.chest-light-sparks { position:absolute; z-index:3; left:var(--pull-x); top:var(--light-y); pointer-events:none; }
+.chest-light-sparks i { position:absolute; width:2px; height:6vmin; border-radius:100%; background:linear-gradient(transparent,#fff4c8,transparent); opacity:0; }
+.chest-light-transition[data-stage=rush] .chest-light-sparks i { animation:chest-light-spark-passes .64s ease-in both; }
+@keyframes chest-light-spark-passes { 0% { opacity:0; transform:rotate(var(--spark-angle)) translateY(2vmin); } 30% { opacity:.75; } 100% { opacity:0; transform:rotate(var(--spark-angle)) translateY(100vmax) scaleY(4); } }
+.chest-mission-opening:has(.chest-light-transition[data-stage=handoff]) { opacity:0; transition:opacity .38s ease-out; }
+@media(prefers-reduced-motion:reduce) { .chest-dive.chest-light-transition { display:block; }.chest-light-core,.chest-light-sparks { display:none; }.chest-light-opened-photo { transition:none; } }
+
+/* Category names are revealed only in the report. Keep both chest-label lines readable. */
+.palace-theme .royal-chest-label { min-height:64px; gap:8px; }
+.palace-theme .royal-chest-label small { font-size:12px; }
+.palace-theme .royal-chest-label > span { display:flex; font-size:14px; }

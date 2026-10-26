@@ -1,0 +1,8 @@
+{
+  "mode": "built-in image_gen",
+  "use_case": "precise-object-edit",
+  "input": "public/art/palace-room.webp",
+  "output": "public/art/palace-room-open.webp",
+  "original": "/Users/sinjihye/.codex/generated_images/01a13e9b-895c-7450-af60-39cc5a2ae698/exec-62ba4f37-6b37-437e-bc21-7dc5aa89d487.png",
+  "prompt": "Use case: precise-object-edit. Edit target: the supplied underwater royal treasure chamber image. Make ONLY the three treasure chest lids OPEN, hinged toward the rear and standing upright, exposing softly glowing warm golden interiors with no visible treasures. All three chests open: left navy gold nautical chest, center ivory pearl gold shell chest, right emerald gold floral chest. Keep each chest base FRONT exactly in its original pixel position, size, perspective, carvings and colors. Preserve ALL other pixels and composition: palace door, statues, chandelier, columns, water windows, floor and reflections. This is an aligned alternate state for a videogame so absolute registration is crucial. Same landscape 1875x839 composition. Photorealistic cinematic materials. No text, no characters, no new objects, no treasure items. Lids should be clearly raised and open while bases remain identical."
+}

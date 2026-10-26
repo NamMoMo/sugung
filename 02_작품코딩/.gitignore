@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+dist/
+outputs/
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+.vite/
+test-results/
+.tools/
+playwright-report/

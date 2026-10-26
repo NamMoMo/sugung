@@ -1,0 +1,15 @@
+{
+  "mode": "built-in image_gen",
+  "edits": [
+    {
+      "asset": "public/art/scenes/birthday-after-living-v2.webp",
+      "original": "/Users/sinjihye/.codex/generated_images/01a13e9b-895c-7450-af60-39cc5a2ae698/exec-dc9f9241-9f20-4d8c-b867-13b0cbc5a822.png",
+      "prompt": "Use case: precise-object-edit. Edit target: supplied 1536x1024 scene, five marine animals in one space. Keep camera, composition, photorealistic 3D style, lighting, ALL FIVE animal body positions, sizes and species EXACTLY unchanged because this is a touchscreen game with fixed hotspots. Change only this: establish this as a rented birthday party room after the party, with subtle remaining balloons or pennant decoration at top. The turtle at upper left is simply peering curiously through the open doorway to see what is immediately outside the party room; remove its expedition backpack/rolled map. Outside that doorway show a short inviting ordinary shared corridor/patio with potted plants, a seating nook and neighboring shopfront-like entrance, no wilderness path, no stairs into a reef. Keep underwater fantasy material styling but ordinary everyday activity. Preserve octopus recording a greeting with natural tentacles (NO human hands), dolphin planning with notebook, seal chatting, manta preserving photographs/cards. Do not move or remove any animal, do not add animals or people. No text/labels/watermarks."
+    },
+    {
+      "asset": "public/art/scenes/break-before-living-v2.webp",
+      "original": "/Users/sinjihye/.codex/generated_images/01a13e9b-895c-7450-af60-39cc5a2ae698/exec-88768589-7c56-4a47-b98b-2270f62e9f24.png",
+      "prompt": "Use case: precise-object-edit. Edit target: supplied 1536x1024 five-marine-animal park scene. Keep camera, composition, warm photorealistic cinematic 3D style, every animal's position, body size, species, pose and all other activities EXACTLY unchanged; fixed touchscreen hotspots depend on registration. Change ONLY the orange octopus upper middle: instead of sitting on a rock, it is comfortably sitting and resting on a clearly recognizable ordinary park bench with wooden horizontal slats for its seat and backrest, restrained dark metal legs, positioned at exactly the same spot. Bench must be visible behind and beneath the octopus. Octopus eyes peacefully closed, relaxed natural tentacles; not building or holding things. Keep turtle chatting upper left, dolphin with headphones upper right, seal doing a number puzzle foreground left and manta reading foreground right unchanged. Retain underwater public park backdrop and tactile materials, no added people or creatures, no panels, no text/labels/watermark."
+    }
+  ]
+}

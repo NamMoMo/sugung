@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="character-art" viewBox="0 0 400 520" role="img" aria-labelledby="character-art-title character-art-description">
+          <title id="character-art-title">용궁의 토끼 수호자</title>
+          <desc id="character-art-description">선택한 의상과 표정, 아우라를 반영한 임시 벡터 캐릭터 시안입니다.</desc>
+          <defs>
+            <linearGradient id="ear-pearl" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#fff9e9"/>
+              <stop offset=".55" stop-color="#c9c2b0"/>
+              <stop offset="1" stop-color="#827f80"/>
+            </linearGradient>
+            <linearGradient id="robe-base" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#23455d"/>
+              <stop offset=".52" stop-color="#14263b"/>
+              <stop offset="1" stop-color="#09111f"/>
+            </linearGradient>
+            <radialGradient id="pearl-shine" cx=".32" cy=".26">
+              <stop offset="0" stop-color="#fffdf2"/>
+              <stop offset=".46" stop-color="#e8d9b3"/>
+              <stop offset="1" stop-color="#97866a"/>
+            </radialGradient>
+            <radialGradient id="aura-halo">
+              <stop offset="0" stop-color="#d5b47a" stop-opacity=".3"/>
+              <stop offset="1" stop-color="#d5b47a" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="soft-light" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="5"/>
+            </filter>
+          </defs>
+          <g id="aura-layer" data-character-layer="aura"></g>
+          <g id="base-layer" data-character-layer="base">
+            <path d="M158 174C143 129 137 69 148 35c5-16 18-22 30-6 18 24 18 91 10 151Z" fill="url(#ear-pearl)" stroke="#e5d6b4" stroke-width="2"/>
+            <path d="M164 138c-10-50-8-82-2-95 3-8 8-8 12 0 11 22 12 61 7 96Z" fill="#aa817d" opacity=".52"/>
+            <path d="M219 178c-5-58-1-125 19-149 12-14 25-8 29 9 8 36-5 97-28 145Z" fill="url(#ear-pearl)" stroke="#e5d6b4" stroke-width="2"/>
+            <path d="M229 145c1-52 9-87 18-100 5-7 9-5 11 4 5 25-6 65-19 93Z" fill="#aa817d" opacity=".52"/>
+            <path d="M126 360c7-47 19-78 45-96l28-12 31 12c26 18 38 49 45 96l18 116H108Z" fill="url(#robe-base)" stroke="#d5b47a" stroke-width="2"/>
+            <path d="M144 285c-33 14-51 46-56 83l-13 69c-2 13 7 23 20 21l34-8 24-108Z" fill="#163340" stroke="#c8aa70" stroke-width="2"/>
+            <path d="M256 285c33 14 51 46 56 83l13 69c2 13-7 23-20 21l-34-8-24-108Z" fill="#163340" stroke="#c8aa70" stroke-width="2"/>
+            <path d="M171 254c8 16 19 24 29 24s21-8 29-24l21 27-22 36h-56l-22-36Z" fill="#0c1728" stroke="#d5b47a" stroke-width="1.5"/>
+            <path d="M128 429c34 15 108 17 144 0l9 47H119Z" fill="#0a1726" stroke="#d5b47a" stroke-width="2"/>
+            <path d="M165 285 200 317l35-32 18 26-25 38h-56l-25-38Z" fill="#d5b47a" opacity=".86"/>
+            <path d="M176 292 200 315l24-23-10 55h-28Z" fill="#183f51"/>
+            <path d="M163 340h74m-77 11h80m-87 66h94" fill="none" stroke="#dfc58f" stroke-opacity=".62" stroke-width="1.5"/>
+            <path d="M137 372c13 10 24 15 35 15m91-15c-13 10-24 15-35 15" fill="none" stroke="#e4d2a9" stroke-opacity=".5" stroke-width="2"/>
+            <circle cx="149" cy="373" r="5" fill="url(#pearl-shine)"/>
+            <circle cx="251" cy="373" r="5" fill="url(#pearl-shine)"/>
+            <path d="M144 475q56 18 112 0" fill="none" stroke="#d5b47a" stroke-width="2"/>
+            <path d="M178 250q-8 18-22 32m66-32q8 18 22 32" fill="none" stroke="#e8ddc5" stroke-width="7" stroke-linecap="round"/>
+            <path d="M179 263q21 20 42 0" fill="none" stroke="#c5b8a1" stroke-width="2"/>
+            <path d="M151 207c-3-43 17-72 49-74 34-2 54 27 49 72-4 41-22 68-49 68-27 0-46-26-49-66Z" fill="url(#ear-pearl)" stroke="#e8d9b8" stroke-width="2"/>
+            <path d="M151 211q-15 22 1 35l10-17m87-18q15 22-1 35l-10-17" fill="#c7bfae" stroke="#e8d9b8" stroke-width="1.5"/>
+            <ellipse cx="171" cy="220" rx="10" ry="6" fill="#ceaaa0" opacity=".55"/>
+            <ellipse cx="229" cy="220" rx="10" ry="6" fill="#ceaaa0" opacity=".55"/>
+            <path d="M160 159q40-24 80 0" fill="none" stroke="#d5b47a" stroke-width="4"/>
+            <path d="M160 159q-8-13-3-20m83 20q8-13 3-20" fill="none" stroke="#d5b47a" stroke-width="2"/>
+            <path d="M185 140 200 119l15 21-15 17Z" fill="#d5b47a" stroke="#f0deba" stroke-width="1.5"/>
+            <circle cx="200" cy="137" r="7" fill="url(#pearl-shine)"/>
+            <path d="M170 153q30-17 60 0" fill="none" stroke="#d5b47a" stroke-opacity=".72" stroke-width="1.5"/>
+            <circle cx="166" cy="166" r="4" fill="url(#pearl-shine)"/>
+            <circle cx="234" cy="166" r="4" fill="url(#pearl-shine)"/>
+          </g>
+          <g id="outfit-layer" data-character-layer="outfit"></g>
+          <g id="expression-layer" data-character-layer="expression"></g>
+        </svg>

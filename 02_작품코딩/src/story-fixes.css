@@ -1,0 +1,78 @@
+/* Allocate the invitation and footer separate rows at every language/height. */
+.kiosk-app.palace-theme .fog-entrance {
+ display: grid; grid-template-rows: minmax(0,1fr) auto;
+ padding: 96px 24px 28px; gap: 18px; box-sizing: border-box;
+}
+.kiosk-app.palace-theme .fog-entrance .fog-invitation {
+ position: relative; grid-row: 1; inset: auto; transform: none; align-self: center;
+ justify-self: center; margin: 0; width: min(1100px,100%); max-width: 100%;
+}
+.kiosk-app.palace-theme .fog-entrance .fog-invitation h1 {
+ font-size: clamp(32px,min(3.3vw,5.8svh),60px); line-height: 1.4; margin: 16px 0 0;
+}
+.kiosk-app.palace-theme .fog-entrance .fog-invitation p {
+ font-size: clamp(18px,min(2vw,2.6svh),24px); line-height: 1.7; margin: 16px 0 0;
+}
+.kiosk-app.palace-theme .fog-entrance .fog-hand { margin-top: clamp(16px,3svh,32px); gap: 10px; }
+.kiosk-app.palace-theme .fog-entrance .fog-hand > span { font-size: 18px; line-height: 1.4; }
+.kiosk-app.palace-theme .fog-entrance .fog-bottom {
+ position: relative; grid-row: 2; inset: auto; transform: none; margin: 0;
+ justify-self: center; width: min(680px,100%); display: flex; flex-direction: column; align-items: center;
+}
+.kiosk-app.palace-theme .fog-entrance .fog-bottom > span { font-size: 16px; line-height: 1.4; letter-spacing: .5px; }
+.kiosk-app.palace-theme .fog-entrance .fog-progress { margin: 12px auto 14px; flex-shrink: 0; }
+.kiosk-app.palace-theme .fog-entrance .fog-bottom > button { font-size: 18px; min-height: 54px; }
+/* The timer's impact phase explicitly starts a two-beat camera rumble. */
+.entrapment-impact .entrapment-world { animation: entry-double-impact .76s ease-out both; will-change: transform; }
+@keyframes entry-double-impact {
+ 0%,100% { transform: scale(1.025) translate(0,0); }
+ 8% { transform: scale(1.035) translate(-13px,7px) rotate(-.3deg); }
+ 18% { transform: scale(1.035) translate(11px,-6px) rotate(.25deg); }
+ 30% { transform: scale(1.03) translate(-5px,3px); }
+ 43% { transform: scale(1.025) translate(0,0); }
+ 53% { transform: scale(1.04) translate(10px,8px) rotate(.3deg); }
+ 65% { transform: scale(1.035) translate(-9px,-5px) rotate(-.2deg); }
+ 80% { transform: scale(1.03) translate(4px,2px); }
+}
+/* Keep the open passage visible above the ending copy. */
+.escape-copy-dock { position: absolute; left: 20px; right: 20px; bottom: 24px; display: flex; justify-content: center; z-index: 3; }
+.kiosk-app.palace-theme .escape-copy-dock .escape-success { width: min(1000px,100%); max-width: 100%; padding: 18px 28px; background: #061321db; border-color: #e5c78c88; box-shadow: 0 10px 55px #0006; }
+.kiosk-app.palace-theme .escape-copy-dock h1 { font-size: 32px; line-height: 1.3; margin: 8px 0; }
+.kiosk-app.palace-theme .escape-copy-dock p { font-size: 20px; line-height: 1.5; margin: 8px 0 14px; }
+.escape-copy-dock .button { min-height: 56px; }
+.escape-free .escape-palace { animation: exit-door-reveal 1.4s ease-out both; }
+@keyframes exit-door-reveal { from { transform: scale(1.035); filter: brightness(.85); } to { transform: scale(1); filter: brightness(1); } }
+@media (max-height: 760px) {
+ .kiosk-app.palace-theme .fog-entrance { padding: 76px 20px 18px; gap: 12px; }
+ .kiosk-app.palace-theme .fog-entrance .fog-invitation h1 { font-size: clamp(30px,4.8svh,38px); line-height: 1.3; margin-top: 12px; }
+ .kiosk-app.palace-theme .fog-entrance .fog-invitation p { font-size: 18px; line-height: 1.6; margin-top: 12px; }
+ .kiosk-app.palace-theme .fog-entrance .fog-hand { margin-top: 16px; gap: 8px; }
+ .kiosk-app.palace-theme .fog-entrance .fog-hand > span { font-size: 16px; }
+ .kiosk-app.palace-theme .fog-entrance .fog-bottom > span { font-size: 14px; }
+ .kiosk-app.palace-theme .fog-entrance .fog-progress { margin: 10px auto 12px; }
+ .kiosk-app.palace-theme .escape-copy-dock p { font-size: 18px; }
+}
+@media (max-height: 620px) {
+ .kiosk-app.palace-theme .fog-entrance .fog-hand { flex-direction: row; justify-content: center; }
+ .kiosk-app.palace-theme .fog-entrance .fog-hand > svg { width: 24px; height: 24px; }
+}
+@media (max-width: 600px) {
+ .kiosk-app.palace-theme .fog-entrance { padding: 88px 16px 20px; }
+ .kiosk-app.palace-theme .fog-entrance .fog-invitation h1 { font-size: 30px; }
+ .kiosk-app.palace-theme .fog-entrance .fog-hand > span { font-size: 16px; }
+ .kiosk-app.palace-theme .fog-entrance .fog-bottom > span { font-size: 14px; }
+ .escape-copy-dock { left: 12px; right: 12px; bottom: 16px; }
+ .kiosk-app.palace-theme .escape-copy-dock .escape-success { padding: 18px; }
+ .kiosk-app.palace-theme .escape-copy-dock h1 { font-size: 28px; }
+ .kiosk-app.palace-theme .escape-copy-dock p { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .entrapment-impact .entrapment-world { animation: none; }
+ .escape-free .escape-palace { animation: none; }
+}
+@media (min-width: 1101px) and (min-height: 761px) {
+ html[lang="en"] .kiosk-app.palace-theme .fog-entrance .fog-hand > span { font-size: 20px; }
+}
+/* Keep the open exit hidden until the final veil has formed. */
+.escape-forming .escape-palace { visibility: hidden; }
+.escape-free .escape-palace { filter: brightness(1); }

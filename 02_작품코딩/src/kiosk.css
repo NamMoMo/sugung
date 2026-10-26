@@ -1,0 +1,350 @@
+:root { --kiosk-ink: #183f3b; --kiosk-gold: #d9bd81; }
+html { overscroll-behavior: none; }
+body { overscroll-behavior: none; }
+.kiosk-app { min-height: 100svh; background: #f5f3eb; }
+.kiosk-app.is-room { background: #102d35; }
+.kiosk-stage { min-height: 100svh; }
+.kiosk-app button { touch-action: manipulation; }
+.kiosk-app .button { min-height: 64px; padding: 16px 28px; font-size: 19px; gap: 12px; }
+.kiosk-app .text-button { min-height: 60px; font-size: 17px; gap: 10px; }
+.kiosk-app .icon-button { min-width: 64px; min-height: 64px; }
+.kiosk-shell { min-height: 100svh; }
+.kiosk-header { height: 86px; padding: 0 3vw; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid #254f4620; background: #fffdf8; }
+.kiosk-brand { display: flex; align-items: center; gap: 12px; background: none; min-height: 64px; text-align: left; flex-shrink: 0; }
+.kiosk-brand > span { font-family: var(--serif); font-size: 26px; letter-spacing: 2px; }
+.kiosk-brand small { display: block; font-family: "Noto Sans KR",sans-serif; font-size: 11px; letter-spacing: 2px; margin-top: 3px; color: #7d8d7e; }
+.kiosk-steps { list-style: none; display: flex; align-items: center; gap: 30px; padding: 0; margin: 0; color: #95a092; }
+.kiosk-steps li { display: flex; gap: 9px; align-items: center; font-size: 15px; white-space: nowrap; }
+.kiosk-steps li > span { font-family: Georgia,serif; font-size: 21px; }
+.kiosk-steps li[aria-current] { color: #244e43; font-weight: 600; }
+.kiosk-header-actions { display: flex; align-items: center; gap: 8px; }
+.kiosk-tool { min-height: 64px; min-width: 64px; border-radius: 12px; background: transparent; display: flex; gap: 8px; align-items: center; justify-content: center; color: #47634f; padding: 8px 12px; font-size: 15px; }
+.kiosk-tool:hover { background: #dbe5d84d; }
+.kiosk-progress { display: flex; align-items: center; gap: 15px; margin-right: 16px; }
+.kiosk-progress strong { font-size: 22px; white-space: nowrap; }
+.kiosk-progress small { font-size: 15px; font-weight: 400; color: #8c9788; }
+.kiosk-progress-dots { display: flex; gap: 6px; }
+.kiosk-progress-dots i { width: 9px; height: 12px; border: 1px solid #bfcbb4; transform: rotate(30deg); border-radius: 2px; }
+.kiosk-progress-dots i.found { background: #c3a568; border-color: #c3a568; }
+.is-room .kiosk-header { background: #102d35; border-color: #d8d1ab20; color: #e5dec0; }
+.is-room .kiosk-tool, .is-room .kiosk-steps li[aria-current] { color: #e5dec0; }
+.is-room .kiosk-steps, .is-room .kiosk-brand small { color: #9cafa0; }
+.kiosk-main.main-content { padding: 28px 3vw 32px; margin: 0 auto; max-width: 1920px; }
+.is-room .kiosk-main.main-content { padding: 0; max-width: none; }
+.kiosk-page { animation: kiosk-arrive .4s ease both; }
+.kiosk-loading { min-height: 60vh; display: grid; place-items: center; font-family: var(--serif); font-size: 28px; color: #758269; }
+@keyframes kiosk-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+/* A closed doorway is physically behind the scratchable mist. */
+.palace-entrance { min-height: 100svh; position: relative; overflow: hidden; background: #102e37; color: #eee4c8; }
+.palace-water { position: absolute; inset: 0; background: linear-gradient(#102c36d9,#102c36ce),url('/art/treasure-room.jpg') center/cover; filter: blur(7px); transform: scale(1.03); }
+.palace-water::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 80%,#b9dec52b,transparent 52%); }
+.palace-entry-content { min-height: 100svh; position: relative; display: flex; flex-direction: column; align-items: center; padding: 30px 30px 28px; }
+.entrance-brand { position: absolute; left: 3vw; top: 28px; display: flex; gap: 12px; align-items: center; }
+.entrance-brand span { font-family: var(--serif); font-size: 25px; letter-spacing: 3px; }
+.entrance-brand small { display: block; font: 9px sans-serif; letter-spacing: 2.5px; margin-top: 7px; color: #a6b8a6; }
+.door-invitation { text-align: center; margin: 20px 0 20px; transition: opacity .5s; }
+.door-invitation .eyebrow { color: #c6b481; letter-spacing: 4px; font-size: 11px; }
+.door-invitation h1 { font-family: var(--serif); font-size: clamp(28px,2.4vw,44px); font-weight: 500; margin: 18px 0 12px; }
+.door-invitation p { color: #b8c7b6; font-size: 19px; }
+.palace-portico { position: relative; width: min(48vw,660px); height: min(64svh,690px); min-height: 330px; margin-top: 8px; border: 2px solid #b7a4758c; border-radius: 48% 48% 5px 5px / 31% 31% 5px 5px; padding: 15px; box-shadow: 0 0 0 10px #a89a6b12,0 0 0 12px #c5b17938,0 0 100px #b3dbb922; perspective: 1500px; }
+.door-light { position: absolute; inset: 12px; border-radius: inherit; background: radial-gradient(ellipse at 50% 40%,#f1e9b3,#9bd2bd 80%); opacity: .3; transition: opacity 1s,box-shadow 1s; }
+.palace-door { width: 100%; height: 100%; position: relative; display: flex; padding: 0; overflow: visible; background: transparent; perspective: 1600px; border-radius: inherit; }
+.palace-door:disabled { opacity: 1; cursor: default; }
+.door-leaf { display: block; width: 50%; height: 100%; position: relative; background: linear-gradient(100deg,#163e42,#214c49 60%,#15383c); border: 1px solid #bfa774b5; box-shadow: inset 0 0 40px #071e2a99; transform-style: preserve-3d; transition: transform 1.35s cubic-bezier(.3,.05,.2,1),opacity 1.25s; }
+.door-left { border-radius: 95% 0 0 3px / 30% 0 0 3px; transform-origin: left center; }
+.door-right { border-radius: 0 95% 3px 0 / 0 30% 3px 0; transform-origin: right center; }
+.door-inlay { position: absolute; inset: 14px; border: 1px solid #c5ad7180; border-radius: inherit; }
+.door-engraving { position: absolute; inset: 5% 5% 0; width: 90%; height: 90%; fill: none; stroke: #c1a974; stroke-width: 1; opacity: .65; }
+.door-right .door-engraving { transform: scaleX(-1); }
+.door-handle { width: 13px; height: 56px; position: absolute; top: 58%; border: 2px solid #cfb880; border-radius: 12px; box-shadow: 0 3px 8px #061f27; }
+.door-left .door-handle { right: 14px; }
+.door-right .door-handle { left: 14px; }
+.door-seal { position: absolute; left: 50%; top: 41%; width: 86px; height: 86px; transform: translate(-50%,-50%); border-radius: 50%; background: #254a45; color: #dfc589; border: 2px solid #b69c65; display: grid; place-items: center; box-shadow: 0 0 0 8px #c8b27312,0 0 45px #d4c6824d; transition: opacity .25s,transform .5s; }
+.door-step { position: absolute; left: -9%; right: -9%; bottom: -14px; height: 16px; background: linear-gradient(#748d78,#3d625b); border: 1px solid #b6b79350; box-shadow: 0 10px 30px #0b2528; }
+.door-touch-hint { min-height: 76px; margin-top: 26px; display: flex; align-items: center; justify-content: center; gap: 17px; font-size: 21px; letter-spacing: 1px; }
+.touch-ripple { width: 18px; height: 18px; border: 1px solid #d8c796; border-radius: 50%; box-shadow: 0 0 0 10px #d8c79618,0 0 0 20px #d8c7960b; animation: door-pulse 2.5s infinite; }
+@keyframes door-pulse { 50% { box-shadow: 0 0 0 16px #d8c79612,0 0 0 30px #d8c79604; } }
+.entrance-opening .door-left { transform: rotateY(-105deg); }
+.entrance-opening .door-right { transform: rotateY(105deg); }
+.entrance-opening .door-seal { opacity: 0; transform: translate(-50%,-50%) scale(.7); }
+.entrance-opening .door-light { opacity: 1; box-shadow: 0 0 100px 45px #d8e8ba70; }
+.entrance-opening .door-invitation { opacity: .5; }
+.kiosk-app .fog-entrance canvas { touch-action: none; }
+.kiosk-app .fog-invitation h1 { font-size: clamp(36px,3.3vw,60px); }
+.kiosk-app .fog-invitation p { font-size: 22px; }
+.kiosk-app .fog-bottom { bottom: 34px; }
+.kiosk-app .fog-bottom > button { min-height: 64px; padding: 12px 22px; font-size: 18px; }
+/* Three touch targets floating over the existing palace painting. */
+.kiosk-app .treasure-room-page { min-height: calc(100svh - 86px); }
+.kiosk-app .room-welcome { padding-top: 28px; }
+.kiosk-app .room-welcome h1 { font-size: clamp(32px,2.8vw,49px); }
+.kiosk-app .room-welcome p { font-size: 19px; line-height: 1.8; }
+.kiosk-app .room-overline { font-size: 11px; }
+.kiosk-app .room-painting { width: min(91vw,1600px); height: clamp(350px,48svh,570px); margin: 0 auto; }
+.kiosk-app .room-painting > img { width: 100%; height: 100%; object-fit: cover; border-radius: 30px; }
+.kiosk-app .room-hotspot { min-width: 220px; min-height: 180px; width: 24%; }
+.kiosk-app .hotspot-label { bottom: -54px; width: max-content; min-width: 270px; max-width: 360px; padding: 14px 22px; }
+.kiosk-app .hotspot-label strong { font-size: clamp(21px,1.55vw,29px); white-space: nowrap; }
+.kiosk-app .hotspot-label small { font-size: 12px; }
+.kiosk-app .hotspot-progress { font-size: 15px; }
+.kiosk-app .hotspot-0 { left: 10%; top: 31%; }
+.kiosk-app .hotspot-1 { left: 38%; top: 20%; }
+.kiosk-app .hotspot-2 { left: 66%; top: 31%; }
+.kiosk-app .room-image-caption { font-size: 16px; bottom: 0; }
+.kiosk-app .room-bottom-bar { margin: 28px auto 0; width: min(88vw,1440px); padding: 20px 28px; }
+.kiosk-app .room-bottom-actions > button { min-height: 64px; font-size: 18px; padding: 12px 20px; }
+.kiosk-app .room-discovery span { font-size: 17px; }
+.kiosk-app .room-discovery strong { font-size: 30px; }
+.kiosk-app .room-gentle-note { font-size: 16px; margin-top: 22px; }
+/* Both connected scenes remain visible on a landscape display. */
+.kiosk-scene-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 16px; }
+.kiosk-scene-heading > div { text-align: center; }
+.kiosk-scene-heading h1 { font-family: var(--serif); font-size: 34px; margin: 6px 0 8px; }
+.kiosk-scene-heading p { font-size: 19px; color: #6e806d; }
+.kiosk-scene-instruction { display: flex; align-items: center; gap: 10px; font-size: 16px; color: #7e8c74; max-width: 220px; line-height: 1.7; }
+.kiosk-app .dual-scenes-page { max-width: 1700px; }
+.kiosk-app .scene-confirm.confirmed:disabled { opacity: 1; background: #e2ebd8; color: #4f7046; border-color: #c6d6b8; }
+.kiosk-app .dual-scenes-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; max-width: none; }
+.kiosk-app .everyday-panel { border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; }
+.kiosk-app .everyday-panel-heading { padding: 20px 24px 0; min-height: 76px; gap: 14px; }
+.kiosk-app .everyday-panel-heading h2 { font-size: 23px; line-height: 1.45; }
+.kiosk-app .everyday-panel-heading h2:focus { outline: none; }
+.kiosk-app .everyday-panel-heading small { font-size: 13px; }
+.kiosk-app .scene-order { font-size: 34px; }
+.kiosk-app .scene-choice-status { font-size: 13px; padding: 9px 13px; flex-shrink: 0; }
+.kiosk-app .everyday-story { font-size: 17px; line-height: 1.75; padding: 12px 24px; min-height: 82px; }
+.kiosk-app .people-scene-frame { margin: 0; }
+.kiosk-app .people-scene { display: block; width: 100%; height: clamp(200px,24svh,290px); }
+.kiosk-app .actor-roster { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); padding: 16px 18px 0; gap: 8px; }
+.kiosk-app .actor-roster > button { min-height: 86px; padding: 10px 7px; font-size: 16px; line-height: 1.5; word-break: keep-all; border-radius: 12px; }
+.kiosk-app .actor-roster > button > span { font-size: 12px; width: 23px; height: 23px; }
+.kiosk-app .actor-detail { display: flex; min-height: 106px; margin: 14px 18px 0; padding: 14px 18px; gap: 12px; align-items: center; }
+.kiosk-app .actor-detail > p { font-size: 17px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; }
+.kiosk-app .scene-confirm { width: calc(100% - 36px); margin: auto 18px 18px; border-radius: 12px; }
+.kiosk-app .dual-footer { max-width: none; margin: 16px 0 0; padding: 0; gap: 20px; }
+.kiosk-app .dual-selection-summary strong { font-size: 20px; }
+.kiosk-app .dual-selection-summary p { font-size: 16px; }
+.kiosk-app .dual-summary-dots > span { width: 38px; height: 38px; }
+/* Six independent treasures, never a character or a combined personality type. */
+.kiosk-result .result-heading { align-items: center; margin: 4px 0 10px; }
+.kiosk-result .result-heading h1 { font-size: 36px; }
+.kiosk-result .result-heading > div > p { font-size: 18px; }
+.kiosk-result .complete-pill { font-size: 16px; }
+.kiosk-result .treasure-result-groups.result-groups { margin: 16px 0; gap: 24px; grid-template-columns: repeat(3,minmax(0,1fr)); }
+.kiosk-result .treasure-group-heading { min-height: 64px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.kiosk-result .treasure-group-heading .eyebrow { width: 100%; font-size: 11px; }
+.kiosk-result .treasure-group-heading h2 { font-size: 24px; margin: 0; }
+.kiosk-result .treasure-group-heading .text-button { margin-left: auto; font-size: 14px; min-height: 46px; }
+.kiosk-result .treasure-result-cards { grid-template-columns: 1fr; gap: 16px; }
+.kiosk-result .treasure-result-card { padding: 16px 22px; border-radius: 20px; }
+.kiosk-result .treasure-art { height: 95px; margin: 0 auto; }
+.kiosk-result .treasure-earned { display: none; }
+.kiosk-result .treasure-choice-label { font-size: 13px; padding: 4px 12px; }
+.kiosk-result .treasure-result-card h3 { font-size: 26px; margin: 6px 0 8px; }
+.kiosk-result .treasure-meaning { font-size: 17px; line-height: 1.65; }
+.kiosk-result .treasure-chosen-action { margin-top: 10px; padding-top: 0; border: 0; }
+.kiosk-result .treasure-chosen-action summary { min-height: 48px; display: flex; align-items: center; font-size: 14px; gap: 9px; }
+.kiosk-result .treasure-chosen-action summary::before { content: "+"; }
+.kiosk-result .treasure-chosen-action[open] summary::before { content: "−"; }
+.kiosk-result .treasure-chosen-action p { font-size: 16px; }
+.kiosk-result .treasure-result-actions { gap: 18px; margin: 18px 0 12px; }
+.kiosk-result .treasure-result-actions > p { margin-right: auto; font-family: var(--serif); font-size: 20px; color: #7c8b73; }
+.kiosk-result .result-disclaimer { font-size: 13px; margin: 12px 0 0; }
+/* Exhibition dialogs and the automatic return to the mist. */
+.kiosk-app .modal { width: min(680px,calc(100vw - 48px)); max-height: calc(100svh - 48px); padding: 30px 38px; overflow-y: auto; }
+.kiosk-app .modal-backdrop { z-index: 140; }
+.kiosk-app .modal-wide { width: min(1000px,calc(100vw - 48px)); }
+.kiosk-app .modal h2 { font-size: 32px; }
+.kiosk-app .modal-intro { font-size: 20px; line-height: 1.8; }
+.kiosk-app .modal-header > button { width: 64px; height: 64px; }
+.kiosk-modal-actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 28px; }
+.kiosk-guide { list-style: none; padding: 12px 0; margin: 0; }
+.kiosk-guide li { display: flex; gap: 20px; padding: 20px 0; }
+.kiosk-guide li > span { color: #b19c6f; font: 28px Georgia,serif; }
+.kiosk-guide h3 { font-size: 21px; margin-bottom: 10px; }
+.kiosk-guide p { font-size: 18px; color: #6b7c67; line-height: 1.8; }
+.kiosk-visit-note { font-size: 16px; line-height: 1.8; color: #7c8c75; }
+.kiosk-map { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+.kiosk-map button { background: #f1f0e8; padding: 18px 12px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.kiosk-map strong { font: 22px var(--serif); }
+.kiosk-map span { font-size: 18px; }
+.kiosk-collected-intro { font-size: 19px; line-height: 1.7; color: #73826a; }
+.kiosk-collected-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 20px 0; }
+.kiosk-collected-pair > div { background: #f3f1e7; border: 1px solid #e4e3d4; border-radius: 20px; padding: 14px 20px 22px; text-align: center; }
+.kiosk-collected-pair span { font-size: 16px; color: #8c805a; }
+.kiosk-collected-pair h3 { font-family: var(--serif); font-size: 25px; margin-top: 10px; }
+.kiosk-collected-pair .treasure-art { height: 160px; }
+.idle-countdown { display: flex; align-items: baseline; gap: 12px; font-size: 17px; color: #819071; margin-top: 20px; }
+.idle-countdown strong { font-family: Georgia,serif; font-size: 52px; color: #365a48; }
+.kiosk-app .toast { left: 50%; min-height: 64px; font-size: 17px; padding: 15px 22px; z-index: 150; }
+.kiosk-app .toast button { min-height: 44px; min-width: 44px; }
+@media (max-height: 900px) and (min-width: 1051px) {
+  .kiosk-header { height: 76px; }
+  .kiosk-main.main-content { padding-top: 18px; padding-bottom: 20px; }
+  .kiosk-scene-heading { margin-bottom: 14px; }
+  .kiosk-scene-heading h1 { font-size: 29px; }
+  .kiosk-app .everyday-panel-heading { padding: 14px 20px 0; min-height: 64px; }
+  .kiosk-app .everyday-panel-heading h2 { font-size: 20px; }
+  .kiosk-app .everyday-story { font-size: 16px; min-height: 82px; padding: 10px 20px; }
+  .kiosk-app .people-scene { height: 180px; }
+  .kiosk-app .actor-roster { padding-top: 10px; }
+  .kiosk-app .actor-roster > button { min-height: 80px; font-size: 14px; }
+  .kiosk-app .actor-detail { min-height: 90px; margin-top: 10px; padding: 10px 14px; }
+  .kiosk-app .actor-detail > p { font-size: 16px; }
+  .kiosk-app .dual-footer { margin-top: 14px; }
+  .kiosk-result .result-heading h1 { font-size: 30px; }
+  .kiosk-result .treasure-result-groups.result-groups { margin: 16px 0; gap: 18px; }
+  .kiosk-result .treasure-art { height: 60px; }
+  .kiosk-result .treasure-result-card { padding: 12px 18px; }
+  .kiosk-result .treasure-result-card h3 { font-size: 23px; }
+  .kiosk-result .treasure-meaning { font-size: 16px; line-height: 1.55; }
+  .kiosk-result .treasure-earned { display: none; }
+  .kiosk-result .treasure-chosen-action { margin-top: 3px; }
+  .kiosk-result .treasure-result-actions > p { display: none; }
+  .door-invitation { margin-top: 2px; }
+  .palace-portico { height: 59svh; }
+}
+@media (max-width: 1300px) {
+  .kiosk-steps { display: none; }
+  .kiosk-progress-dots { display: none; }
+  .kiosk-scene-instruction { display: none; }
+  .kiosk-scene-heading > div { text-align: right; }
+  .kiosk-app .room-hotspot { min-width: 180px; }
+}
+@media (max-width: 1050px) {
+  .kiosk-header { padding: 0 20px; gap: 12px; }
+  .kiosk-fullscreen { display: none; }
+  .kiosk-brand > span { font-size: 22px; }
+  .kiosk-progress { margin-right: 0; }
+  .kiosk-tool { padding: 6px; }
+  .kiosk-main.main-content { padding: 22px; }
+  .kiosk-app .dual-scenes-grid { grid-template-columns: 1fr; max-width: 800px; margin: auto; }
+  .kiosk-app .dual-footer { max-width: 800px; margin-left: auto; margin-right: auto; }
+  .kiosk-result .treasure-result-groups.result-groups { grid-template-columns: 1fr; }
+  .kiosk-result .treasure-result-cards { grid-template-columns: 1fr 1fr; }
+  .palace-portico { width: min(70vw,570px); }
+  .door-invitation { margin-top: 78px; }
+  .kiosk-app .room-painting { height: 42svh; }
+  .kiosk-app .room-hotspot { min-width: 150px; }
+  .kiosk-app .hotspot-label strong { font-size: 19px; }
+}
+@media (max-width: 650px) {
+  .kiosk-brand small, .kiosk-brand > svg, .kiosk-fullscreen, .kiosk-progress { display: none; }
+  .kiosk-header { padding: 0 12px; height: 76px; }
+  .kiosk-tool { min-width: 52px; }
+  .kiosk-tool > span { display: none; }
+  .kiosk-main.main-content { padding: 16px; }
+  .kiosk-scene-heading { align-items: flex-start; gap: 10px; }
+  .kiosk-scene-heading > .text-button { font-size: 14px; }
+  .kiosk-scene-heading h1 { font-size: 23px; }
+  .kiosk-scene-heading p { font-size: 16px; }
+  .kiosk-app .everyday-panel-heading { padding: 16px 14px 0; }
+  .kiosk-app .everyday-panel-heading h2 { font-size: 19px; }
+  .kiosk-app .scene-choice-status { display: none; }
+  .kiosk-app .everyday-story { padding: 12px 16px; font-size: 16px; }
+  .kiosk-app .actor-roster { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .kiosk-app .actor-roster > button { font-size: 16px; min-height: 64px; }
+  .kiosk-app .actor-detail > p { font-size: 16px; }
+  .kiosk-app .dual-footer { flex-direction: column; align-items: stretch; }
+  .kiosk-result .treasure-result-cards { grid-template-columns: 1fr; }
+  .kiosk-result .result-heading h1 { font-size: 28px; }
+  .kiosk-result .result-heading { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .kiosk-result .treasure-result-actions > p { text-align: center; }
+  .kiosk-app .modal { padding: 22px; }
+  .kiosk-app .modal h2 { font-size: 26px; }
+  .kiosk-collected-pair { gap: 10px; }
+  .kiosk-collected-pair > div { padding: 10px; }
+  .kiosk-collected-pair h3 { font-size: 19px; }
+  .kiosk-collected-pair .treasure-art { height: 110px; }
+  .kiosk-map { grid-template-columns: 1fr; }
+  .kiosk-app .room-welcome p { font-size: 17px; }
+  .kiosk-app .room-painting { height: 47svh; min-height: 350px; }
+  .kiosk-app .room-hotspot { min-width: 0; width: 30%; min-height: 120px; }
+  .kiosk-app .hotspot-0 { left: 3%; top: 32%; }
+  .kiosk-app .hotspot-1 { left: 35%; top: 13%; }
+  .kiosk-app .hotspot-2 { left: 67%; top: 32%; }
+  .kiosk-app .hotspot-label { min-width: 0; width: 100%; max-width: none; padding: 12px 7px; }
+  .kiosk-app .hotspot-label strong { font-size: 16px; white-space: normal; word-break: keep-all; }
+  .kiosk-app .hotspot-label small { font-size: 9px; }
+  .kiosk-app .hotspot-progress { font-size: 11px; }
+  .kiosk-app .room-bottom-bar { padding: 16px; flex-direction: column; gap: 14px; }
+  .kiosk-app .room-bottom-actions { gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .kiosk-app .room-bottom-actions > button { padding: 10px 12px; font-size: 15px; }
+  .kiosk-app .room-image-caption { bottom: -30px; font-size: 13px; }
+  .kiosk-app .room-bottom-bar { margin-top: 48px; }
+  .palace-portico { width: 76vw; height: 49svh; min-height: 300px; }
+  .door-invitation h1 { font-size: 26px; }
+  .door-invitation p { font-size: 17px; }
+  .door-touch-hint { font-size: 18px; }
+  .entrance-brand { left: 22px; }
+  .kiosk-app .fog-invitation h1 { font-size: 34px; }
+  .kiosk-app .fog-invitation p { font-size: 19px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-page { animation: none; }
+  .door-leaf, .door-seal, .door-light, .door-invitation { transition-duration: .01ms; }
+  .touch-ripple { animation: none; }
+}
+
+/* Photo scenes retain their complete frame so touch regions stay on the people. */
+.kiosk-app .immersive-scenes { max-width: 1700px; }
+.scene-moments { display: flex; justify-content: center; gap: 14px; margin: 0 0 18px; }
+.scene-moments button { display: flex; gap: 14px; align-items: center; min-height: 64px; padding: 10px 24px; background: #edece2; border: 1px solid transparent; border-radius: 15px; font-size: 17px; color: #788572; }
+.scene-moments button[aria-current] { background: #fffdf5; border-color: #b89a57; color: #315647; box-shadow: 0 4px 16px #46553809; }
+.scene-moments button > span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #e1e6d5; font-size: 15px; }
+.kiosk-app .immersive-stage { display: grid; grid-template-columns: minmax(0,1fr) 340px; max-width: min(100%,calc((100svh - 390px)*1.5 + 340px)); margin: auto; border: 1px solid #dddcc9; border-radius: 22px; background: #fffdf8; }
+.photo-scene { position: relative; aspect-ratio: 3 / 2; background: #d4cbb9; isolation: isolate; overflow: hidden; }
+.photo-scene > img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; user-select: none; }
+.photo-touch-hint { position: absolute; left: 50%; transform: translateX(-50%); top: 15px; padding: 9px 18px; border-radius: 30px; background: #163d36d9; color: #fffbed; font-size: 15px; white-space: nowrap; pointer-events: none; }
+.kiosk-app .photo-person { position: absolute; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 8px 3px 0; border: 2px solid transparent; border-radius: 45% 45% 18px 18px; background: transparent; color: #fffaf0; cursor: pointer; transition: background .2s,border-color .2s,box-shadow .2s; min-height: 64px; }
+.kiosk-app .photo-person:hover { background: #fff3c214; border-color: #fff4c780; }
+.kiosk-app .photo-person.person-active { border-color: #ffdf85; background: #ffe6a32b; box-shadow: 0 0 0 3px #253b2c70,inset 0 0 30px #ffe4a155; }
+.kiosk-app .photo-person:focus-visible { outline: 4px solid #fff6ce; outline-offset: 3px; }
+.photo-person-marker { display: grid; place-items: center; width: 33px; height: 33px; background: #183e35e6; border: 1px solid #f7e6ac; border-radius: 50%; font-size: 12px; box-shadow: 0 2px 8px #0004; }
+.photo-person-label { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: calc(100% + 4px); min-height: 74px; padding: 9px 5px; border: 1px solid #fff6; border-radius: 12px; background: #15392ff2; color: #fff8e3; font-size: clamp(12px,1vw,17px); line-height: 1.5; word-break: keep-all; box-shadow: 0 3px 14px #0003; }
+.photo-person-label b { font-size: 11px; opacity: .7; }
+.person-active .photo-person-label { background: #f1d48e; color: #233e30; border-color: #ffedb4; }
+.photo-fallback { position: absolute; top: 10%; padding: 20px; color: #243b30; }
+.photo-unavailable > img { visibility: hidden; }
+.kiosk-app .scene-context { display: flex; flex-direction: column; padding: 24px; min-width: 0; }
+.scene-context > small { color: #7d8875; margin: 12px 0 8px; font-size: 12px; }
+.scene-context h2 { font-family: var(--serif); font-size: 25px; line-height: 1.5; margin: 0 0 16px; word-break: keep-all; }
+.scene-context h2:focus { outline: none; }
+.scene-context .scene-story { font-size: 16px; line-height: 1.8; color: #65745f; word-break: keep-all; }
+.kiosk-app .scene-context .actor-detail { margin: 20px 0; padding: 16px 14px; min-height: 140px; align-items: flex-start; gap: 10px; }
+.scene-context .actor-detail strong { display: block; font-size: 17px; margin-bottom: 8px; color: #34533c; }
+.kiosk-app .scene-context .actor-detail p { font-size: 15px; line-height: 1.75; }
+.kiosk-app .scene-context .scene-confirm { margin: auto 0 0; width: 100%; }
+.kiosk-app .scene-context .next-moment { margin-top: 10px; width: 100%; font-size: 17px; padding: 12px; }
+.scene-change-note { color: #87917b; font-size: 12px; text-align: center; margin-top: 12px; line-height: 1.6; }
+.immersive-scenes .dual-footer { max-width: min(100%,calc((100svh - 390px)*1.5 + 340px)); margin: 18px auto 0; }
+@media (min-width: 1001px) and (max-height: 950px) {
+  .kiosk-app .immersive-stage { max-width: min(100%,calc((100svh - 325px)*1.5 + 320px)); grid-template-columns: minmax(0,1fr) 320px; }
+  .immersive-scenes .kiosk-scene-heading { margin-bottom: 8px; }
+  .immersive-scenes .kiosk-scene-heading h1 { font-size: 27px; margin: 0 0 5px; }
+  .immersive-scenes .kiosk-scene-heading p { font-size: 16px; }
+  .scene-moments { margin-bottom: 10px; }
+  .scene-moments button { min-height: 56px; font-size: 15px; }
+  .kiosk-app .scene-context { padding: 18px; }
+  .scene-context h2 { font-size: 21px; margin-bottom: 10px; }
+  .scene-context .scene-story { font-size: 14px; line-height: 1.7; }
+  .kiosk-app .scene-context .actor-detail { margin: 12px 0; min-height: 112px; padding: 12px; }
+  .kiosk-app .scene-context .actor-detail p { font-size: 14px; line-height: 1.6; }
+  .scene-context .actor-detail strong { font-size: 15px; margin-bottom: 5px; }
+  .scene-context > small { margin-top: 8px; }
+  .kiosk-app .scene-context .next-moment { min-height: 56px; }
+  .scene-change-note { font-size: 11px; margin-top: 8px; }
+  .immersive-scenes .dual-footer { margin-top: 12px; max-width: min(100%,calc((100svh - 325px)*1.5 + 320px)); }
+  .photo-person-label { font-size: 13px; min-height: 70px; }
+}
+@media (max-width: 1000px) {
+  .kiosk-app .immersive-stage { max-width: 100%; grid-template-columns: 1fr; }
+  .scene-moments { gap: 8px; }
+  .scene-moments button { font-size: 13px; padding: 8px; gap: 7px; flex: 1; }
+  .scene-moments button > svg { display: none; }
+  .photo-person-label { font-size: 12px; min-height: 74px; }
+  .photo-touch-hint { font-size: 12px; top: 8px; }
+  .kiosk-app .scene-context { padding: 20px; }
+  .immersive-scenes .dual-footer { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .kiosk-app .photo-person { transition: none; } }

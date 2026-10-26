@@ -1,0 +1,429 @@
+/* Obsidian, ocean light and engraved gold from the supplied palace image. */
+.kiosk-app.palace-theme { --green: #d4b574; --green-deep: #b4914d; --muted: #a6b5c4; --line: #b99a5533; color: #eee6d3; background: radial-gradient(ellipse at 50% 0,#13324b 0,#071321 52%,#050d17 100%); }
+.palace-theme .eyebrow { color: #c6a96d; }
+.palace-theme .kiosk-header { color: #dfc795; background: #071321e8; border-color: #c9a55c38; }
+.palace-theme .kiosk-tool,.palace-theme .text-button,.palace-theme .kiosk-brand,.palace-theme .kiosk-steps li[aria-current] { color: #e1c897; }
+.palace-theme .kiosk-tool:hover { background: #ceb06b14; }
+.palace-theme .kiosk-brand small,.palace-theme .kiosk-steps,.palace-theme .kiosk-progress small { color: #8f9faf; }
+.palace-theme .kiosk-progress-dots i { border-color: #87734e; }.palace-theme .kiosk-progress-dots i.found { background: #e0bb70; border-color: #e0bb70; }
+.palace-theme .button-primary,.palace-theme .button-gold { background: linear-gradient(135deg,#e5cb91,#ac8541); color: #15202b; border: 1px solid #ecd69d; box-shadow: 0 4px 20px #c89b3620; }
+.palace-theme .button-outline { background: transparent; border-color: #c2a26466; color: #deca9e; }
+.palace-theme button:focus-visible,.palace-theme a:focus-visible { outline: 3px solid #f5dc9c; outline-offset: 4px; }
+.palace-theme .kiosk-scene-heading h1,.palace-theme .scene-context h2 { color: #f2dfb9; }
+.palace-theme .kiosk-scene-heading p,.palace-theme .kiosk-scene-instruction { color: #aab9c9; }
+.palace-theme .scene-moments button { color: #9aacc0; background: #0d2032; border-color: #b7965726; }
+.palace-theme .scene-moments button[aria-current] { color: #f2d698; background: #182b3e; border-color: #bd9b56; }
+.palace-theme .scene-moments button > span { color: #e1c996; background: #af8a3a26; }
+.palace-theme .immersive-stage { border: 1px solid #ad8e4d77; background: #0c1d2e; box-shadow: 0 20px 80px #0005; }
+.palace-theme .scene-context > small,.palace-theme .scene-context .scene-story { color: #b4c0cd; }
+.palace-theme .scene-context .actor-detail { background: #142a3c; border-color: #bc9a5138; }
+.palace-theme .actor-detail-icon,.palace-theme .scene-context .actor-detail strong { color: #dec08a; }
+.palace-theme .scene-context .actor-detail p { color: #ccd5dc; }
+.palace-theme .scene-confirm { background: #122a3e; border: 1px solid #c3a06080; color: #e4c789; }
+.palace-theme .scene-confirm.confirmed:disabled { background: #203a46; border-color: #a88d57; color: #ebd59d; }
+.palace-theme .scene-change-note { color: #8c9fb0; }
+.palace-theme .photo-scene > img { filter: saturate(.88) brightness(.91); }
+.palace-theme .photo-touch-hint,.palace-theme .photo-person-label { background: #081b2bef; color: #ecd8af; border-color: #d6b47470; }
+.palace-theme .photo-person-marker { background: #102a40; border-color: #d3b374; color: #f2ddb3; }
+.palace-theme .person-active .photo-person-label { background: #d9b674; color: #122334; }
+.palace-theme .dual-footer { background: transparent; border: 0; }
+.palace-theme .dual-selection-summary strong { color: #e3c992; }.palace-theme .dual-selection-summary p { color: #9eb0c1; }
+.palace-theme .dual-summary-dots > span { color: #cdb784; background: #11263b; border-color: #b49a6044; }.palace-theme .dual-summary-dots > span.selected { background: #caa763; color: #102235; border-color: #e2ca93; }
+.palace-theme .modal-backdrop { background: #020914d9; backdrop-filter: blur(14px); }
+.palace-theme .modal { background: linear-gradient(145deg,#152b40,#081522); border: 1px solid #bd9b57; color: #f0e1c6; box-shadow: 0 0 80px #000a; }
+.palace-theme .modal h2,.palace-theme .kiosk-guide h3 { color: #ead4a9; }.palace-theme .modal-intro,.palace-theme .kiosk-guide p,.palace-theme .kiosk-visit-note { color: #b5c4d1; }
+.palace-theme .icon-button { background: #d4b67714; color: #ddc596; }.palace-theme .toast { background: #132b3e; border: 1px solid #b69353; color: #f3dfb7; }
+.seal-progress { display: flex; justify-content: center; gap: 18px; margin: 30px 0; }
+.seal-progress > span { width: 56px; height: 56px; display: grid; place-items: center; border: 1px solid #a98a4b66; color: #8398aa; border-radius: 50%; }
+.seal-progress > .unsealed { color: #132031; background: #d8b46e; box-shadow: 0 0 30px #ddb35c24; }
+.seal-chests { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 18px; margin-top: 24px; }
+.seal-chests > button { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 16px; border: 1px solid #bc985e66; background: #10273b; border-radius: 12px; color: #ebd7af; min-height: 180px; }
+.seal-chests > button:hover { background: #1a354a; border-color: #dec28d; }.seal-chests strong { font-size: 19px; }.seal-chests button > span:last-child { display: flex; align-items: center; gap: 8px; color: #aebcca; font-size: 14px; }
+.seal-number { font-family: Georgia,serif; font-size: 30px; color: #c8a35e; }
+/* The reference artwork itself is the room. Hit regions follow its three chests. */
+.royal-room { padding: 14px 0 18px; }
+.royal-room-heading { text-align: center; padding: 0 20px; }.royal-room-heading h1 { font-family: var(--serif); font-size: 30px; color: #f1dbb0; margin: 7px 0; }.royal-room-heading p { font-size: 15px; color: #aebdcc; margin: 0 0 16px; }
+.royal-room-canvas { position: relative; width: min(100%,calc((100svh - 265px)*2.235)); margin: auto; aspect-ratio: 1875 / 839; border: 1px solid #9c80484d; box-shadow: 0 0 80px #235a8020; }
+.royal-room-canvas > img { width: 100%; height: 100%; display: block; }
+.royal-chest { position: absolute; top: 59%; width: 16%; height: 23%; border: 1px solid transparent; border-radius: 30px; background: transparent; }
+.royal-chest-0 { left: 23.6%; }.royal-chest-1 { left: 42.2%; }.royal-chest-2 { left: 61%; }
+.royal-chest:hover,.royal-chest:focus-visible { border-color: #f2d296; background: #efcc7e12; box-shadow: 0 0 35px #d8ad4a55; }
+.chest-glimmer { position: absolute; left: calc(50% - 12px); top: -22%; color: #ffe4a8; filter: drop-shadow(0 0 12px #ffcf6b); animation: chest-glimmer 3s ease-in-out infinite; }
+.royal-chest-label { position: absolute; top: 108%; left: -15%; width: 130%; min-height: 80px; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 1px solid #ba9a5c90; padding: 12px 8px; border-radius: 8px; background: #071522ed; color: #f2dbac; box-shadow: 0 5px 25px #0009; }
+.royal-chest-label small { font-size: 9px; letter-spacing: 3px; color: #bd9e64; }.royal-chest-label strong { font-family: var(--serif); font-size: 21px; }.royal-chest-label > span { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #a6b9ca; }
+.royal-room-footer { display: flex; justify-content: center; align-items: center; gap: 35px; padding: 8px 20px 0; font-size: 15px; color: #a7bacb; }
+@keyframes chest-glimmer { 50% { opacity: .5; transform: translateY(-5px); } }
+/* Door leaves use the exact same image coordinates as the reference-derived plate. */
+.royal-entrance { position: relative; width: 100%; height: 100svh; overflow: hidden; background: #050c16; }
+.gate-world { position: absolute; width: max(100vw,223.5svh); height: max(44.743vw,100svh); left: 50%; top: 50%; transform: translate(-50%,-50%); transition: transform 1.8s ease; }
+.gate-plate { position: absolute; width: 100%; height: 100%; display: block; }
+.royal-door { position: absolute; left: 37%; top: 16%; width: 26%; height: 65%; border: 0; background: transparent; padding: 0; perspective: 1500px; }
+.royal-door:disabled { opacity: 1; }.royal-door:focus-visible { outline-offset: 6px; outline-color: #e9cb84; }
+.royal-door-leaf { position: absolute; top: 0; width: 50%; height: 100%; overflow: hidden; transition: transform 1.65s cubic-bezier(.3,0,.2,1),filter 1.65s; backface-visibility: hidden; }
+.royal-door-leaf img { position: absolute; width: 769.2308%; height: 153.8462%; max-width: none; top: -24.6154%; pointer-events: none; }
+.royal-door-left { left: 0; transform-origin: left; }.royal-door-right { right: 0; transform-origin: right; }
+.royal-door-left img { left: -284.6154%; }.royal-door-right img { left: -384.6154%; }
+.gate-gap { position: absolute; left: 37%; top: 16%; width: 26%; height: 65%; background: radial-gradient(ellipse,#ffefbf 0,#b78834 42%,#071321 78%); opacity: 0; transition: opacity .4s; }
+.royal-door-touch { position: absolute; left: 50%; top: 57%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 14px 20px; white-space: nowrap; border: 1px solid #d6b578; background: #081525dd; border-radius: 40px; color: #f1d9a9; font-size: 16px; box-shadow: 0 0 50px #d8b15d33; }
+.entrance-opening .gate-gap { opacity: 1; }.entrance-opening .royal-door-left { transform: rotateY(-85deg); filter: brightness(.4); }.entrance-opening .royal-door-right { transform: rotateY(85deg); filter: brightness(.4); }.entrance-opening .royal-door-touch { opacity: 0; }.entrance-opening .gate-world { transform: translate(-50%,-50%) scale(1.15); }
+.royal-entrance-brand { position: absolute; top: 32px; left: 40px; display: flex; align-items: center; gap: 14px; color: #e4c38b; pointer-events: none; }
+.royal-entrance-brand span { font-family: var(--serif); font-size: 24px; letter-spacing: 3px; }.royal-entrance-brand small { display: block; font: 9px sans-serif; letter-spacing: 3px; margin-top: 7px; }
+.royal-door-invitation { position: absolute; bottom: 5%; left: 0; width: 100%; text-align: center; pointer-events: none; padding: 25px; background: linear-gradient(transparent,#04101de0); color: #e8d7b4; }
+.royal-door-invitation h1 { font-family: var(--serif); font-size: 31px; margin: 10px 0; }.royal-door-invitation p { color: #b6c5d2; font-size: 16px; }
+/* A continuous descent into the trap, and a second veil of mist at the exit. */
+.trap-transition,.escape-scene { position: relative; display: grid; place-items: center; min-height: 100svh; overflow: hidden; background: #030b15; }
+.trap-backdrop { position: absolute; inset: 0; background-size: cover; background-position: center; animation: trap-descent 2.8s ease-in both; }
+.trap-vortex { position: absolute; inset: -70%; background: conic-gradient(from 0deg,transparent,#ba904333,transparent,#4d99ae44,transparent); animation: vortex-turn 3.5s linear infinite; mask-image: radial-gradient(ellipse,transparent 10%,#000 32%,transparent 65%); }
+.trap-rings { position: absolute; width: 60vmin; aspect-ratio: 1; border: 1px solid #e0bb6966; border-radius: 50%; box-shadow: 0 0 0 50px #c89f3e08,0 0 0 120px #82b9c60a,0 0 80px #e7bd6944,inset 0 0 100px #000; animation: trap-ring 2.8s ease-in both; }
+.trap-copy { position: relative; z-index: 1; text-align: center; max-width: 800px; padding: 38px; border: 1px solid #c4a46a66; background: #061320e6; box-shadow: 0 0 90px #0008; border-radius: 20px; }
+.trap-copy h1,.escape-success h1 { font-family: var(--serif); font-size: clamp(30px,3vw,54px); line-height: 1.6; color: #efd6a2; margin: 15px 0; }.trap-copy p,.escape-success p { color: #b8c9d9; line-height: 1.9; font-size: 18px; margin: 18px 0 30px; }
+@keyframes trap-descent { from { transform: scale(1.02); filter: blur(0) brightness(.6); } to { transform: scale(1.6) rotate(5deg); filter: blur(12px) brightness(.2); } }
+@keyframes vortex-turn { to { transform: rotate(360deg); } } @keyframes trap-ring { from { transform: scale(.35); opacity: .2; } to { transform: scale(3); opacity: .8; } }
+.escape-palace { position: absolute; width: 100%; height: 100%; object-fit: cover; filter: brightness(.7); }
+.escape-rays { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 20%,#e3bd6b3b,transparent 65%); }
+.escape-forming { position: relative; z-index: 2; text-align: center; width: 100%; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #e6d4aa; background: #728f9b; animation: mist-form 1.1s ease both; }
+.escape-forming h1 { font: 32px/1.7 var(--serif); margin: 22px; } @keyframes mist-form { from { background: #728f9b00; } to { background: #345568; } }
+.escape-success { position: relative; z-index: 1; text-align: center; padding: 45px 55px; background: #061321e8; border: 1px solid #c7a96b88; box-shadow: 0 0 120px #edc87724; border-radius: 18px; animation: kiosk-arrive 1s ease both; }
+.palace-theme .fog-bottom,.palace-theme .fog-brand,.palace-theme .fog-invitation { color: #efe0c0; }.palace-theme .fog-eyebrow { color: #e4cb90; }
+/* Results are revealed together, with a locally generated visitor-specific QR. */
+.results-body { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 24px; align-items: start; }
+.results-body.is-shared { display: block; }
+.palace-theme .result-heading h1,.palace-theme .treasure-group-heading h2 { color: #efd8ad; }.palace-theme .result-heading > div > p { color: #a4b7c8; }
+.palace-theme .complete-pill { background: #132c3d; border-color: #c4a16255; color: #e3c58c; }
+.palace-theme .treasure-result-groups.result-groups { gap: 18px; margin-top: 0; }
+.palace-theme .treasure-result-card { background: linear-gradient(145deg,#142b40,#0a1a2a); border: 1px solid #b99a5c55; box-shadow: 0 12px 25px #0002; padding: 13px 16px; }
+.palace-theme .treasure-result-card h3 { color: #efdbb5; font-size: 23px; }.palace-theme .treasure-meaning { color: #bac9d7; font-size: 15px; line-height: 1.7; }
+.palace-theme .treasure-choice-label { background: #d3af6120; color: #ddc28e; }.palace-theme .treasure-art { height: 70px; }
+.palace-theme .treasure-result-actions,.palace-theme .result-disclaimer { color: #99aebf; }.palace-theme .treasure-group-heading .text-button { color: #b8a77d; font-size: 12px; }
+.result-qr { display: flex; flex-direction: column; align-items: center; padding: 22px 18px; text-align: center; background: #0f2336; border: 1px solid #c6a36480; border-radius: 18px; position: sticky; top: 20px; }
+.qr-picture { width: 244px; height: 244px; display: grid; place-items: center; background: white; color: #15273b; border-radius: 9px; overflow: hidden; margin-bottom: 20px; padding: 2px; }.qr-picture img { width: 240px; height: 240px; display: block; }.qr-picture > span { padding: 20px; line-height: 1.8; }
+.result-qr h2 { font-family: var(--serif); color: #ecd4a5; font-size: 22px; line-height: 1.6; margin: 10px 0; }.result-qr p { color: #adbfce; font-size: 14px; line-height: 1.85; }.result-qr small { display: block; color: #8098ad; font-size: 12px; line-height: 1.8; margin-top: 15px; }
+.qr-links { display: flex; gap: 8px; margin-top: 16px; }.qr-links > * { display: grid; place-items: center; flex: 1; min-height: 48px; padding: 8px; border: 1px solid #ac8e5866; background: #c3a15d14; color: #e9d3a6; border-radius: 8px; font-size: 13px; text-decoration: none; }
+.shared-report-brand { display: flex; justify-content: center; align-items: center; gap: 14px; padding: 25px; color: #d7b879; font-family: var(--serif); font-size: 22px; border-bottom: 1px solid #aa8a4b44; }
+.shared-report .result-heading .complete-pill { display: none; }.shared-report .result-heading { text-align: center; justify-content: center; }.shared-report .treasure-result-actions { justify-content: center; }.invalid-result { max-width: 700px; margin: 80px auto; text-align: center; }.invalid-result p { margin: 25px; }.invalid-result a { display: inline-flex; text-decoration: none; }
+@media (max-height: 950px) and (min-width: 1001px) {
+ .royal-room-heading h1 { font-size: 25px; }.royal-room-heading p { font-size: 13px; margin-bottom: 10px; }.royal-room { padding-top: 10px; }.royal-chest-label { padding: 8px 6px; min-height: 70px; }.royal-chest-label strong { font-size: 18px; }.royal-chest-label > span { font-size: 10px; }
+ .palace-theme .treasure-art { height: 54px; }.palace-theme .treasure-result-card h3 { font-size: 20px; }.palace-theme .treasure-meaning { font-size: 14px; line-height: 1.6; }.palace-theme .treasure-result-card { padding: 12px; }.results-body { grid-template-columns: minmax(0,1fr) 280px; gap: 20px; }.result-qr { padding: 16px 12px; }.palace-theme .result-heading h1 { font-size: 28px; }
+}
+@media (max-width: 1100px) {
+ .results-body { grid-template-columns: 1fr; }.result-qr { position: static; flex-direction: row; gap: 24px; text-align: left; }.qr-picture { flex-shrink: 0; margin: 0; }.result-qr > div:last-child { flex: 1; }
+ .royal-room-canvas { width: 100%; }.royal-chest-label { left: -45%; width: 190%; }.royal-chest-label strong { font-size: 15px; }.royal-chest-label small { font-size: 8px; }.royal-chest-label > span { display: none; }
+ .royal-room-footer { margin-top: 45px; }
+}
+@media (max-width: 700px) {
+ .royal-entrance-brand { left: 20px; top: 25px; }.royal-door-invitation h1 { font-size: 23px; }.royal-door-invitation { bottom: 3%; }.royal-door-invitation p { font-size: 13px; line-height: 1.8; }.royal-door-touch { font-size: 13px; padding: 12px; }
+ .royal-room-heading h1 { font-size: 25px; }.royal-room-heading p { font-size: 13px; line-height: 1.8; }.royal-room-canvas { overflow: visible; }.royal-chest { top: 58%; height: 28%; }.royal-chest-label strong { font-size: 12px; }.royal-chest-label { min-height: 64px; gap: 7px; padding: 10px 4px; }.royal-room-footer { margin-top: 65px; flex-wrap: wrap; gap: 12px; }
+ .seal-progress { gap: 8px; }.seal-progress > span { width: 38px; height: 38px; }.seal-chests { grid-template-columns: 1fr; }.seal-chests > button { min-height: 130px; }.trap-copy,.escape-success { width: calc(100% - 30px); padding: 25px 18px; }.trap-copy p,.escape-success p { font-size: 15px; }.escape-forming h1 { font-size: 24px; }.trap-copy h1,.escape-success h1 { font-size: 30px; }
+ .result-qr { flex-direction: column; text-align: center; }.palace-theme .kiosk-result .treasure-result-groups { grid-template-columns: 1fr; }.palace-theme .kiosk-result .treasure-result-cards { grid-template-columns: 1fr; }.palace-theme .result-heading h1 { font-size: 26px; }.palace-theme .treasure-result-card { padding: 20px; }.palace-theme .treasure-meaning { font-size: 16px; }.palace-theme .treasure-art { height: 100px; }.palace-theme .treasure-result-actions { flex-direction: column; }.palace-theme .treasure-result-actions .button { width: 100%; }.shared-report-brand { font-size: 18px; }.shared-report .kiosk-main.main-content { padding: 20px 16px; }.shared-report .result-heading p { font-size: 15px; line-height: 1.7; }.palace-theme .scene-moments button { min-height: 64px; }
+}
+@media (prefers-reduced-motion: reduce) { .trap-backdrop,.trap-vortex,.trap-rings,.chest-glimmer { animation: none; }.gate-world,.royal-door-leaf,.gate-gap { transition: none; } }
+/* Keep labels separate and reserve the focus ring for the visible touch cue. */
+.palace-theme .royal-chest-label { width: 112%; left: -6%; }
+.royal-chest-label strong { line-height: 1.5; }
+.royal-room-heading > .eyebrow,.royal-door-invitation > .eyebrow,.trap-copy > .eyebrow,.escape-success > .eyebrow { display: flex; justify-content: center; }
+.palace-theme .royal-door:focus-visible { outline: none; }
+.royal-door:focus-visible .royal-door-touch { outline: 3px solid #f0d49a; outline-offset: 6px; }
+@media (max-height: 950px) and (min-width: 1101px) {
+ .result-qr .qr-picture { width: 220px; height: 220px; margin-bottom: 12px; }.result-qr .qr-picture img { width: 216px; height: 216px; }
+ .result-qr h2 { font-size: 18px; line-height: 1.5; margin: 8px 0; }.result-qr p { font-size: 12px; line-height: 1.7; }.result-qr small { font-size: 10px; line-height: 1.7; margin-top: 10px; }.result-qr .qr-links { margin-top: 12px; }
+}
+@media (max-width: 700px) { .royal-chest { min-width: 60px; }.palace-theme .royal-chest-label { width: 100%; left: 0; min-height: 76px; }.royal-chest-label strong { font-size: 11px; } }
+/* A situation reads first; each marine animal has its own framed choice. */
+.palace-theme .current-situation h1 { font-size: clamp(27px,2.3vw,43px); margin: 8px 0; line-height: 1.35; color: #ffe4ae; text-shadow: 0 3px 25px #e0b76116; }
+.palace-theme .current-situation .eyebrow { font-size: 13px; letter-spacing: 2px; color: #bfaa7f; }
+.palace-theme .current-situation p { font-size: 18px; color: #c9d5df; }
+.palace-theme .scene-context h2 { font-size: 22px; color: #d7bd8b; margin: 6px 0 12px; }
+.palace-theme .marine-choice-scene { aspect-ratio: 3 / 2; display: flex; flex-direction: column; padding: 18px; gap: 14px; background: radial-gradient(ellipse at 50% 0,#1e3c51,#071422 90%); overflow: hidden; }
+.marine-choice-legend { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: 48px; }
+.marine-choice-legend > span { font-size: 12px; color: #a5b6c7; letter-spacing: 2px; }.marine-choice-legend > strong { font-size: 18px; font-weight: 500; color: #f4d99f; }
+.marine-choice-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 12px; flex: 1; min-height: 0; padding: 5px 0; }
+.palace-theme .marine-choice.photo-person { position: relative; inset: auto; display: flex; flex-direction: column; justify-content: flex-start; width: 100%; height: 100%; min-width: 0; min-height: 64px; padding: 0; border: 2px solid #9f8b626e; border-radius: 18px; background: #0c1d2e; overflow: hidden; box-shadow: 0 8px 20px #0007; transition: border-color .2s,transform .2s,box-shadow .2s; }
+.palace-theme .marine-choice.photo-person:hover { border-color: #ebcf8c; box-shadow: 0 0 22px #eac07225; }
+.palace-theme .marine-choice.photo-person.person-active { border: 3px solid #ffe1a0; transform: translateY(-4px); background: #203e4e; box-shadow: 0 0 0 2px #d4ab5470,0 0 32px #dcae4c55; }
+.marine-portrait { display: block; width: 100%; flex: 1; min-height: 0; position: relative; overflow: hidden; }
+.marine-portrait > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.94) saturate(.95); user-select: none; pointer-events: none; }
+.person-active .marine-portrait > img { filter: brightness(1.12) saturate(1.05); }
+.marine-portrait-shade { position: absolute; inset: 0; background: linear-gradient(#07152225,transparent 23%,transparent 70%,#071522c0); pointer-events: none; }
+.marine-choice .photo-person-marker { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; border: 1px solid #f4d599; background: #071a2eee; font-size: 14px; box-shadow: 0 0 14px #0008; }
+.person-active .photo-person-marker { color: #142332; background: #f0ce83; }
+.marine-species { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; color: #fff0d1; font-size: 15px; letter-spacing: 1px; text-shadow: 0 2px 4px #000; }
+.palace-theme .marine-choice .photo-person-label { display: flex; flex: 0 0 112px; width: 100%; min-height: 112px; border: 0; border-top: 1px solid #c6a66866; border-radius: 0; background: #0b1d2f; padding: 12px 7px; gap: 8px; color: #f2dfb7; box-shadow: none; }
+.marine-choice .photo-person-label > b { font-size: 11px; font-weight: 400; color: #a5b7c6; }.marine-choice .photo-person-label > strong { font-size: clamp(13px,1vw,18px); font-weight: 500; line-height: 1.65; word-break: keep-all; }
+.palace-theme .marine-choice.person-active .photo-person-label { background: linear-gradient(135deg,#f3d79a,#bd9553); color: #122334; }.marine-choice.person-active .photo-person-label > b { color: #31404b; }
+.marine-image-error { color: #ecd19a; font-size: 14px; text-align: center; }.photo-unavailable .marine-portrait > img { visibility: hidden; }
+.trap-transition .trap-vortex { animation-iteration-count: 1; animation-fill-mode: forwards; }
+/* The final veil is the purple curse breaking into light. */
+.palace-theme .fog-escape .fog-brand,.palace-theme .fog-escape .fog-invitation,.palace-theme .fog-escape .fog-bottom { color: #f8edff; }
+.palace-theme .fog-escape .fog-eyebrow { color: #eed2ff; }.fog-escape .fog-progress > i { background: linear-gradient(90deg,#bd84ff,#f5dbff); box-shadow: 0 0 15px #d2a4ff; }
+.fog-escape canvas { filter: saturate(1.2); }.escape-scene .escape-rays { background: radial-gradient(ellipse at 50% 30%,#c397ff55,transparent 67%); }
+.palace-theme .escape-forming { color: #f2dcff; animation-name: curse-form; }
+@keyframes curse-form { from { background: #63278b00; } to { background: #63318b; } }
+.escape-free .escape-rays { animation: curse-lift 2.5s ease-out both; }.escape-success { box-shadow: 0 0 130px #ba8bff44; border-color: #d2acf6aa; }
+@keyframes curse-lift { from { opacity: 1; filter: blur(0); } to { opacity: .3; filter: blur(16px); } }
+@media (max-height: 950px) and (min-width: 1001px) {
+ .palace-theme .current-situation h1 { font-size: 31px; margin: 2px 0 5px; }.palace-theme .current-situation p { font-size: 16px; }.palace-theme .current-situation .eyebrow { font-size: 11px; }
+ .palace-theme .marine-choice-scene { padding: 12px; gap: 10px; }.marine-choice-grid { gap: 9px; }.marine-choice-legend { min-height: 40px; gap: 5px; }.marine-choice-legend > span { font-size: 10px; }.marine-choice-legend > strong { font-size: 15px; }
+ .palace-theme .marine-choice .photo-person-label { flex-basis: 98px; min-height: 98px; padding: 8px 5px; }.marine-choice .photo-person-label > strong { font-size: 14px; }.marine-species { font-size: 12px; bottom: 9px; }.marine-choice .photo-person-marker { width: 34px; height: 34px; top: 9px; }
+}
+@media (max-width: 1000px) {
+ .palace-theme .marine-choice-scene { aspect-ratio: auto; min-height: 470px; }.palace-theme .kiosk-scene-heading { flex-wrap: wrap; }.palace-theme .current-situation { width: 100%; text-align: center; order: 2; }.palace-theme .current-situation h1 { font-size: 30px; }.palace-theme .current-situation p { font-size: 16px; line-height: 1.7; }
+}
+@media (max-width: 600px) {
+ .palace-theme .marine-choice-scene { min-height: 0; padding: 12px; }.marine-choice-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }.palace-theme .marine-choice.photo-person { height: 320px; }.marine-choice-grid > button:last-child { grid-column: 1 / -1; width: calc(50% - 7px); justify-self: center; }.palace-theme .marine-choice .photo-person-label { flex-basis: 100px; min-height: 100px; }.marine-choice .photo-person-label > strong { font-size: 16px; }.marine-choice-legend > strong { font-size: 15px; }.palace-theme .current-situation h1 { font-size: 26px; }.palace-theme .fog-escape .fog-invitation h1 { font-size: 28px; }
+}
+@media (prefers-reduced-motion: reduce) { .marine-choice.photo-person { transition: none; }.escape-free .escape-rays { animation: none; } }
+/* Real material photographs are also the source for the saved result PNG. */
+.palace-theme .treasure-art.treasure-photo { display: block; position: relative; width: 108px; height: 108px; margin: 0 auto 6px; overflow: visible; }
+.treasure-photo-crop { position: absolute; inset: 0; display: block; overflow: hidden; border-radius: 15px; background: #081522; box-shadow: 0 0 28px #d8b25d1f; }
+.treasure-photo-crop > .treasure-atlas { position: absolute; width: 300%; height: 200%; max-width: none; display: block; }
+.treasure-sheen { position: absolute; inset: -50%; background: linear-gradient(115deg,transparent 38%,#fff9d800 44%,#fff5ce40 50%,#fff9db00 56%,transparent 63%); transform: translateX(-80%); animation: treasure-shine 6s ease-in-out infinite; mix-blend-mode: screen; pointer-events: none; }
+.treasure-glint { position: absolute; color: #fff0c4; text-shadow: 0 0 9px #ffe0a8,0 0 18px #dab66e; pointer-events: none; animation: treasure-twinkle 3.8s ease-in-out infinite; }
+.glint-one { left: 8%; top: 17%; font-size: 18px; }.glint-two { right: 4%; top: 8%; font-size: 23px; animation-delay: 1.2s; }.glint-three { right: 10%; bottom: 8%; font-size: 13px; animation-delay: 2.4s; }
+@keyframes treasure-twinkle { 0%,100% { opacity: .15; transform: scale(.65) rotate(-12deg); } 50% { opacity: 1; transform: scale(1.15) rotate(12deg); } }
+@keyframes treasure-shine { 0%,30% { transform: translateX(-80%); } 65%,100% { transform: translateX(80%); } }
+@media (max-height: 950px) and (min-width: 1101px) {
+ .palace-theme .treasure-art.treasure-photo { width: 84px; height: 84px; margin-bottom: 2px; }.palace-theme .treasure-group-heading { min-height: 54px; }.palace-theme .kiosk-result .result-heading { margin-top: 0; margin-bottom: 5px; }.palace-theme .treasure-result-groups.result-groups { margin-bottom: 8px; }.palace-theme .kiosk-result .treasure-result-card { padding-top: 9px; padding-bottom: 9px; }
+}
+@media (max-width: 700px) { .palace-theme .treasure-art.treasure-photo { width: 160px; height: 160px; margin: 2px auto 14px; } }
+@media (prefers-reduced-motion: reduce) { .treasure-glint,.treasure-sheen { animation: none; }.treasure-sheen { display: none; }.treasure-glint { opacity: .6; } }
+/* Crop exactly one fifth of the shared scene, avoiding a neighbouring animal. */
+.marine-portrait > img { inset: auto; top: 50%; right: auto; bottom: auto; width: 500%; height: auto; max-width: none; object-fit: initial; transform: translateY(-50%); }
+.palace-theme .immersive-stage { max-width: min(100%,calc((100svh - 445px)*1.5 + 340px)); }
+.immersive-scenes .dual-footer { max-width: min(100%,calc((100svh - 445px)*1.5 + 340px)); }
+.palace-theme .fog-escape .fog-invitation { width: min(92vw,1060px); max-width: 1060px; }
+.palace-theme .fog-escape .fog-invitation h1 { font-size: clamp(30px,4vw,58px); line-height: 1.6; word-break: keep-all; }
+@media (min-width: 1101px) {
+ .palace-theme .treasure-result-card { display: grid; grid-template-columns: 138px minmax(0,1fr); align-items: center; column-gap: 12px; row-gap: 6px; }
+ .palace-theme .kiosk-result .treasure-art.treasure-photo { grid-column: 1; grid-row: 1 / span 2; width: 136px; height: 136px; margin: 0; }
+ .palace-theme .treasure-result-card .treasure-choice-label { grid-column: 2; grid-row: 1; justify-self: center; align-self: end; }
+ .palace-theme .treasure-result-card h3 { grid-column: 2; grid-row: 2; align-self: start; text-align: center; margin: 4px 0 0; line-height: 1.5; }
+ .palace-theme .treasure-result-card .treasure-meaning { grid-column: 1 / -1; grid-row: 3; margin: 5px 0 0; }
+}
+@media (max-height: 950px) and (min-width: 1001px) {
+ .palace-theme .immersive-stage { max-width: min(100%,calc((100svh - 365px)*1.5 + 320px)); }.immersive-scenes .dual-footer { max-width: min(100%,calc((100svh - 365px)*1.5 + 320px)); }
+ .palace-theme .scene-context h2 { font-size: 18px; margin: 5px 0 8px; }.palace-theme .scene-context .scene-story { line-height: 1.6; }
+}
+@media (max-height: 950px) and (min-width: 1101px) {
+ .palace-theme .treasure-result-card { grid-template-columns: 114px minmax(0,1fr); gap: 5px 10px; }.palace-theme .kiosk-result .treasure-art.treasure-photo { width: 112px; height: 112px; }.palace-theme .treasure-result-card h3 { font-size: 19px; }
+}
+@media (max-width: 1000px) { .palace-theme .immersive-stage,.immersive-scenes .dual-footer { max-width: 100%; } }
+@media (max-width: 600px) { .palace-theme .marine-choice.photo-person { height: 420px; }.palace-theme .fog-escape .fog-invitation h1 { font-size: 28px; } }
+/* One lived-in space: invisible touch targets, soft light rather than cards. */
+.palace-theme .living-scene { display: block; position: relative; width: 100%; aspect-ratio: 3 / 2; padding: 0; background: #0b2030; overflow: hidden; }
+.living-scene > .living-scene-art { width: 100%; height: 100%; display: block; object-fit: contain; user-select: none; pointer-events: none; filter: brightness(.96) saturate(.95); }
+.living-scene-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); padding: 8px 17px; border-radius: 30px; color: #fff0cf; background: #0a1e30cb; font-size: 14px; white-space: nowrap; pointer-events: none; }
+.palace-theme .living-person.photo-person { position: absolute; display: flex; align-items: center; justify-content: flex-start; padding: 0; border: 0; border-radius: 50%; background: transparent; box-shadow: none; min-height: 64px; cursor: pointer; }
+.palace-theme .living-person.photo-person:hover,.palace-theme .living-person.photo-person.person-active { background: transparent; border: 0; box-shadow: none; transform: none; }
+.animal-aura { position: absolute; inset: 2% 1% 3%; border-radius: 50%; background: radial-gradient(ellipse,transparent 40%,#ffe8a215 58%,#ffe1a75c 73%,#f6d48724 80%,transparent 94%); filter: blur(6px); pointer-events: none; opacity: .8; transition: opacity .25s,filter .25s; }
+.living-person:hover .animal-aura { opacity: 1; filter: blur(3px); }.person-active .animal-aura { opacity: 1; background: radial-gradient(ellipse,transparent 38%,#ffeab929 55%,#ffe2a3b0 71%,#ffdf7d4a 81%,transparent 95%); filter: blur(3px); }
+.living-person-number { position: absolute; top: 0; left: 48%; display: grid; place-items: center; width: 29px; height: 29px; border-radius: 50%; color: #fff2cf; background: #0a2037d9; border: 1px solid #e7ca8d9c; font-size: 12px; pointer-events: none; box-shadow: 0 0 18px #f5d79540; }
+.person-active .living-person-number { background: #f1d18b; color: #142a3a; }
+.living-person-action { position: absolute; bottom: -3%; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 7px; width: max-content; max-width: 120%; min-height: 38px; padding: 6px 12px; border-radius: 18px; background: #0b2130cc; color: #fff0d1; backdrop-filter: blur(6px); text-shadow: 0 1px 4px #0008; pointer-events: none; }
+.living-person-action > span { font-size: 10px; color: #ccbd9b; }.living-person-action > strong { font-size: 13px; font-weight: 500; line-height: 1.5; word-break: keep-all; }.person-active .living-person-action { background: #e1be77ed; color: #182b36; text-shadow: none; }.person-active .living-person-action > span { color: #4e5146; }
+.palace-theme .living-person:focus-visible { outline: 2px solid #fff1bc; outline-offset: 2px; }.living-person:focus-visible .animal-aura { opacity: 1; }
+.living-scene-error { position: absolute; top: 8%; left: 10%; right: 10%; text-align: center; color: #ead5a8; }.living-scene-unavailable > img { visibility: hidden; }
+@media (max-height: 950px) and (min-width: 1001px) { .living-person-action { padding: 5px 8px; min-height: 36px; gap: 3px 5px; }.living-person-action > strong { font-size: 12px; }.living-person-action > span { font-size: 9px; }.living-scene-hint { font-size: 12px; top: 8px; padding: 7px 13px; } }
+@media (max-width: 600px) { .palace-theme .living-scene { min-height: 0; }.living-person-action { max-width: 140%; min-height: 32px; padding: 4px 6px; gap: 1px; flex-direction: column; }.living-person-action > span { display: none; }.living-person-action > strong { font-size: 10px; line-height: 1.3; }.living-person-number { width: 22px; height: 22px; font-size: 10px; }.living-scene-hint { font-size: 10px; padding: 6px 10px; top: 7px; } }
+@media (prefers-reduced-motion: reduce) { .animal-aura { transition: none; } }
+/* Return to the actual chamber: opened chests and the door's six living seals. */
+.royal-room-canvas { isolation: isolate; }
+.open-chest-layer { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.open-chest-layer > img { width: 100%; height: 100%; display: block; }
+.open-chest-layer-0 { clip-path: polygon(23% 47%,39% 47%,39% 83%,23% 83%); }
+.open-chest-layer-1 { clip-path: polygon(42% 47%,58% 47%,58% 83%,42% 83%); }
+.open-chest-layer-2 { clip-path: polygon(61% 47%,77% 47%,77% 83%,61% 83%); }
+.just-opened { animation: chest-awakens 1.5s ease-out both; }
+.royal-chest { z-index: 3; }
+.royal-chest.chest-complete { cursor: default; opacity: 1; }
+.royal-chest.chest-complete:hover { border-color: transparent; background: transparent; box-shadow: none; }
+.chest-complete .chest-glimmer { top: 5%; animation: none; color: #fff1c6; }
+.chest-complete .royal-chest-label { border-color: #eac7776e; background: #132d36e8; }
+.chest-complete .royal-chest-label > span { color: #efd697; }
+.chest-available .chest-glimmer { filter: drop-shadow(0 0 9px #ffe0a0); }
+.door-seals { position: absolute; z-index: 2; top: 29%; left: 50%; transform: translateX(-50%); text-align: center; padding: 12px 18px; border-radius: 40%; background: radial-gradient(ellipse,#08141fdf,transparent 72%); }
+.door-seal-runes { display: flex; gap: 10px; }
+.seal-rune { width: clamp(24px,3vw,48px); height: clamp(24px,3vw,48px); position: relative; display: block; color: #8574a2; }
+.seal-rune svg { width: 100%; height: 100%; overflow: visible; }
+.rune-ring { stroke: currentColor; stroke-width: 1.5; }.rune-symbol { stroke: currentColor; stroke-width: 1.3; opacity: .8; }
+.rune-crack { stroke: #fff6cf; stroke-width: 2.5; opacity: 0; }.rune-check { stroke: #ffe4a0; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+.rune-released { color: #f4d68e; filter: drop-shadow(0 0 8px #eecb8190); }.rune-released .rune-ring { stroke-dasharray: 11 5; }.rune-released .rune-symbol { opacity: 0; }.rune-released .rune-check { opacity: 1; }
+.door-seal-caption { display: block; color: #e7d1a7; font-size: 13px; white-space: nowrap; margin-top: 8px; text-shadow: 0 2px 9px #000; }.door-seal-caption strong { margin-left: 8px; color: #ffe7ad; font-size: 16px; }
+.rune-breaking .rune-crack { animation: seal-fracture 1.6s ease-out both; animation-delay: var(--seal-delay); }.rune-breaking .rune-check { animation: seal-check 1.8s both; animation-delay: var(--seal-delay); }.rune-breaking .rune-ring { animation: seal-ring 1.6s both; animation-delay: var(--seal-delay); }
+.seal-rune i { position: absolute; top: 45%; left: 45%; width: 4px; height: 4px; border-radius: 50%; background: #ffe9a7; opacity: 0; --ray-x: -35px; --ray-y: -35px; }.seal-rune i:nth-of-type(2) { --ray-x: 35px; --ray-y: -25px; }.seal-rune i:nth-of-type(3) { --ray-x: 30px; --ray-y: 30px; }.seal-rune i:nth-of-type(4) { --ray-x: -25px; --ray-y: 35px; }.rune-breaking i { animation: seal-sparks 1.7s both; animation-delay: var(--seal-delay); }
+.seal-release-light { position: absolute; inset: 0; z-index: 4; pointer-events: none; background: radial-gradient(ellipse at 50% 37%,#ffe8b35c,transparent 65%); mix-blend-mode: screen; animation: room-release 2.2s ease-out both; }
+@keyframes chest-awakens { from { opacity: .2; filter: brightness(1.9); } to { opacity: 1; filter: brightness(1); } }
+@keyframes seal-fracture { 0%,15% { opacity: 0; } 35%,60% { opacity: 1; filter: drop-shadow(0 0 6px #fff); } 100% { opacity: 0; } }
+@keyframes seal-ring { 0% { stroke-dasharray: none; opacity: .5; } 35% { opacity: 1; stroke-width: 3; } 75% { opacity: .1; transform: scale(1.4); transform-origin: center; } 100% { opacity: 1; transform: scale(1); } }
+@keyframes seal-check { 0%,65% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes seal-sparks { 0%,25% { opacity: 0; transform: translate(0,0); } 45% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--ray-x),var(--ray-y)); } }
+@keyframes room-release { 0% { opacity: 0; } 35% { opacity: 1; } 100% { opacity: 0; } }
+/* Concrete actions remain readable without dividing the common space into cards. */
+.palace-theme .touch-journey .immersive-stage { max-width: min(100%,calc((100svh - 320px)*1.5 + 330px)); grid-template-columns: minmax(0,1fr) 330px; overflow: hidden; }
+.touch-journey .scene-moments { margin-bottom: 12px; }.touch-journey .scene-moments button { min-height: 48px; }
+.palace-theme .touch-journey .scene-context { padding: 16px 20px; }
+.palace-theme .touch-journey .scene-context h2 { font-size: 23px; margin-bottom: 9px; }.touch-journey .scene-context > small { margin: 0 0 8px; }
+.touch-journey .scene-context .scene-story { font-size: 15px; line-height: 1.65; margin: 0 0 12px; }
+.action-at-a-glance { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.action-at-a-glance li { display: flex; gap: 10px; align-items: center; color: #f2e3c7; transition: color .2s; }
+.action-at-a-glance li > span { width: 27px; height: 27px; border: 1px solid #bca77175; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; font-size: 12px; color: #e6c78f; }
+.action-at-a-glance li > div { display: flex; flex-direction: column; gap: 3px; }.action-at-a-glance small { color: #a4b7c5; font-size: 11px; }.action-at-a-glance strong { font-size: 16px; line-height: 1.5; font-weight: 500; word-break: keep-all; }
+.action-at-a-glance .action-highlighted { color: #ffe0a0; }.action-highlighted > span { background: #edcc8b; color: #122434 !important; box-shadow: 0 0 14px #ffe4a548; }
+.choice-feedback { display: flex; gap: 8px; align-items: center; margin-top: 15px; color: #b5c5d0; font-size: 13px; line-height: 1.6; }.choice-feedback svg { flex-shrink: 0; }.feedback-active { color: #ffe0a0; }
+.choice-flow-bar { height: 3px; background: #f1d49c1a; margin-top: 10px; overflow: hidden; }.choice-flow-bar > i { display: block; height: 100%; background: #f1d49c; transform-origin: left; animation: choice-flow 1.5s linear both; }
+.cancel-choice { font-size: 12px; min-height: 36px; align-self: center; color: #d8c5a0; }.touch-journey .scene-change-note { margin: 9px 0 0; }
+.palace-theme .touch-journey .living-person-action { padding: 7px 12px; max-width: 112%; background: #071c2ce8; box-shadow: 0 2px 14px #0007; }
+.touch-journey .living-person-action > strong { font-size: clamp(13px,1.05vw,18px); font-weight: 600; line-height: 1.4; }.touch-journey .living-person-action > span { display: none; }
+.touch-journey .living-person-number { width: 31px; height: 31px; font-size: 13px; }
+.scene-light-bloom .living-person:not(.person-active) { opacity: .45; transition: opacity .35s; }
+.scene-light-bloom .person-active .animal-aura { animation: animal-light-chosen 1.5s ease-out both; background: radial-gradient(ellipse,transparent 20%,#fff3ce38 43%,#ffe3a5dc 68%,#ffe2a370 80%,transparent 97%); filter: blur(5px); }
+.scene-light-bloom .person-active .living-person-action { color: #182b36; background: #f2d694; box-shadow: 0 0 26px #ffdf9870; }
+.scene-light-bloom::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5; background: radial-gradient(ellipse,#ffedb26b,transparent); animation: scene-light-pass 1.5s both; }
+@keyframes animal-light-chosen { 0% { opacity: .7; transform: scale(.95); } 45% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1.25); filter: blur(10px); } }
+@keyframes scene-light-pass { 0%,70% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes choice-flow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (min-width: 1001px) and (max-height: 950px) {
+ .palace-theme .touch-journey .immersive-stage { max-width: min(100%,calc((100svh - 265px)*1.5 + 300px)); grid-template-columns: minmax(0,1fr) 300px; }
+ .palace-theme .touch-journey .scene-context { padding: 14px 16px; }.palace-theme .touch-journey .scene-context h2 { font-size: 20px; }.action-at-a-glance { gap: 7px; }.action-at-a-glance strong { font-size: 14px; }.touch-journey .scene-context .scene-story { font-size: 13px; margin-bottom: 8px; }.choice-feedback { margin-top: 10px; font-size: 12px; }
+}
+@media (max-width: 1000px) {
+ .palace-theme .touch-journey .immersive-stage { max-width: 100%; grid-template-columns: 1fr; }.action-at-a-glance { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }.door-seals { top: 25%; padding: 6px; }.door-seal-runes { gap: 5px; }.door-seal-caption { font-size: 10px; }.door-seal-caption strong { font-size: 12px; }
+}
+@media (max-width: 600px) {
+ .touch-journey .living-person-action > strong { font-size: 10px; }.palace-theme .touch-journey .living-person-action { padding: 4px 5px; max-width: 130%; }.touch-journey .living-person-number { width: 22px; height: 22px; font-size: 10px; }.seal-rune { width: 19px; height: 19px; }.door-seals { top: 20%; }.door-seal-caption { font-size: 9px; margin-top: 3px; }.door-seal-caption strong { font-size: 10px; }.action-at-a-glance strong { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .just-opened,.rune-breaking .rune-crack,.rune-breaking .rune-check,.rune-breaking .rune-ring,.rune-breaking i,.seal-release-light,.scene-light-bloom .person-active .animal-aura,.scene-light-bloom::after { animation: none; }.seal-release-light,.rune-crack,.seal-rune i,.scene-light-bloom::after { display: none; }.choice-flow-bar > i { animation-duration: .8s; }.scene-light-bloom .person-active .animal-aura { opacity: 1; }
+}
+.palace-theme .living-person.person-active:disabled { opacity: 1; cursor: default; }
+.palace-theme .scene-light-bloom .living-person:not(.person-active):disabled { opacity: .45; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.touch-journey .kiosk-scene-instruction { white-space: nowrap; font-size: 13px; }
+.room-releasing .chest-available:disabled { opacity: 1; cursor: default; }
+/* The mystery begins with the room closing, before a chest is touched. */
+.room-entrapment { position: relative; min-height: 100svh; overflow: hidden; background: #06101a; display: grid; place-items: center; }
+.entrapment-room { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: chamber-arrival 1.1s ease-out both; }
+.entrapment-shadow { position: absolute; inset: 0; background: linear-gradient(#060e1766,#110a2299); animation: chamber-lock 1.4s both; }
+.entry-seals { position: absolute; top: 18%; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; }
+.entry-seals span { width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid #b293e8; border-radius: 50%; color: #e3caff; background: #4625638c; box-shadow: 0 0 30px #9e62e855,inset 0 0 16px #bf8cff33; font-size: 26px; animation: entry-seal-appears .65s both; animation-delay: var(--entry-delay); }
+.entry-door-flash { position: absolute; inset: 0; background: #bba0ed; pointer-events: none; animation: entry-door-shut 1.5s both; }
+.entrapment-copy { position: relative; max-width: 940px; margin: 150px 24px 30px; padding: 35px 48px; border-radius: 24px; background: #071624ed; border: 1px solid #b9a0db77; text-align: center; color: #ecdbc1; opacity: 0; transform: translateY(15px); transition: opacity .6s,transform .6s; }
+.entrapment-ready .entrapment-copy { opacity: 1; transform: none; }
+.entrapment-copy .eyebrow { display: block; font-size: 11px; color: #c4a4e8; letter-spacing: 3px; }.entrapment-copy h1 { font-family: var(--serif); font-size: clamp(28px,3vw,46px); line-height: 1.6; margin: 18px 0; }.entrapment-copy p { font-size: 19px; line-height: 2; margin: 0 0 28px; color: #c5d0db; word-break: keep-all; }.entrapment-copy .button { min-height: 64px; }
+@keyframes chamber-arrival { from { transform: scale(1.05); filter: brightness(1.3); } to { transform: scale(1); filter: brightness(1); } }
+@keyframes chamber-lock { 0%,30% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes entry-door-shut { 0%,35% { opacity: 0; } 40% { opacity: .38; } 60%,100% { opacity: 0; } }
+@keyframes entry-seal-appears { from { opacity: 0; transform: scale(1.8); } to { opacity: 1; transform: scale(1); } }
+/* A chest invites the visitor into its mission through warm light. */
+.chest-mission-opening { position: relative; min-height: 100svh; display: grid; place-items: center; background: #07101c; overflow: hidden; }
+.chest-mission-opening > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: mission-room-fades 1.4s both; }
+.chest-mission-light { position: absolute; width: 90vw; height: 120vh; top: 25%; left: 31.6%; transform: translateX(-50%); background: radial-gradient(ellipse,#fff8dfbb,#ffdf8c55 30%,transparent 65%); animation: mission-light-rises 1.4s ease-in both; pointer-events: none; }.chest-opening-strength .chest-mission-light { left: 50.2%; }.chest-opening-aura .chest-mission-light { left: 69%; }
+.chest-mission-copy { z-index: 1; text-align: center; color: #fff0cc; padding: 25px; text-shadow: 0 2px 14px #000; }.chest-mission-copy h1 { font-family: var(--serif); font-size: clamp(26px,3vw,44px); margin: 20px 0; }.chest-mission-copy p { color: #ecddc5; font-size: 18px; }
+@keyframes mission-room-fades { from { filter: brightness(1); } to { filter: brightness(.35) blur(7px); } }
+@keyframes mission-light-rises { from { opacity: 0; transform: translateX(-50%) scale(.15); } 70% { opacity: 1; } to { opacity: .8; transform: translateX(-50%) scale(2); } }
+/* The light is earned by a choice; only placing it unlocks a seal. */
+.royal-room-heading { position: relative; }.royal-room-heading p { margin-bottom: 9px; }.room-found-count { display: inline-block; font-size: 12px; color: #bac7d3; margin-bottom: 10px; }.room-found-count strong { color: #f4d494; font-size: 15px; margin-left: 7px; }
+.royal-room-canvas { width: min(100%,calc((100svh - 290px)*2.235)); }
+.seal-transfer-layer { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.seal-transfer-layer .door-seals { top: 26%; padding: 12px 18px; }
+.seal-drop-target { pointer-events: auto; padding: 0; border: none; background: transparent; border-radius: 50%; transition: filter .2s,transform .2s; }
+.seal-transfer-layer .seal-drop-target:disabled { opacity: 1; cursor: default; }.seal-drop-target:not(.rune-released) { color: #c09be8; filter: drop-shadow(0 0 7px #a067de); }.seal-transfer-layer .rune-released { color: #f4d68e; filter: drop-shadow(0 0 9px #eecb8190); }
+.light-is-selected .seal-drop-target:not(:disabled) { animation: seal-invitation 2s ease-in-out infinite; }.seal-transfer-layer .seal-nearby { color: #fff4cc; transform: scale(1.18); filter: drop-shadow(0 0 16px #ffe9a4); }.seal-drop-target:focus-visible { outline-color: #ffe3a6; outline-offset: 7px; }
+.palace-theme .treasure-light { position: absolute; width: clamp(48px,4.6vw,80px); height: clamp(48px,4.6vw,80px); transform: translate(-50%,-50%); border: 0; padding: 0; background: transparent; border-radius: 50%; pointer-events: auto; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; z-index: 5; }
+.light-core { position: absolute; inset: 23%; border-radius: 50%; background: radial-gradient(circle,#fffdf0 8%,#ffeab9 30%,#eac87255 65%,transparent 74%); box-shadow: 0 0 28px #ffe6a1b3,0 0 65px #ffdc7c66; animation: light-breathe 2.8s ease-in-out infinite; }.light-orbit { position: absolute; inset: 7%; border: 1px solid #ffe7a773; border-radius: 50%; box-shadow: 0 0 12px #ffe7a744; }.light-spark { position: absolute; inset: 0; display: grid; place-items: center; color: #fffbe4; text-shadow: 0 0 10px #fff5b0; font-size: 27px; }
+.treasure-light-active .light-orbit { border-color: #fff4cd; box-shadow: 0 0 26px #ffedb4a8; }.treasure-light-active .light-core { filter: brightness(1.3); }.treasure-light-dragging { cursor: grabbing; z-index: 10; }.treasure-light-dragging .light-core { box-shadow: 0 0 35px #fff2c5,0 0 70px #ffe0a2a0; }.treasure-light:focus-visible { outline: 2px solid #fff0c4; outline-offset: 4px; }
+.light-drag-guidance { position: absolute; z-index: 4; top: 39%; left: 50%; transform: translateX(-50%); padding: 8px 16px; font-size: 14px; color: #ffe8b1; background: #071624c4; border-radius: 25px; pointer-events: none; white-space: nowrap; }.light-drag-guidance span { display: inline-block; margin-right: 9px; font-size: 22px; }
+.room-transferring .chest-available:disabled { opacity: .65; cursor: default; }.room-transferring .royal-chest-label > span { font-size: 11px; }.room-transferring .chest-complete .chest-glimmer { display: none; }
+@keyframes light-breathe { 0%,100% { opacity: .75; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.08); } }
+@keyframes seal-invitation { 0%,100% { filter: drop-shadow(0 0 6px #b787ee); } 50% { filter: drop-shadow(0 0 16px #d8b4ff); } }
+@media (max-width: 1000px) { .royal-room-canvas { width: 100%; }.seal-transfer-layer .door-seals { top: 21%; }.light-drag-guidance { font-size: 11px; padding: 5px 11px; top: 38%; }.door-seal-runes { gap: 10px; }.seal-transfer-layer .seal-rune { width: 34px; height: 34px; } }
+@media (max-width: 600px) { .entrapment-copy { margin: 120px 16px 20px; padding: 24px 20px; }.entrapment-copy h1 { font-size: 26px; }.entrapment-copy p { font-size: 15px; line-height: 1.85; }.entry-seals { top: 10%; gap: 10px; }.entry-seals span { width: 33px; height: 33px; font-size: 20px; }.seal-transfer-layer .door-seals { top: 10%; padding: 5px; }.seal-transfer-layer .seal-rune { width: 27px; height: 27px; }.seal-transfer-layer .door-seal-runes { gap: 8px; }.light-drag-guidance { top: 34%; font-size: 9px; padding: 3px 9px; }.light-drag-guidance span { font-size: 15px; }.treasure-light { width: 44px; height: 44px; }.light-core { box-shadow: 0 0 15px #ffe6a1b3; }.room-found-count { font-size: 11px; }.royal-room-heading h1 { font-size: 23px; }.chest-mission-copy p { font-size: 15px; } }
+@media (prefers-reduced-motion: reduce) { .entrapment-room,.entrapment-shadow,.entry-seals span,.entry-door-flash,.chest-mission-opening > img,.chest-mission-light,.light-core,.light-is-selected .seal-drop-target:not(:disabled) { animation: none; }.entry-door-flash { display: none; }.entrapment-copy { transition: none; }.entrapment-shadow { opacity: 1; }.chest-mission-light { opacity: .8; }.seal-drop-target { transition: none; } }
+/* Entry choreography: a quiet second, one impact, six seals, then the explanation. */
+.entrapment-world { position: absolute; inset: -2%; transform: scale(1.025); }
+.entrapment-world .entrapment-room { animation: chamber-arrival 1s ease-out both; }
+.entrapment-world .entrapment-shadow { background: linear-gradient(#040a1455,#130a24b3); animation: vivid-room-darkens 1.5s 1s ease-out both; }
+.entrapment-world .entry-seals { top: 21%; z-index: 3; }
+.entrapment-world .entry-seals span { position: relative; animation: seal-strikes .5s both; animation-delay: var(--entry-delay); box-shadow: 0 0 30px #ac6dff88,inset 0 0 17px #ce9aff55; }
+.entry-seals span i { position: absolute; inset: -2px; border: 1px solid #d5b5ff; border-radius: 50%; animation: seal-strike-wave .65s both; animation-delay: var(--entry-delay); }
+.entry-door-binding { position: absolute; left: 39%; top: 9%; width: 23%; height: 66%; border-radius: 45% 45% 0 0; border: 2px solid #b37fe9; box-shadow: 0 0 24px #9853f4a6,inset 0 0 50px #ac68ec66; animation: door-bind 1.6s 1.15s both; }
+.entry-impact-wave { position: absolute; left: 50%; top: 48%; width: 50vw; aspect-ratio: 1; border: 2px solid #bd9fe266; border-radius: 50%; transform: translate(-50%,-50%); box-shadow: 0 0 38px #b283ed44; animation: impact-ripple .9s 1s both; }
+.entry-edge-mist { position: absolute; inset: 0; background: radial-gradient(ellipse at center,transparent 25%,#4f23642e 65%,#6f37916b 100%); animation: edge-curse-arrives 2s 1.1s both; pointer-events: none; }
+.entry-arrival-caption { position: absolute; left: 0; right: 0; bottom: 12%; text-align: center; font-family: var(--serif); color: #f0dfbc; font-size: clamp(19px,2vw,30px); text-shadow: 0 2px 20px #000; animation: arrival-caption 1.1s both; }
+.entry-blocked-message { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; pointer-events: none; color: #f1deff; text-shadow: 0 2px 25px #08030f; }
+.entry-blocked-message small { color: #c4a6e5; font-size: 11px; letter-spacing: 4px; }.entry-blocked-message strong { font-family: var(--serif); font-weight: 400; font-size: clamp(30px,4.2vw,62px); }.entry-blocked-message span { color: #cfbfdc; font-size: 17px; }.entrapment-blocked .entry-blocked-message { animation: blocked-appears .5s ease-out both; }
+.entrapment-instructions .entry-edge-mist { opacity: .6; }.entrapment-copy { z-index: 4; }
+@keyframes entry-single-impact { 0%,100% { transform: translate(0,0); } 18% { transform: translate(-6px,4px); } 40% { transform: translate(5px,-3px); } 65% { transform: translate(-3px,1px); } 85% { transform: translate(1px,0); } }
+@keyframes vivid-room-darkens { 0% { opacity: 0; } 12% { opacity: 1; } 45% { opacity: .8; } 100% { opacity: 1; } }
+@keyframes seal-strikes { from { opacity: 0; transform: scale(2.1); filter: blur(5px); } 50% { opacity: 1; transform: scale(.9); filter: blur(0); } to { opacity: 1; transform: scale(1); } }
+@keyframes seal-strike-wave { from { opacity: .9; transform: scale(.8); } to { opacity: 0; transform: scale(2.3); } }
+@keyframes door-bind { from { opacity: 0; clip-path: inset(0 0 100%); } 75% { opacity: .9; clip-path: inset(0); } to { opacity: .6; clip-path: inset(0); } }
+@keyframes impact-ripple { from { opacity: .7; transform: translate(-50%,-50%) scale(.15); } to { opacity: 0; transform: translate(-50%,-50%) scale(2.7); } }
+@keyframes edge-curse-arrives { from { opacity: 0; } to { opacity: 1; } }
+@keyframes arrival-caption { 0%,60% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes blocked-appears { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .entrapment-world,.entrapment-world .entrapment-room,.entrapment-world .entrapment-shadow,.entrapment-world .entry-seals span,.entry-seals span i,.entry-door-binding,.entry-impact-wave,.entry-edge-mist,.entry-arrival-caption,.entrapment-blocked .entry-blocked-message { animation: none; }.entry-arrival-caption,.entry-impact-wave,.entry-seals span i { display: none; }.entry-door-binding { opacity: .5; }.entry-edge-mist { opacity: .5; } }
+/* Award two unmistakable, touch-sized lights before the visitor moves them. */
+.light-award-veil { position: absolute; inset: 0; z-index: 4; pointer-events: none; background: radial-gradient(ellipse at var(--award-x) 65%,transparent 9%,#02091655 32%,#020916bc 78%); animation: award-spotlight .45s ease-out both; }
+.light-award-copy { position: absolute; z-index: 7; top: 6%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; width: 90%; text-align: center; color: #fff2c9; text-shadow: 0 2px 18px #000; pointer-events: none; }
+.light-award-copy strong { font-family: var(--serif); font-weight: 400; font-size: clamp(23px,2.5vw,39px); }.light-award-copy > span { font-size: clamp(12px,1.3vw,19px); color: #e9d9b6; background: #071421c9; border-radius: 20px; padding: 7px 18px; }
+.light-award-skip { position: absolute; inset: 0; z-index: 20; width: 100%; height: 100%; border: 0; background: transparent; color: #fff0cc; cursor: pointer; }
+.light-award-skip > span { position: absolute; bottom: 3%; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 24px; border: 1px solid #f6d79680; background: #0b1b2ded; border-radius: 30px; font-size: 15px; width: max-content; max-width: 92%; }
+.light-award-skip:focus-visible { outline: 3px solid #ffe3a6; outline-offset: -6px; }
+.palace-theme .treasure-light { width: clamp(64px,6vw,106px); height: clamp(64px,6vw,106px); }
+.palace-theme .treasure-light:disabled { opacity: 1; cursor: default; }.treasure-light .light-core { inset: 19%; box-shadow: 0 0 24px #fff1c8,0 0 55px #ffe19ac0,0 0 85px #f9c64d66; animation: visible-light-breathe 2.8s ease-in-out infinite; }
+.treasure-light .light-orbit { inset: 5%; border: 1px solid #ffedb6c9; box-shadow: 0 0 17px #ffe7a75c; }.treasure-light .light-spark { font-size: 35px; }
+.light-arriving { animation: light-flies-from-chest .85s cubic-bezier(.18,.76,.24,1) both; animation-delay: var(--light-delay); }
+.light-flight-tail { position: absolute; width: 32%; height: 190%; left: 34%; top: 45%; border-radius: 50%; background: linear-gradient(#fff2cfa6,#eec36244,transparent); filter: blur(7px); transform-origin: top; opacity: 0; pointer-events: none; }
+.light-arriving .light-flight-tail { animation: light-tail .9s ease-out both; animation-delay: var(--light-delay); }.light-arriving .light-orbit { animation: light-arrival-ring 1.1s ease-out both; animation-delay: var(--light-delay); }
+.treasure-light-active .light-core { filter: brightness(1.3); scale: 1.15; }.treasure-light .light-core { transition: scale .18s; }
+.light-transfer-demo { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; animation: show-transfer-trace 3.5s both; }
+.light-transfer-demo path { fill: none; stroke: #ffe8a9; stroke-width: 2; stroke-dasharray: 6 8; vector-effect: non-scaling-stroke; opacity: .65; }.light-transfer-demo circle { fill: #fff6d8; filter: drop-shadow(0 0 6px #ffe09c); }
+.room-transferring:not(.room-awarding) .light-drag-guidance { top: 52%; background: #061724ed; font-size: 16px; padding: 10px 20px; }
+@keyframes award-spotlight { from { opacity: 0; } to { opacity: 1; } }
+@keyframes light-flies-from-chest { 0% { opacity: 0; transform: translate(-50%,90%) scale(.2); filter: blur(3px); } 48% { opacity: 1; transform: translate(-50%,-65%) scale(1.25); filter: blur(0); } 75% { opacity: 1; transform: translate(-50%,-45%) scale(.98); } 100% { opacity: 1; transform: translate(-50%,-50%) scale(1); filter: blur(0); } }
+@keyframes light-tail { 0% { opacity: 0; transform: scaleY(.2); } 40% { opacity: .9; transform: scaleY(1); } 100% { opacity: 0; transform: scaleY(.1); } }
+@keyframes light-arrival-ring { 0% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; transform: scale(1.4); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes visible-light-breathe { 0%,100% { opacity: .9; transform: translateY(2px) scale(.95); } 50% { opacity: 1; transform: translateY(-4px) scale(1.05); } }
+@keyframes show-transfer-trace { 0%,45% { opacity: 0; } 55%,84% { opacity: 1; } 100% { opacity: 0; } }
+@media(max-width:1000px) { .light-award-copy { top: 3%; gap: 6px; }.light-award-copy strong { font-size: 24px; }.light-award-copy > span { font-size: 12px; padding: 5px 10px; }.light-award-skip > span { font-size: 12px; padding: 8px 12px; }.room-transferring:not(.room-awarding) .light-drag-guidance { font-size: 12px; top: 54%; padding: 6px 12px; } }
+@media(max-width:600px) { .palace-theme .treasure-light { width: 48px; height: 48px; }.treasure-light .light-spark { font-size: 25px; }.light-award-copy strong { font-size: 18px; }.light-award-copy > span { font-size: 10px; padding: 4px 7px; }.light-award-skip > span { font-size: 10px; padding: 5px 8px; bottom: 0; }.light-award-copy { gap: 3px; }.room-transferring:not(.room-awarding) .light-drag-guidance { font-size: 9px; padding: 3px 9px; top: 61%; }.light-award-copy > span { max-width: 100%; } }
+@media(prefers-reduced-motion:reduce) { .light-award-veil,.light-arriving,.light-arriving .light-flight-tail,.light-arriving .light-orbit,.treasure-light .light-core,.light-transfer-demo { animation: none; }.light-flight-tail,.light-transfer-demo { display: none; }.treasure-light .light-core { transition: none; } }
+/* Suspended, full-height mist; the hand pushes vapor, with no glass-wipe mask. */
+.palace-theme .fog-entrance canvas { cursor: grab; filter: none; }.palace-theme .fog-entrance canvas:active { cursor: grabbing; }
+.palace-theme .fog-invitation { width: min(900px,calc(100% - 48px)); text-shadow: 0 2px 18px #152537b0; }
+.palace-theme .fog-invitation h1 { color: #fff4dd; }.palace-theme .fog-invitation p { color: #f0f2ee; }
+.palace-theme .fog-brand,.palace-theme .fog-bottom { text-shadow: 0 2px 10px #102132b3; }
+.palace-theme .fog-eyebrow { color: #fff0cf; }.palace-theme .fog-invitation-faded { opacity: 0; }
+.palace-theme .fog-escape .fog-invitation { text-shadow: 0 2px 22px #251432c4; }.palace-theme .fog-escape .fog-invitation h1 { color: #fff2ff; }
+@media(prefers-reduced-motion:reduce) { .fog-entrance { transition-duration: .05s; }.fog-invitation { transition: none; } }
+.entrance-fog .royal-door-touch,.entrance-fog > .royal-entrance-brand { visibility: hidden; }
+
+/* A consistent, touch-sized language control above the mist and palace. */
+.language-switch { position: fixed; top: 16px; right: 24px; z-index: 120; display: flex; align-items: center; gap: 2px; padding: 4px; border: 1px solid #d9b66e77; border-radius: 30px; background: #081826eb; color: #9f9c90; box-shadow: 0 4px 22px #0004; }
+.language-switch button { min-width: 78px; min-height: 44px; padding: 8px 13px; border-radius: 24px; background: transparent; color: #cbd3dc; font: 600 15px 'DM Sans','Noto Sans KR',sans-serif; }
+.language-switch button[aria-pressed="true"] { color: #15222b; background: #e0c18a; }
+.language-switch button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+.palace-theme .kiosk-header { padding-right: 224px; }
+.modal-header .language-switch { position: static; margin-left: auto; margin-right: 16px; }
+.shared-report-brand { padding-right: 220px; min-height: 88px; }
+html[lang="en"] body { word-break: normal; overflow-wrap: break-word; }
+html[lang="en"] .kiosk-brand > span { letter-spacing: 1px; }
+html[lang="en"] .kiosk-brand small { letter-spacing: .5px; }
+html[lang="en"] .kiosk-steps { gap: 18px; }
+html[lang="en"] .touch-journey .living-person-action > strong { font-size: clamp(12px,.94vw,16px); word-break: normal; }
+html[lang="en"] .touch-journey .living-person-action { max-width: 112%; }
+html[lang="en"] .entrapment-copy h1 { font-size: clamp(30px,3.1vw,58px); }
+html[lang="en"] .entrapment-copy p { max-width: 900px; margin-left: auto; margin-right: auto; }
+html[lang="en"] .palace-theme .treasure-result-card h3 { font-size: clamp(16px,1.2vw,23px); }
+html[lang="en"] .royal-chest-label strong { font-size: clamp(14px,1.25vw,23px); }
+html[lang="en"] .palace-theme .kiosk-result .treasure-meaning { font-size: 14px; line-height: 1.5; }
+@media (max-width: 1650px) { html[lang="en"] .kiosk-steps { display: none; } }
+@media (max-width: 1000px) { .palace-theme .kiosk-header { padding-right: 200px; } .language-switch { right: 12px; } .language-switch button { min-width: 68px; padding: 8px 10px; } }
+@media (max-width: 600px) {
+ .language-switch { top: 10px; right: 10px; } .language-switch button { font-size: 13px; min-width: 62px; }
+ .palace-theme .kiosk-header { padding-top: 65px; padding-right: 12px; height: 138px; flex-wrap: wrap; }
+ .shared-report-brand { padding: 78px 16px 18px; height: auto; font-size: 15px; }
+ .modal-header { flex-wrap: wrap; gap: 10px; } .modal-header .language-switch { margin-right: 0; }
+ html[lang="en"] .fog-invitation h1 { font-size: 32px; }
+ html[lang="en"] .touch-journey .living-person-action > strong { font-size: 10px; }
+}

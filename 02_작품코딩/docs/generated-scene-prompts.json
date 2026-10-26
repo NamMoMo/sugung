@@ -1,0 +1,15 @@
+{
+  "mode": "Built-in image_gen image editing; no CLI fallback",
+  "assets": [
+    {
+      "file": "public/art/scenes/birthday-after-living-v3.webp",
+      "reference": "public/art/scenes/birthday-after-living-v2.webp",
+      "prompt": "Use case: precise-object-edit. Edit this exact 3:2 underwater birthday party scene for an interactive touchscreen. Preserve the camera, photographic 3D fantasy finish, warm gold/navy palette, architecture, lighting and exact body positions of the five main animals (turtle upper left, orange octopus upper middle, dolphin upper right, spotted seal lower left, purple ray lower right). Change only two actions: the lower-right ray is visibly sliding a printed birthday-party photograph into an OPEN PHOTO ALBUM with clear photo pockets, resting where the old box of loose cards was. Several photos already neatly in album; no box of cards. The lower-left seal is warmly extending a flipper to invite one small shy sea friend beside it into the group; add just one small shy fish at the seal's left side, clearly a supporting friend, not a sixth main option. Seal's head and action must stay inside its current lower-left region. Leave the turtle exploring the doorway, octopus filming, dolphin planning completely unchanged. Keep all five main animal positions/sizes so existing touch regions remain aligned. No words, numbers, borders, labels or watermarks."
+    },
+    {
+      "file": "public/art/scenes/break-after-living-v2.webp",
+      "reference": "public/art/scenes/break-after-living.webp",
+      "prompt": "Use case: precise-object-edit. Preserve this exact 3:2 underwater cozy evening scene and all five main animals, locations, poses, furniture, detailed photorealistic 3D fantasy finish, warm golden lighting, navy palette and camera. Change ONLY upper-left turtle's activity: it is curious about a newly purchased small electronic device, holding/tapping a clean touchscreen device showing a simple grid of colorful feature icons without text. Put a small opened unbranded product box and folded blank quick-start leaflet nearby on the table to communicate newly bought. Remove the blue cylindrical speaker. Keep turtle body size/position unchanged inside existing upper-left region. Leave octopus preparing snacks, dolphin stretching, seal decorating photos, ray gaming and all other areas unchanged. No written labels or typography, no watermarks."
+    }
+  ]
+}

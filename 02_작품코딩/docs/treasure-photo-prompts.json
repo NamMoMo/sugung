@@ -1,0 +1,90 @@
+{
+  "tool": "built-in image_gen",
+  "format": "3 columns × 2 rows; first five cells used, last cell empty",
+  "sheets": [
+    {
+      "key": "roles-before",
+      "ids": [
+        "discover",
+        "create",
+        "make",
+        "help",
+        "teach"
+      ],
+      "objects": "1) ornate handheld magnifying glass with gold frame, clear optical glass and sapphire handle; 2) mother-of-pearl artist paint palette with five jewel-like colored paint wells; 3) miniature ornate gold craftsman's hammer with emerald inlay; 4) a small freestanding gold sculpture of two hands clasping in a supportive handshake; 5) open thick antique book with gold embossed binding and visible ivory pages.",
+      "prompt": "Use case: product-mockup. Asset type: production game treasure atlas, a single contact sheet 3 columns by 2 rows, landscape 1536x1024, SIX exactly equal 512x512 square cells. Five separate real tangible luxury treasures, one centered in each of the first FIVE cells in reading order, bottom-right cell is empty dark navy. Photorealistic macro studio jewelry photography, extremely detailed polished antique gold filigree, gemstone refraction, iridescent pearls, tiny physically realistic light glints, luxurious underwater royal treasure collection. Dark navy #081522 seamless background in EVERY cell, no borders, no grid lines, no captions, no letters, no watermark. Each object entirely contained in its own square with 16% breathing room on all sides, no overlap or objects crossing cell boundaries. Each object occupies about 65% of its cell and has a subtle real contact shadow, camera at slight front three-quarter angle, coherent warm key light and blue rim light. NOT illustrated icons, NOT cartoons, NOT flat vector, NOT badges with generic symbols. Each actual object clearly recognizable. First row three objects, second row two objects plus EMPTY bottom-right. Subjects in cell order: 1) ornate handheld magnifying glass with gold frame, clear optical glass and sapphire handle; 2) mother-of-pearl artist paint palette with five jewel-like colored paint wells; 3) miniature ornate gold craftsman's hammer with emerald inlay; 4) a small freestanding gold sculpture of two hands clasping in a supportive handshake; 5) open thick antique book with gold embossed binding and visible ivory pages.",
+      "source": "/Users/sinjihye/.codex/generated_images/01a13e9b-895c-7450-af60-39cc5a2ae698/exec-51457f43-610c-4518-a223-e95b983520b5.png",
+      "asset": "public/art/treasures/roles-before.webp"
+    },
+    {
+      "key": "roles-after",
+      "ids": [
+        "explore",
+        "express",
+        "plan",
+        "connect",
+        "protect"
+      ],
+      "objects": "1) antique gold navigation compass with sapphire rim and clearly visible magnetic needle; 2) miniature gold vintage microphone with a jewel-encrusted grille on a small stand; 3) partly rolled ivory architectural plan with fine unlettered blue drawing lines and a tiny gold divider; 4) an intricate three-dimensional golden cord knot tied elegantly; 5) upright ornate gold shield with a deep blue sapphire centerpiece.",
+      "prompt": "Use case: product-mockup. Asset type: production game treasure atlas, a single contact sheet 3 columns by 2 rows, landscape 1536x1024, SIX exactly equal 512x512 square cells. Five separate real tangible luxury treasures, one centered in each of the first FIVE cells in reading order, bottom-right cell is empty dark navy. Photorealistic macro studio jewelry photography, extremely detailed polished antique gold filigree, gemstone refraction, iridescent pearls, tiny physically realistic light glints, luxurious underwater royal treasure collection. Dark navy #081522 seamless background in EVERY cell, no borders, no grid lines, no captions, no letters, no watermark. Each object entirely contained in its own square with 16% breathing room on all sides, no overlap or objects crossing cell boundaries. Each object occupies about 65% of its cell and has a subtle real contact shadow, camera at slight front three-quarter angle, coherent warm key light and blue rim light. NOT illustrated icons, NOT cartoons, NOT flat vector, NOT badges with generic symbols. Each actual object clearly recognizable. First row three objects, second row two objects plus EMPTY bottom-right. Subjects in cell order: 1) antique gold navigation compass with sapphire rim and clearly visible magnetic needle; 2) miniature gold vintage microphone with a jewel-encrusted grille on a small stand; 3) partly rolled ivory architectural plan with fine unlettered blue drawing lines and a tiny gold divider; 4) an intricate three-dimensional golden cord knot tied elegantly; 5) upright ornate gold shield with a deep blue sapphire centerpiece.",
+      "source": "/Users/sinjihye/.codex/generated_images/01a13e9b-895c-7450-af60-39cc5a2ae698/exec-ee1acf45-1540-464c-85ef-2e38e48abbf0.png",
+      "asset": "public/art/treasures/roles-after.webp"
+    },
+    {
+      "key": "strength-before",
+      "ids": [
+        "observe",
+        "analysis",
+        "creative",
+        "empathy",
+        "execute"
+      ],
+      "objects": "1) exquisite single gold-rimmed optical monocle lens with a delicate gold chain; 2) circular antique celestial star map astrolabe of fine gold with sapphire stars, no letters; 3) ornate miniature gold lantern with a realistically glowing warm light inside; 4) one luminous rose-gold pearl nestled in an open natural oyster shell edged in gold; 5) polished solid gold lightning bolt pendant with tiny diamonds.",
+      "prompt": "Use case: product-mockup. Asset type: production game treasure atlas, a single contact sheet 3 columns by 2 rows, landscape 1536x1024, SIX exactly equal 512x512 square cells. Five separate real tangible luxury treasures, one centered in each of the first FIVE cells in reading order, bottom-right cell is empty dark navy. Photorealistic macro studio jewelry photography, extremely detailed polished antique gold filigree, gemstone refraction, iridescent pearls, tiny physically realistic light glints, luxurious underwater royal treasure collection. Dark navy #081522 seamless background in EVERY cell, no borders, no grid lines, no captions, no letters, no watermark. Each object entirely contained in its own square with 16% breathing room on all sides, no overlap or objects crossing cell boundaries. Each object occupies about 65% of its cell and has a subtle real contact shadow, camera at slight front three-quarter angle, coherent warm key light and blue rim light. NOT illustrated icons, NOT cartoons, NOT flat vector, NOT badges with generic symbols. Each actual object clearly recognizable. First row three objects, second row two objects plus EMPTY bottom-right. Subjects in cell order: 1) exquisite single gold-rimmed optical monocle lens with a delicate gold chain; 2) circular antique celestial star map astrolabe of fine gold with sapphire stars, no letters; 3) ornate miniature gold lantern with a realistically glowing warm light inside; 4) one luminous rose-gold pearl nestled in an open natural oyster shell edged in gold; 5) polished solid gold lightning bolt pendant with tiny diamonds.",
+      "source": "/Users/sinjihye/.codex/generated_images/01a13e9b-895c-7450-af60-39cc5a2ae698/exec-e0a4cf9c-4ee1-4cda-8f2d-3ad1d443a7b3.png",
+      "asset": "public/art/treasures/strength-before.webp"
+    },
+    {
+      "key": "strength-after",
+      "ids": [
+        "craft",
+        "organize",
+        "explain",
+        "cooperate",
+        "persist"
+      ],
+      "objects": "1) fine jewelers' miniature gold spanner and precision tool resting together; 2) closed dark blue leather journal with embossed gold filigree cover and gold page edges; 3) a tangible speech-bubble-shaped carved pale aquamarine ornament with a gold filigree rim on small gold base; 4) two thick interlocked gold rings set with small sapphires; 5) a freestanding flowing ocean wave sculpture of solid polished gold and translucent blue crystal.",
+      "prompt": "Use case: product-mockup. Asset type: production game treasure atlas, a single contact sheet 3 columns by 2 rows, landscape 1536x1024, SIX exactly equal 512x512 square cells. Five separate real tangible luxury treasures, one centered in each of the first FIVE cells in reading order, bottom-right cell is empty dark navy. Photorealistic macro studio jewelry photography, extremely detailed polished antique gold filigree, gemstone refraction, iridescent pearls, tiny physically realistic light glints, luxurious underwater royal treasure collection. Dark navy #081522 seamless background in EVERY cell, no borders, no grid lines, no captions, no letters, no watermark. Each object entirely contained in its own square with 16% breathing room on all sides, no overlap or objects crossing cell boundaries. Each object occupies about 65% of its cell and has a subtle real contact shadow, camera at slight front three-quarter angle, coherent warm key light and blue rim light. NOT illustrated icons, NOT cartoons, NOT flat vector, NOT badges with generic symbols. Each actual object clearly recognizable. First row three objects, second row two objects plus EMPTY bottom-right. Subjects in cell order: 1) fine jewelers' miniature gold spanner and precision tool resting together; 2) closed dark blue leather journal with embossed gold filigree cover and gold page edges; 3) a tangible speech-bubble-shaped carved pale aquamarine ornament with a gold filigree rim on small gold base; 4) two thick interlocked gold rings set with small sapphires; 5) a freestanding flowing ocean wave sculpture of solid polished gold and translucent blue crystal.",
+      "source": "/Users/sinjihye/.codex/generated_images/01a13e9b-895c-7450-af60-39cc5a2ae698/exec-01d27fbe-4d3a-4d07-bbbe-cbd368a21e28.png",
+      "asset": "public/art/treasures/strength-after.webp"
+    },
+    {
+      "key": "interests-before",
+      "ids": [
+        "people",
+        "nature",
+        "music",
+        "numbers",
+        "story"
+      ],
+      "objects": "1) two lustrous white pearls side by side in an ornate gold pendant setting; 2) a naturalistic vivid emerald green jade leaf brooch with fine gold veins; 3) an iridescent scallop shell with opal sheen and delicate golden ridges; 4) a tall clear faceted quartz crystal wrapped with an intricate geometric gold lattice; 5) an antique ivory parchment scroll with gold finials partly unrolled, blank parchment.",
+      "prompt": "Use case: product-mockup. Asset type: production game treasure atlas, a single contact sheet 3 columns by 2 rows, landscape 1536x1024, SIX exactly equal 512x512 square cells. Five separate real tangible luxury treasures, one centered in each of the first FIVE cells in reading order, bottom-right cell is empty dark navy. Photorealistic macro studio jewelry photography, extremely detailed polished antique gold filigree, gemstone refraction, iridescent pearls, tiny physically realistic light glints, luxurious underwater royal treasure collection. Dark navy #081522 seamless background in EVERY cell, no borders, no grid lines, no captions, no letters, no watermark. Each object entirely contained in its own square with 16% breathing room on all sides, no overlap or objects crossing cell boundaries. Each object occupies about 65% of its cell and has a subtle real contact shadow, camera at slight front three-quarter angle, coherent warm key light and blue rim light. NOT illustrated icons, NOT cartoons, NOT flat vector, NOT badges with generic symbols. Each actual object clearly recognizable. First row three objects, second row two objects plus EMPTY bottom-right. Subjects in cell order: 1) two lustrous white pearls side by side in an ornate gold pendant setting; 2) a naturalistic vivid emerald green jade leaf brooch with fine gold veins; 3) an iridescent scallop shell with opal sheen and delicate golden ridges; 4) a tall clear faceted quartz crystal wrapped with an intricate geometric gold lattice; 5) an antique ivory parchment scroll with gold finials partly unrolled, blank parchment.",
+      "source": "/Users/sinjihye/.codex/generated_images/01a13e9b-895c-7450-af60-39cc5a2ae698/exec-f5a37620-0370-49cf-a29e-5fe2dc3d942b.png",
+      "asset": "public/art/treasures/interests-before.webp"
+    },
+    {
+      "key": "interests-after",
+      "ids": [
+        "tools",
+        "taste",
+        "movement",
+        "art",
+        "play"
+      ],
+      "objects": "1) an exquisite solid brass gear mechanism with precisely machined teeth and sapphire hub; 2) a tiny rounded golden cooking cauldron with pearl inlay and two small handles; 3) a flowing wind-ribbon sculpture of translucent pale blue glass and polished silver, a real decorative object on a small gold base; 4) a large multifaceted rainbow gemstone in an ornate gold claw setting; 5) a pair of realistic black enamel and gold gaming dice with diamond pips.",
+      "prompt": "Use case: product-mockup. Asset type: production game treasure atlas, a single contact sheet 3 columns by 2 rows, landscape 1536x1024, SIX exactly equal 512x512 square cells. Five separate real tangible luxury treasures, one centered in each of the first FIVE cells in reading order, bottom-right cell is empty dark navy. Photorealistic macro studio jewelry photography, extremely detailed polished antique gold filigree, gemstone refraction, iridescent pearls, tiny physically realistic light glints, luxurious underwater royal treasure collection. Dark navy #081522 seamless background in EVERY cell, no borders, no grid lines, no captions, no letters, no watermark. Each object entirely contained in its own square with 16% breathing room on all sides, no overlap or objects crossing cell boundaries. Each object occupies about 65% of its cell and has a subtle real contact shadow, camera at slight front three-quarter angle, coherent warm key light and blue rim light. NOT illustrated icons, NOT cartoons, NOT flat vector, NOT badges with generic symbols. Each actual object clearly recognizable. First row three objects, second row two objects plus EMPTY bottom-right. Subjects in cell order: 1) an exquisite solid brass gear mechanism with precisely machined teeth and sapphire hub; 2) a tiny rounded golden cooking cauldron with pearl inlay and two small handles; 3) a flowing wind-ribbon sculpture of translucent pale blue glass and polished silver, a real decorative object on a small gold base; 4) a large multifaceted rainbow gemstone in an ornate gold claw setting; 5) a pair of realistic black enamel and gold gaming dice with diamond pips.",
+      "source": "/Users/sinjihye/.codex/generated_images/01a13e9b-895c-7450-af60-39cc5a2ae698/exec-f8fcc08b-742e-4bdd-9a26-d9d37221220f.png",
+      "asset": "public/art/treasures/interests-after.webp"
+    }
+  ]
+}

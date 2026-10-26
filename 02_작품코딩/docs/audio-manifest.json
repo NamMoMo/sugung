@@ -1,0 +1,103 @@
+{
+  "provided_originals": [
+    {
+      "filename": "상자 속 선택 미션.wav",
+      "sha256": "0e051775de575a830643590caa4ab36774317c3bf8b0f8f6fb535e71bec5f9da"
+    },
+    {
+      "filename": "잠겨된 chest.mp3",
+      "sha256": "601b0beb2eb9b74311fcd852a20aa883ecf1fcaede1712579e0edbfd55331191"
+    },
+    {
+      "filename": "입장 전-안개 속 용궁문ㅇ.wav",
+      "sha256": "ebe6f6ddb5a30a84cc4a718e4ecae02aff9854d9a75453657812d30d8a411275"
+    },
+    {
+      "filename": "상자열릴때.mp3",
+      "sha256": "6d4b5cea51c524dd4a8ccf0fc106d74ae5e55c2cb9a97989786d87aecba51900"
+    },
+    {
+      "filename": "보물의 방 탈출.mp3",
+      "sha256": "87f2d41bf2de4b27e988ea9f727a9f3342bd7348f34e999cefa3fb83ba870ffa"
+    },
+    {
+      "filename": "버튼선택.mp3",
+      "sha256": "3ab06b76690800dee2c80b15f58583458d2973606dea0bdcbdae3806e99cb326"
+    },
+    {
+      "filename": "[모동숲 ASMR] 박물관 물고기관 마음이 편해지는 사운드  ACNH  BGM  Cozy Ambience.mp3",
+      "sha256": "9073f9529aaeb66eb64e5f2532529151fb9c8e1605c45b8d5b484de961b56967"
+    },
+    {
+      "filename": "쿵.mp3",
+      "sha256": "c7fcee16112f0ef57ba04b6a5f95782a69d21b5c88226334f78c0d784893146f"
+    },
+    {
+      "filename": "문 열림.mp3",
+      "sha256": "e9a297f166050ed7f98bb93aee0215235d67483ec9e43ae86ac372aea6ea63eb"
+    }
+  ],
+  "scene_mapping": {
+    "intro": "/audio/intro.m4a",
+    "room": "/audio/room.mp3",
+    "mission": "/audio/mission.m4a",
+    "escape": "/audio/escape-user.mp3",
+    "result": "/audio/result-asmr.m4a"
+  },
+  "credits": "/audio/credits.txt",
+  "transition_seconds": 1.6,
+  "loop_overlap_seconds": 4.5,
+  "button_sound": "/audio/button.mp3",
+  "effects": {
+    "button": {
+      "src": "/audio/button.mp3",
+      "offset_seconds": 0.04
+    },
+    "door": {
+      "src": "/audio/door-impact.mp3",
+      "offset_seconds": 2.05,
+      "trigger": "TrapTransition impact phase"
+    },
+    "chest": {
+      "src": "/audio/chest-open.mp3",
+      "offset_seconds": 0.5,
+      "trigger": "Pressing Step into the story; portal light begins"
+    },
+    "gate": {
+      "src": "/audio/gate-opening-user.mp3",
+      "trigger": "First palace door begins opening",
+      "offset_seconds": 0,
+      "provided_filename": "문 열림.mp3"
+    }
+  },
+  "report_excerpt": {
+    "start_seconds": 0,
+    "duration_seconds": 300
+  },
+  "autoplay": "Attempt on initial fog; if blocked, resume on first gesture; shared QR reports stay silent until requested.",
+  "room_resume": "First entrance starts at zero; mission returns resume the previous chamber playback position; next visitor resets it.",
+  "mission_resume": "First chest starts at zero; second and third chests resume the previous mission playback position; next visitor resets it.",
+  "mission_trigger": "Press Step into the story: chamber music continues during chest briefing; mission music begins with the portal light.",
+  "underwater_ambience": {
+    "src": "/audio/underwater-ambience.m4a",
+    "provided_filename": "물속ASMR.mp4",
+    "source_duration_seconds": 36035.975,
+    "excerpt_start_seconds": 0,
+    "excerpt_duration_seconds": 300,
+    "stereo": true,
+    "stage_levels": {
+      "intro": 0.14,
+      "room": 0.14,
+      "mission": 0.11,
+      "escape": 0.12,
+      "result": 0.065
+    },
+    "loop_overlap_seconds": 4.5,
+    "highpass_hz": 65,
+    "lowpass_hz": 5000,
+    "continuous_across_scene_changes": true,
+    "ducking": "Critical effects lower water and music briefly; .9-second recovery; button clicks only lower water.",
+    "excerpt_sha256": "a1dd387d58537ae41f2404ff03afe5fbed8ddc4ab3185e922caf1de81b02bdf3",
+    "progressive_streaming": true
+  }
+}

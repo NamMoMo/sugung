@@ -1,0 +1,17 @@
+.escape-world,.exit-underwater,.exit-water-plate { position:absolute; inset:0; width:100%; height:100%; }
+.exit-underwater { pointer-events:none; }
+.exit-water-plate { z-index:2; }
+.escape-free .escape-palace { animation:none; }
+.escape-free .escape-world { animation:exit-door-reveal 1.4s ease-out both; }
+.escape-forming .escape-world { visibility:hidden; }
+.ocean-jelly-photo { animation:jelly-bell-pulse 5.5s ease-in-out infinite; transform-box:fill-box; transform-origin:50% 15%; }
+.water-moving .exit-water-sunshafts { animation:exit-sunshafts-sway 12s ease-in-out infinite alternate; transform-origin:50% 10%; }
+.water-moving .exit-water-caustics { animation:exit-caustics-drift 14s ease-in-out infinite alternate; }
+.water-moving .exit-water-mote { animation:exit-mote-drift var(--mote-speed) linear var(--mote-delay) infinite; }
+.water-still .exit-water-mote { opacity:.3; }
+.ocean-paused * { animation-play-state:paused !important; }
+@keyframes jelly-bell-pulse { 0%,100% { transform:scale(1,1); } 40% { transform:scale(.94,1.035); } 65% { transform:scale(1.025,.99); } }
+@keyframes exit-sunshafts-sway { from { transform:translateX(-8px) skewX(-2deg); opacity:.45; } to { transform:translateX(9px) skewX(2deg); opacity:.85; } }
+@keyframes exit-caustics-drift { from { transform:translate(-12px,-9px) scaleX(1.01); opacity:.1; } to { transform:translate(10px,16px) scaleX(.99); opacity:.17; } }
+@keyframes exit-mote-drift { from { transform:translate(0,35px); opacity:0; } 20%,80% { opacity:.5; } to { transform:translate(14px,-65px); opacity:0; } }
+@media(prefers-reduced-motion:reduce) { .escape-free .escape-world,.ocean-jelly-photo,.water-moving .exit-water-sunshafts,.water-moving .exit-water-caustics,.water-moving .exit-water-mote { animation:none; } }
