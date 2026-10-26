@@ -1,7 +1,7 @@
 {
-  "version": "현장수정-2026-10-26",
-  "saved_at": "2026-10-25T23:59:02.798489+09:00",
-  "shared_preview_version": 23,
+  "version": "2차수정",
+  "saved_at": "2026-10-27T03:14:28.5317044+09:00",
+  "shared_preview_version": 28,
   "github_repository": "https://github.com/NamMoMo/sugung",
   "github_branch": "1조",
   "stage": {
@@ -64,12 +64,13 @@
   "interaction_limit": 7,
   "ending_hit_min_speed": 1.3,
   "minigame_path": {
-    "type": "alternating_arm_splash",
+    "type": "dual_hand_alternating_diagonal_targets",
     "video": "jara01.mp4",
-    "turn": "one left and one right full up/down cycle, alternating",
+    "turn": "two diagonal pairs completed with distinct left and right wrists",
     "turns_per_rate_step": 3,
-    "rate_step": 0.1,
-    "initial_rate": 1,
+    "rate_step": 0.2,
+    "initial_rate": 0.8,
     "max_rate": 2
-  }
+  },
+  "snapshot_tag": "2차수정"
 }

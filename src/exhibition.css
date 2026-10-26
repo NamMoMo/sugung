@@ -57,6 +57,6 @@
 .language-en .instruction p{font-size:34px}
 
 /* Keep the introduction language switch within easy reach. */
-.scene-mainReady .language-toggle{right:300px;top:270px}
+.scene-mainReady .language-toggle{right:480px;top:390px}
 
 .scene-photo .confirm-button{right:300px;bottom:320px}
