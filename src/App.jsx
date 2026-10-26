@@ -82,7 +82,7 @@ export default function App() {
   useEffect(()=>{if(!toast)return;const id=setTimeout(()=>setToast(''),2400);return()=>clearTimeout(id);},[toast]);
   function clearInteraction(){arrivalEntry.current.reset();grip.current.reset();confirmation.current.reset();languageHold.current.reset();dragPoint.current=null;grabbedMask.current=null;heldLabel.current=null;activeHand.current=null;lastGesture.current={value:'unknown',since:0,stable:'unknown',id:null};}
   function next(){if(transitioning.current)return;if(sessionRef.current.scene==='standby'){arrival.current?.prime();journey.current?.prime();glitchRabbit.current?.prime();ending.current?.prime();}if(['rabbit','mainReady'].includes(sessionRef.current.scene))music.current?.arm();clearInteraction();reduce({type:'next'});}
-  function requestNext(){if(queue.blocked.current||transitioning.current)return;const scene=sessionRef.current.scene;if(scene==='escaped'){reset();return;}queue.valid.current=false;if(scene==='minigame'){journey.current?.finish();return;}if(scene==='glitch'){glitchRabbit.current?.finish();return;}if(scene==='ending'){ending.current?.finish();return;}next();}
+  function requestNext(){if(transitioning.current)return;const scene=sessionRef.current.scene;if(scene==='escaped'){reset();return;}if(queue.blocked.current)return;queue.valid.current=false;if(scene==='minigame'){journey.current?.finish();return;}if(scene==='glitch'){glitchRabbit.current?.finish();return;}if(scene==='ending'){ending.current?.finish();return;}next();}
   function reset(){if(!queue.working.current)void queue.release();}
   function resetArtwork(){setLanguage('ko');languageHold.current.reset();setLanguageProgress(0);pointer.current=null;arrival.current?.reset();music.current?.stop();transitionTimers.current.forEach(clearTimeout);transitioning.current=false;setFlash(false);setPhotoFade(false);stableLayout.current.reset();anchorFrame.current=null;birthTimes.current.clear();clearInteraction();bursts.current=[];setText('');input.current?.blur();reduce({type:'reset'});}
   useEffect(()=>{
@@ -242,7 +242,8 @@ export default function App() {
         {queue.error&&<p role="alert">{queue.error}</p>}
       </div>
     </section>}
-    {queue.show&&queue.completionError&&<button className="queue-save-retry" disabled={queue.busy} onClick={queue.retryFinish}>완료 기록 다시 저장</button>}
+    {session.scene==='escaped'&&queue.error&&<p className="queue-ending-error" role="status">{queue.error}</p>}
+    {queue.completionError&&<button className="queue-save-retry" disabled={queue.busy} onClick={queue.retryFinish}>완료 기록 다시 저장</button>}
     <audio ref={audio} src="/audio/main_BGM.mp3" loop preload="auto" onError={()=>setAudioError('main_BGM.mp3 파일을 재생할 수 없습니다.')} aria-label={t("메인 콘텐츠 배경음악")}/>
     <div ref={stage} inert={queue.show} lang={english?'en':'ko'} className={`stage ${english?'language-en':''} ${mode==='demo'?'demo':''} ${session.labels.length>8?'dense-labels':''} scene-${session.scene}`} style={{width:OUTPUT_W,height:OUTPUT_H,transform:`translate(-50%,-50%) scale(${scale})`}} onPointerMove={onPointer} onPointerDown={e=>{if(e.target.closest('button,input')&&!e.target.closest('.confirm-button,.main-start-button'))return;input.current?.blur();onPointer(e,'fist');if(!e.target.closest('button'))e.currentTarget.setPointerCapture?.(e.pointerId);}} onPointerUp={e=>onPointer(e,'open')} onPointerCancel={()=>{pointer.current=null;}} onPointerLeave={()=>{if(!grip.current.drag)pointer.current=null;}}>
     <section className="stage-shell">

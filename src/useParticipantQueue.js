@@ -6,6 +6,7 @@ export function useParticipantQueue(onStart, scene, session) {
   const [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const [completionError, setCompletionError] = useState(false);
   const selected = useRef(null), blocked = useRef(true), valid = useRef(true), working = useRef(false);
+  const endingVisible = useRef(false);
   const revision = useRef(0), readSerial = useRef(0), alive = useRef(true);
   const latest = useRef({ onStart, session }); latest.current = { onStart, session };
   const refresh = async () => {
@@ -15,7 +16,7 @@ export function useParticipantQueue(onStart, scene, session) {
     if (!alive.current || started !== revision.current || serial !== readSerial.current) return data;
     setState({ ...data, waiting: orderWaiting(data.waiting, data.active?.visit_id) });
     const change = selectionChanged(selected.current?.visit_id, data.active);
-    if (change.stop) {
+    if (change.stop && !endingVisible.current) {
       selected.current = null; blocked.current = true; setShow(true);
       latest.current.onStart();
       setError('선택한 참가자의 체험이 중지되거나 종료되었습니다. 참가자를 다시 선택해 주세요.');
@@ -42,6 +43,7 @@ export function useParticipantQueue(onStart, scene, session) {
     finally { working.current = false; if (alive.current) setBusy(false); }
   }
   function begin(person) {
+    endingVisible.current = false;
     setCompletionError(false);
     latest.current.onStart(); selected.current = person; valid.current = true;
     setState(current => ({ active: person, waiting: orderWaiting(current.waiting, person.visit_id) }));
@@ -60,14 +62,16 @@ export function useParticipantQueue(onStart, scene, session) {
     return run(async () => {
       const person = selected.current || state.active;
       if (person) await queueRequest('release', { visit_id: person.visit_id });
-      selected.current = null; latest.current.onStart(); await refresh();
+      selected.current = null; endingVisible.current = false; latest.current.onStart(); await refresh();
       setCompletionError(false);
     });
   }
   function finish() {
     const person = selected.current;
     if (!person || working.current) return;
-    blocked.current = true; setShow(true);
+    blocked.current = true; endingVisible.current = true;
+    // 09 is part of the artwork. Saving completion must not cover it with the waiting screen.
+    setShow(false);
     if (!valid.current || latest.current.session.count !== 10) {
       setError('관리자 장면 이동 또는 테스트 체험입니다. 완료 기록 없이 선택을 취소해 주세요.'); return;
     }

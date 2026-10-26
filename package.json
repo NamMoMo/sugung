@@ -10,6 +10,14 @@
     "test": "node --test tests/*.test.js",
     "setup:vision": "node scripts/setup-vision.mjs"
   },
-  "dependencies": { "@mediapipe/tasks-vision": "0.10.32", "react": "^19.2.0", "react-dom": "^19.2.0" },
-  "devDependencies": { "vite": "^7.1.0", "@vitejs/plugin-react": "^5.0.0" }
+  "dependencies": {
+    "@mediapipe/tasks-vision": "0.10.32",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "react-test-renderer": "19.3.1",
+    "vite": "^7.1.0"
+  }
 }
