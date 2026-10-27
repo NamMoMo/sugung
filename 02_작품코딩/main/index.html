@@ -286,6 +286,7 @@
   }
   #ending > canvas.frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   #ending.on { transform: none; }
+  #ending .kept.statement { font-size: clamp(1rem, 4.5vw, 1.3rem); line-height: 1.7; overflow-wrap: anywhere; }
   #ending .kept { font: 700 1.9rem/1.25 var(--serif); margin: .25rem 0 1rem; color: #F6E3BA; text-shadow: 0 0 12px rgba(245,205,140,.3); }
   #ending .small { font: 600 .78rem/1.5 var(--sans); letter-spacing: .05em; color: #ECCB8C; margin: 0; }
   #ending .next {
@@ -742,8 +743,9 @@
 <script type="module">
 import * as THREE from 'three';
 import { appLaunch, loadAppContext, saveAppRecord, showAppReturn, showAppLoadError, clearAppLoadError } from './app-bridge-client.js';
-import { CATEGORY, CAT_NAME, CAT_COLOR, ITEM_EN, CAT_NAME_EN } from './catalog.js';
+import { CATEGORY, CAT_NAME, CAT_COLOR, ITEM_EN, CAT_NAME_EN, INTEREST_ITEMS, itemStatement, categoryOf, offlineLabels } from './catalog.js';
 import { UI, RABBIT_EN, NEXT_ACTIONS_EN, DETACH_LINES_EN, ABOUT, RANDOM_NICKNAMES_EN, CUSTOM } from './i18n.js';
+import { drawStatement } from './statement-text.js';
 import { CHORONG_COLORS, COLOR_STARTERS, twoTone } from './colors.js';   // 초롱 색 바꾸기: 빛깔 10가지   // 한국어 / English 문구 (영어를 고치려면 i18n.js)
 
 /* ───────────────────────── 설정 ───────────────────────── */
@@ -799,8 +801,8 @@ const DETACH_LINES = {
 
 // 서버가 없을 때 쓰는 샘플 (방 A에서 저장되는 형태를 흉내 냄)
 const SAMPLE_DB = {
-  '0417': ['양치하기','샤워하기','물 마시기','스트레칭하기','창문 열기','이불 정리','설거지하기','산책하기','햇볕 쬐기'],
-  '0102': ['밥 챙겨 먹기','일찍 눕기','물 마시기','옷 갈아입기','화분 돌보기','창문 열기','산책하기','안부 전하기','노래 듣기'],
+  '0417': Object.keys(CATEGORY).slice(0, 10),
+  '0102': Object.keys(CATEGORY).slice(4),
 };
 
 const RABBIT = {
@@ -848,7 +850,8 @@ const LANG = (() => {
 const U = () => appLaunch ? { ...UI[LANG], nickLabel: LANG === 'en' ? 'Nickname · up to 40 characters' : '닉네임 · 최대 40자' } : UI[LANG];
 const itemName = label => LANG === 'en' ? (ITEM_EN[label] || label) : label;
 const catName = cat => LANG === 'en' ? CAT_NAME_EN[cat] : CAT_NAME[cat];
-const nextActionText = label => (LANG === 'en' ? NEXT_ACTIONS_EN[label] : NEXT_ACTIONS[label]) || U().nextFallback(itemName(label));
+const interestAction = (label, lang = 'ko') => lang === 'en' ? `Try an activity related to ${ITEM_EN[label].toLowerCase()} this week` : `이번 주에는 ‘${label}’에 관한 활동을 한 번 해 보기`;
+const nextActionText = label => INTEREST_ITEMS[label] ? interestAction(label, LANG) : (LANG === 'en' ? NEXT_ACTIONS_EN[label] : NEXT_ACTIONS[label]) || U().nextFallback(itemName(label));
 let lastInfo = ['', []];    // 첫 화면 안내 문구 (언어를 바꾸면 다시 씀)
 function info(key, ...args) {
   lastInfo = [key, args];
@@ -881,8 +884,7 @@ async function loadItems() {
   }
   // 방법 3: 짧은 QR (서버 없는 모드) — 항목 번호 목록 (?id=0001&k=0.2.13.24, 번호는 catalog.js 순서)
   if (params.get('k')) {
-    const all = Object.keys(CATEGORY);
-    return params.get('k').split('.').map(n => all[parseInt(n, 10)]).filter(Boolean);
+    return offlineLabels(params.get('k'), params.get('catalog'));
   }
   if (!participantId) throw new NeedId();
   // 방법 1: 번호로 서버에서 찾기
@@ -1046,6 +1048,7 @@ function plaquePath(x, L, T, R, B, r) {   // 모서리가 안으로 파인 패(�
   x.lineTo(L, T + r); x.arc(L, T, r, Math.PI / 2, 0, true); x.closePath();
 }
 function tagTextureStyled(label, cat, style) {
+  const statement = INTEREST_ITEMS[label] ? itemStatement(label, LANG) : null;
   label = itemName(label);   // 화면에 쓰는 이름 (English를 고르면 영어)
   const c = document.createElement('canvas'); c.width = TAG_CW; c.height = TAG_H;
   const x = c.getContext('2d');
@@ -1110,6 +1113,9 @@ function tagTextureStyled(label, cat, style) {
     // 글씨: 모든 꼬리표가 같은 자리·같은 크기 (길면 그 줄만 조금 줄임), 가운데 정렬. 진주빛
     const gcx = (L + R) / 2, half = Math.min(gcx - (hxA + HR + 18), R - 40 - gcx), GX0 = gcx - half, GX1 = gcx + half;   // 패 전체 기준 가운데 (긴 이름은 구멍과 겹치지 않는 폭 안에서 줄어듦)
     x.textAlign = 'center'; x.textBaseline = 'middle';
+    if (statement) {
+      drawStatement(x, statement, gcx, cy, GX1 - GX0, B - T - 28);
+    } else {
     fitText(x, label, GX1 - GX0, 62, 700, '"Gowun Batang", serif');
     const tw = x.measureText(label).width, tx0 = gcx - tw / 2, tx1 = gcx + tw / 2;
     // 금빛 자개 글씨: 크림·연금·복숭아빛 조각이 섞인 자개를 글자 모양으로 박아 넣은 느낌
@@ -1130,6 +1136,7 @@ function tagTextureStyled(label, cat, style) {
     x.save(); x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 3; x.shadowOffsetY = 1.5; x.drawImage(tc, 0, 0); x.restore();   // 살짝 박힌 그림자
     x.save(); x.shadowColor = 'rgba(245,205,140,.5)'; x.shadowBlur = 8; x.drawImage(tc, 0, 0); x.restore();
     x.strokeStyle = 'rgba(190,140,70,.55)'; x.lineWidth = .9; x.strokeText(label, gcx, cy + 2);   // 글자 가장자리 금선
+    }
     // 붉은 실 고리의 앞쪽 절반 + 매듭
     // 명주실이 구멍 왼쪽 테두리를 꽉 감음: 위·아래 두 가닥이 테두리 왼쪽 끝에서 만나 고리를 이루고 매듭으로 이어짐 (뒷면 실은 안 보임)
     const wx = hxA - HR - 2.8;                                    // 두꺼운 고리의 왼쪽 끝
@@ -1798,10 +1805,10 @@ function setSilk(m, a, b) {
   }
   pos.needsUpdate = true; m.geometry.computeVertexNormals(); m.material.map.repeat.set(1, L / 0.006);
 }
-const MAX_TAGS = 9;   // 초롱에 다는 꼬리표 최대 개수 (방 A에서 더 많이 담아 와도 앞의 9개만)
+const MAX_TAGS = 10;   // 초롱에 다는 꼬리표 최대 개수 (방 A에서 더 많이 담아 와도 앞의 10개만)
 function buildTags(labels) {
   labels.forEach(label => {
-    const cat = CATEGORY[label] || 'want';
+    const cat = categoryOf(label);
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tagTexture(label, cat), transparent: true, alphaTest: 0.35 }));
     sprite.scale.set(0.26 * TAG_CW / 640, 0.26 * TAG_H / 640, 1);
     const line = makeSilk();   // 초롱 테두리 ↔ 꼬리표를 잇는 끈: 꼬아 만든 동아줄 (가는 원통 + 비스듬한 꼰 결 무늬)
@@ -1825,7 +1832,7 @@ function refreshTagTextures() {
 }
 function ensureTagFont() {
   if (!document.fonts || !tags.length) return;
-  const text = tags.map(t => t.label).join('');
+  const text = tags.map(t => itemStatement(t.label, LANG)).join('');
   if (document.fonts.check(TAG_FONT, text)) return;
   document.fonts.load(TAG_FONT, text).then(() => refreshTagTextures()).catch(() => {});
   setTimeout(() => { if (document.fonts.check(TAG_FONT, text)) refreshTagTextures(); }, 5000);   // 혹시 놓친 경우 한 번 더
@@ -2018,7 +2025,8 @@ function finish() {
   ended = true;
   const kept = activeTags()[0];
   $('endingTitle').textContent = record.nickname ? nicknameTitle(record.nickname) : U().keptTitle;
-  $('keptLabel').textContent = itemName(kept.label);
+  $('keptLabel').textContent = itemStatement(kept.label, LANG);
+  $('keptLabel').classList.toggle('statement', !!INTEREST_ITEMS[kept.label]);
   $('nextAction').textContent = nextActionText(kept.label);
   $('btnConfirm').hidden = false; $('btnBack').hidden = false; paintEndFrame();
   say(RABBIT.end);
@@ -2070,7 +2078,7 @@ function confirmChoice() {
 function prepareLaunch() {
   if (launchState) return;
   const kept = activeTags()[0];
-  record.kept = { item: kept.label, nextAction: NEXT_ACTIONS[kept.label] || `‘${kept.label}’을(를) 이번 주에 한 번 해 보기` };   // 기록은 한국어로
+  record.kept = { item: kept.label, nextAction: (INTEREST_ITEMS[kept.label] ? interestAction(kept.label) : NEXT_ACTIONS[kept.label]) || `‘${kept.label}’을(를) 이번 주에 한 번 해 보기` };   // 기록은 한국어로
   $('ending').classList.remove('on');
   launchState = 1; dragLift = 0; targetH = LAUNCH_H;   // 초롱을 화면 가운데로 내려, 날아오르는 모습이 잘 보이게
   $('bar').style.visibility = 'hidden';
@@ -2623,7 +2631,7 @@ async function loadAndShow() {
     askForId('tooFew'); return;
   }
   clearAppLoadError();
-  labels = labels.slice(0, MAX_TAGS);   // 한 화면(초롱)에 꼬리표는 최대 9개
+  labels = labels.slice(0, MAX_TAGS);   // 한 화면(초롱)에 꼬리표는 최대 10개
   $('idForm').hidden = true; $('introActions').hidden = false;
   $('btnStart').disabled = false;
   record.id = participantId || 'direct'; record.loaded = [...labels]; record.kiosk = KIOSK; record.lanternColor = PALETTE.name; record.lang = LANG;
@@ -3692,7 +3700,9 @@ async function makeLanternCard() {
   if (name) { x.fillStyle = '#FFF1D2'; x.font = `700 64px ${serif}`; x.shadowColor = 'rgba(255,214,150,.55)'; x.shadowBlur = 24; x.fillText(C.own(name), cx, y); x.shadowBlur = 0; y += 76; }
   if (kept) {
     x.fillStyle = 'rgba(243,223,182,.7)'; x.font = `400 30px ${serif}`; x.fillText(L.keptTitle, cx, y); y += 54;
-    x.fillStyle = '#F3DFB6'; x.font = `700 42px ${serif}`; x.fillText(itemName(kept.label), cx, y); y += 70;
+    x.fillStyle = '#F3DFB6'; x.font = `700 38px ${serif}`;
+    for (const line of wrapLines(x, itemStatement(kept.label, LANG), 840)) { x.fillText(line, cx, y); y += 48; }
+    y += 22;
     x.fillStyle = 'rgba(243,223,182,.7)'; x.font = `400 30px ${serif}`; x.fillText(L.nextTitle, cx, y); y += 48;
     x.fillStyle = '#F3DFB6'; x.font = `400 34px ${serif}`;
     const nt = nextActionText(kept.label);

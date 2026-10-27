@@ -31,7 +31,9 @@
   input[type=text], input[type=password], input[type=search] { font: inherit; font-size: 1.05rem; padding: .65rem .8rem; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
   .row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
   .chips { display: flex; flex-wrap: wrap; gap: .45rem; }
-  .chip { border-radius: 999px; padding: .5rem .9rem; border: 1px solid var(--line); background: #fff; }
+  .chip { width: 100%; text-align: left; line-height: 1.65; border-radius: 12px; padding: .5rem .9rem; border: 1px solid var(--line); background: #fff; }
+  .chip strong, .chip span { display: block; }
+  .chip span { font-size: .92rem; margin-top: .25rem; }
   .chip[aria-pressed="true"] { color: #fff; border-color: transparent; }
   .muted { color: var(--muted); font-size: .9rem; }
   .msg { min-height: 1.4em; font-size: .92rem; }
@@ -178,7 +180,7 @@
 
 <script src="./vendor/qrcode/qrcode.js"></script>
 <script type="module">
-import { CATEGORY, CAT_NAME, CAT_COLOR } from './catalog.js';
+import { CATEGORY, CAT_NAME, CAT_COLOR, INTEREST_ITEMS } from './catalog.js';
 
 const $ = id => document.getElementById(id);
 const API = '/api';
@@ -241,7 +243,7 @@ function drawQr(canvas, text) {
 }
 const siteBase = () => new URL('./', location.href).href;   // /staff.html 과 /staff 모두에서 사이트 첫 주소
 const participantUrl = id => OFFLINE
-  ? `${siteBase()}?id=${encodeURIComponent(id)}&k=${[...selected].map(i => Object.keys(CATEGORY).indexOf(i)).join('.')}`   // 항목 번호로 짧게
+  ? `${siteBase()}?id=${encodeURIComponent(id)}&catalog=2&k=${[...selected].map(item => Object.keys(CATEGORY).indexOf(item)).join(".")}`   // 버전으로 구분해 이전 QR의 항목 순서 보존
   : `${siteBase()}?id=${encodeURIComponent(id)}`;
 
 /* ── 방 A 기록 입력 ── */
@@ -253,7 +255,10 @@ function renderCats() {
     const h = document.createElement('h3'); h.innerHTML = `<i style="background:${CAT_COLOR[cat]}"></i>${CAT_NAME[cat]}`;
     const wrap = document.createElement('div'); wrap.className = 'chips';
     items.forEach(item => {
-      const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = item;
+      const b = document.createElement('button'); b.className = 'chip'; b.type = 'button';
+      const heading = document.createElement('strong'); heading.textContent = `${INTEREST_ITEMS[item].treasure} · ${item}`;
+      const sentence = document.createElement('span'); sentence.textContent = INTEREST_ITEMS[item].statement;
+      b.append(heading, sentence);
       b.setAttribute('aria-pressed', selected.has(item));
       b.style.background = selected.has(item) ? CAT_COLOR[cat] : '';
       b.onclick = () => { selected.has(item) ? selected.delete(item) : selected.add(item); renderCats(); };
@@ -261,7 +266,7 @@ function renderCats() {
     });
     $('cats').append(h, wrap);
   });
-  $('countInfo').textContent = `${selected.size}개 선택` + (selected.size < 2 ? ' · 2개 이상 골라 주세요' : selected.size > 9 ? ' · 초롱에는 앞의 9개만 달려요' : '');
+  $('countInfo').textContent = `${selected.size}개 선택` + (selected.size < 2 ? ' · 2개 이상 골라 주세요' : selected.size > 10 ? ' · 초롱에는 앞의 10개만 달려요' : '');
   $('btnSave').disabled = selected.size < 2;
 }
 async function nextId() {

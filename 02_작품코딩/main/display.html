@@ -43,7 +43,8 @@
 <div id="status"><i></i><span id="statusText">연결 중</span></div>
 </div>
 <script type="module">
-import { CATEGORY, CAT_NAME, CAT_COLOR, ITEM_EN } from './catalog.js';   // ITEM_EN: 꼬리표·알림에 함께 쓰는 영어 이름
+import { CATEGORY, CAT_NAME, CAT_COLOR, ITEM_EN, INTEREST_ITEMS, itemStatement, categoryOf } from './catalog.js';   // ITEM_EN: 꼬리표·알림에 함께 쓰는 영어 이름
+import { drawStatement, fitStatement } from './statement-text.js';
 import * as THREE from './vendor/three/build/three.module.js';
 import { twoToneFromName } from './colors.js';   // 관람객이 바꾼 위·아래 빛깔 ('쪽빛·다홍')
 /* ───────────────────────── 설정 ───────────────────────── */
@@ -784,6 +785,9 @@ function tagTextureA(label, cat) {
     // 글씨: 모든 꼬리표가 같은 자리·같은 크기 (길면 그 줄만 조금 줄임), 가운데 정렬. 진주빛
     const gcx = (L + R) / 2, half = Math.min(gcx - (hxA + HR + 18), R - 40 - gcx), GX0 = gcx - half, GX1 = gcx + half;   // 패 전체 기준 가운데 (긴 이름은 구멍과 겹치지 않는 폭 안에서 줄어듦)
     x.textAlign = 'center'; x.textBaseline = 'middle';
+    if (INTEREST_ITEMS[label]) {
+      drawStatement(x, itemStatement(label), gcx, cy, GX1 - GX0, B - T - 28);
+    } else {
     const en = ITEM_EN[label], ty = en ? cy - 22 : cy;   // 영어 이름이 있으면 한국어를 조금 위로 올리고 아래에 영어를 씀
     fitText(x, label, GX1 - GX0, en ? 54 : 62, 700, '"Gowun Batang", serif');
     const tw = x.measureText(label).width, tx0 = gcx - tw / 2, tx1 = gcx + tw / 2;
@@ -809,6 +813,7 @@ function tagTextureA(label, cat) {
       fitText(x, en, GX1 - GX0, 44, 700, '"Gowun Batang", serif');
       x.save(); x.fillStyle = '#E9CF9C'; x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 3; x.shadowOffsetY = 1;
       x.fillText(en, gcx, cy + 42); x.restore();
+    }
     }
     // 붉은 실 고리의 앞쪽 절반 + 매듭
     // 명주실이 구멍 왼쪽 테두리를 꽉 감음: 위·아래 두 가닥이 테두리 왼쪽 끝에서 만나 고리를 이루고 매듭으로 이어짐 (뒷면 실은 안 보임)
@@ -839,10 +844,11 @@ function tagTextureA(label, cat) {
 }
 function tagSprite(label) {
   if (!tagCache[label]) {
-    tagCache[label] = tagTextureA(label, CATEGORY[label] || 'want');
+    tagCache[label] = tagTextureA(label, categoryOf(label));
     // 고운바탕 글꼴(이 글자들)이 아직 준비되지 않았으면, 준비된 뒤 이 꼬리표를 다시 그림 (기본 글꼴로 굳지 않게)
     const F = '700 62px "Gowun Batang"';
-    if (document.fonts && !document.fonts.check(F, label)) document.fonts.load(F, label).then(() => { delete tagCache[label]; }).catch(() => {});
+    const text = itemStatement(label);
+    if (document.fonts && !document.fonts.check(F, text)) document.fonts.load(F, text).then(() => { delete tagCache[label]; }).catch(() => {});
   }
   return tagCache[label];
 }
@@ -1379,6 +1385,7 @@ function drawBanner(now) {
   const t = (now - banner.t0) / 1000; if (t > 9) { banner = null; bannerHalo.style.opacity = 0; return; }
   const a = Math.min(1, t / 1.2) * Math.min(1, (9 - t) / 1.5);
   ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center';
+  const interest = INTEREST_ITEMS[banner.L.item];
   const itemEn = ITEM_EN[banner.L.item];
   const cx = W * 0.62, cy = H * (itemEn ? 0.855 : 0.9);   // 영어 줄이 더해지면 조금 위로
   // 하단 글씨(항목 이름 + 안내 문장): 표지 제목 '청사초롱, 꿈을 담다'와 같은 샴페인 골드 자개 빛
@@ -1396,8 +1403,12 @@ function drawBanner(now) {
   };
   let fs = Math.round(H * 0.042 * 0.8);   // 큰 글씨 (원래보다 20% 작게)
   ctx.font = `700 ${fs}px "Gowun Batang", serif`;
-  nacreText(`‘${banner.L.item}’`, cy, fs, true);
   let y = cy;
+  if (interest) {
+    const layout = fitStatement(ctx, interest.statement, W * .68, H * .13, fs, 8);
+    const top = cy - (layout.lines.length - 1) * layout.lineHeight;
+    layout.lines.forEach((line, i) => nacreText(line, top + i * layout.lineHeight, layout.fontSize, true));
+  } else nacreText(`‘${banner.L.item}’`, cy, fs, true);
   if (itemEn) {   // 항목의 영어 이름
     y += H * 0.033; const f2 = Math.round(H * 0.021);
     ctx.font = `700 ${f2}px "Gowun Batang", serif`; nacreText(itemEn, y, f2, false);
@@ -1643,7 +1654,7 @@ async function poll() {
   setTimeout(poll, POLL_MS);
 }
 if (DEMO) {
-  const items = ['양치하기', '산책하기', '물 마시기', '스트레칭하기', '창문 열기', '샤워하기', '안부 전하기', '노래 듣기', '햇볕 쬐기', '이불 정리'];
+  const items = Object.keys(CATEGORY);
   let n = 1; stText.textContent = '시험 모드';
   const go = () => { addLantern({ k: 'demo' + n, id: String(n).padStart(4, '0'), item: items[n % items.length], color: PAL_NAMES[n % 6], at: Date.now() }, true); n++; };
   // 평소 시험: 처음 MAX_LANTERNS 개는 6초마다 떠올라 하늘을 채우고, 그 뒤로는 20초마다 하나씩 (하나씩 천천히 별이 되는 모습을 보기 위해)
