@@ -14,12 +14,12 @@ test('diagonal guides require two distinct hands, latch a touch and alternate fi
  g.update(g.targets.map((t,i)=>hand(i?'Left':'Right',t,1400)),1400);
  assert.equal(g.turns,1);assert.deepEqual(g.targets.map(t=>[t.x,t.y]),first.map(t=>[t.x,t.y]));
 });
-test('three complete diagonal round trips increase speed; one pair cannot trigger multiple rounds',()=>{
+test('two complete diagonal round trips increase speed; one pair cannot trigger multiple rounds',()=>{
  const g=new SplashGuides();
  for(let pair=0;pair<80;pair++){
   const at=1000+pair*500,points=g.targets.map((t,i)=>hand(i?'Right':'Left',t,at));
   g.update(points,at);assert.equal(g.pairs,pair+1);
-  assert.equal(g.rate,[.8,1,1.2,1.4,1.6,1.8,2][Math.min(6,Math.floor((pair+1)/6))]);
+  assert.equal(g.rate,[.8,1,1.2,1.4,1.6,1.8,2][Math.min(6,Math.floor((pair+1)/4))]);
  }
  g.reset();assert.equal(g.rate,.8);assert.equal(g.pairs,0);
 });
@@ -40,3 +40,4 @@ test('fish audio fades in the last three real seconds at any video speed and dur
  assert.equal(splashAudioFade({duration:40,currentTime:40,playbackRate:1}),1);
  assert.equal(splashAudioFade({duration:NaN,currentTime:0,playbackRate:1}),0);
 });
+

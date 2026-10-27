@@ -56,7 +56,7 @@ test('20 complete exhibition cycles reuse media safely, reset speed and targets,
    await action({type:'next'});assert.equal(session.scene,'intro');assert.equal(movie('opening_VD 오프닝 영상').currentTime,0);
    await end('opening_VD 오프닝 영상');assert.equal(session.scene,'minigame');
    assert.equal(movie('jara01 첨벙첨벙 영상').playbackRate,.8);assert.equal(movie('fish_A 자라미니게임 오디오').currentTime,0);
-   for(let i=0;i<3;i++)await act(async()=>journey.current.testTurn());
+   for(let i=0;i<2;i++)await act(async()=>journey.current.testTurn());
    assert.equal(movie('jara01 첨벙첨벙 영상').playbackRate,1);
    await end('jara01 첨벙첨벙 영상');await step(2000);assert.equal(session.scene,'king');assert.equal(movie('fish_A 자라미니게임 오디오').paused,true);
    await end('king_VD 용왕 영상');assert.equal(session.scene,'glitch');
@@ -108,5 +108,6 @@ test('main BGM fades and resets across 100 visitors without restarting between 0
   assert.equal(a.paused,true);assert.equal(a.volume,0);assert.equal(a.currentTime,0);music.stop();
  }
 });
+
 
 
