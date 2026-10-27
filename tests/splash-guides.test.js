@@ -4,13 +4,13 @@ import {SplashGuides,splashAudioFade} from '../src/splash-guides.js';
 const hand=(id,t,at)=>({id,x:t.x,y:t.y,sampleAt:at});
 test('diagonal guides require two distinct hands, latch a touch and alternate fixed positions',()=>{
  const g=new SplashGuides(),first=g.targets;
- assert.deepEqual(first.map(t=>[t.x,t.y]),[[.31,.41],[.69,.76]]);
+ assert.deepEqual(first.map(t=>[t.x,t.y]),[[.35,.41],[.65,.76]]);
  assert.equal(g.update([hand('Left',first[0],1000)],1000).length,1);
  assert.equal(g.targets[0].hit,true);assert.equal(g.pairs,0);
  g.update([hand('Left',first[1],1100)],1100);assert.equal(g.pairs,0);
  assert.equal(g.update([hand('Right',first[1],1200)],1200).length,1);
  assert.equal(g.pairs,1);assert.equal(g.turns,0);
- assert.deepEqual(g.targets.map(t=>[t.x,t.y]),[[.31,.76],[.69,.41]]);
+ assert.deepEqual(g.targets.map(t=>[t.x,t.y]),[[.35,.76],[.65,.41]]);
  g.update(g.targets.map((t,i)=>hand(i?'Left':'Right',t,1400)),1400);
  assert.equal(g.turns,1);assert.deepEqual(g.targets.map(t=>[t.x,t.y]),first.map(t=>[t.x,t.y]));
 });

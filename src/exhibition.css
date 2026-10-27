@@ -60,3 +60,6 @@
 .scene-mainReady .language-toggle{right:480px;top:390px}
 
 .scene-photo .confirm-button{right:300px;bottom:320px}
+
+/* Prevent focus scrolling the scaled exhibition stage away from wrist coordinates. */
+.stage{overflow:clip}

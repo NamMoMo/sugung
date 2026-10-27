@@ -33,8 +33,8 @@ export function upperContour(mask,frame,mirrored=true){
  return rows;
 }
 export class UpperBodyLayout {
- constructor(){this.reset();}
- reset(){this.clearRows=[];this.clearFrame=null;this.occluded=false;this.seats=new Map();this.frame={x:.5,headX:.5,headY:.325,shoulderY:.465,width:.19};this.mask=null;this.rows=[];this.lastGood=[];this.warning=false;this.lastInputs=null;}
+ constructor(frame=null){this.initialFrame=frame;this.reset();}
+ reset(){this.clearRows=[];this.clearFrame=null;this.occluded=false;this.seats=new Map();this.frame={...(this.initialFrame||{x:.5,headX:.5,headY:.325,shoulderY:.465,width:.19})};this.mask=null;this.rows=[];this.lastGood=[];this.warning=false;this.lastInputs=null;}
  update(labels,sizes,observed,dt=16,mask=null,mirrored=true,occluded=false){
   this.occluded=occluded;
   if(this.warning&&this.lastInputs?.labels===labels&&this.lastInputs.mask===mask&&this.lastInputs.observed===observed)return this.lastGood;
@@ -48,7 +48,7 @@ export class UpperBodyLayout {
   this.seats=snapshot;this.warning=true;
   const ids=new Set(labels.map(l=>l.id));
   if(!this.lastGood.length){
-   const fallback=new UpperBodyLayout();
+   const fallback=new UpperBodyLayout(this.initialFrame);
    this.lastGood=fallback.plan(labels,sizes,null,16,null,mirrored)||fallback.plan(labels,sizes,null,16,null,mirrored,true)||[];
   }
   this.lastGood=this.lastGood.filter(l=>ids.has(l.id));return this.lastGood;

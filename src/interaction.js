@@ -99,7 +99,7 @@ export function bodyOverlap(mask, x, y, width = .11, height = .065) {
   for (let a = -4; a <= 4; a++) for (let b = -3; b <= 3; b++) {
     const px = x + a * width / 8, py = y + b * height / 6;
     total++;
-    if (px >= 0 && px < 1 && py >= 0 && py < 1 && mask.data[Math.floor(py * mask.height) * mask.width + Math.floor((1 - px) * mask.width)] > .6) inside++;
+    if (px >= 0 && px < 1 && py >= 0 && py < 1 && mask.data[Math.floor(py * mask.height) * mask.width + Math.floor((mask.mirrored===false?px:1-px) * mask.width)] > .6) inside++;
   }
   return inside / total >= .3;
 }
