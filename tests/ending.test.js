@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CRACKS,CrackHits,EndingSegments,HIT_COOLDOWN_MS,ENDING_PRELUDE_MS,createCracks,endingCoverOpacity,endingVideoReady,endingAcceptsHit,CRACK_GAP} from '../src/ending.js';
+import {CRACKS,CrackHits,EndingSegments,HIT_COOLDOWN_MS,ENDING_PRELUDE_MS,createCracks,endingCoverOpacity,endingVideoReady,endingAcceptsHit,endingReachedEnd,ENDING_ESCAPE_RATE,CRACK_GAP} from '../src/ending.js';
 const target=CRACKS[0];
 const at=(x,y=target.y,id='Left')=>({x,y,id});
 test('a held hand, first detection inside, and slow entry never count as impact',()=>{
@@ -50,6 +50,23 @@ test('video segments follow intro, loop 2–3, hits 4–5, loop 6–7, third hit
 });
 test('operator advance plays the escape footage rather than jumping past it',()=>{
  const s=new EndingSegments();s.forceEscape();assert.equal(s.hits,3);assert.deepEqual(s.range,[7,Infinity]);
+});
+
+test('late seeks recover the requested segment instead of playing an earlier clip',()=>{
+ const s=new EndingSegments();s.boundary(1);
+ assert.equal(s.boundary(0),2);s.hit();assert.equal(s.boundary(2.8),4);
+ s.boundary(5);assert.equal(s.boundary(4),6);
+ s.hit();s.boundary(5);s.hit();assert.equal(s.boundary(6),7);
+ assert.equal(s.boundary(12),null);
+});
+
+test('escape completes on the actual last frame once available, never on a stalled earlier frame',()=>{
+ const s=new EndingSegments(),v={duration:14.016,currentTime:13,readyState:4,seeking:false,ended:false};
+ assert.equal(endingReachedEnd(v,s),false);s.forceEscape();
+ assert.equal(endingReachedEnd(v,s),false);v.currentTime=14.01;
+ assert.equal(endingReachedEnd(v,s),true);v.seeking=true;assert.equal(endingReachedEnd(v,s),false);
+ v.seeking=false;v.currentTime=7;v.ended=true;assert.equal(endingReachedEnd(v,s),true);
+ assert.equal(ENDING_ESCAPE_RATE,1.5);
 });
 
 

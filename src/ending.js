@@ -1,6 +1,7 @@
 export const PHOTO_FADE_MS=900;
 export const ENDING_PRELUDE_MS=6000;
 export const ENDING_WHITE_MS=2000;
+export const ENDING_ESCAPE_RATE=1.5;
 export const HIT_COOLDOWN_MS=400;
 // Speed uses screen heights/second, correcting x for the 16:9 stage.
 export const HIT_MIN_SPEED=1.3;
@@ -74,6 +75,9 @@ export class EndingSegments{
  hit(){if(!this.hittable)return false;this.hits++;this.phase=this.hits===3?'escape':'impact';this.revision++;return true;}
  forceEscape(){if(this.phase==='escape')return;this.hits=3;this.phase='escape';this.revision++;}
  boundary(time){
+  // Recover an out-of-range frame after a delayed seek without advancing the
+  // story using an old frame from a different segment.
+  if(time<this.range[0]-.08)return this.range[0];
   if(time<this.range[1]-.025||this.phase==='escape')return null;
   if(this.phase==='intro'||this.phase==='impact')this.phase='idle';
   this.revision++;return this.range[0];
@@ -87,4 +91,8 @@ export function endingVideoReady(video,segments){
 export function endingAcceptsHit(video,segments){
  // Loop seeks are presentation work. Do not discard a real swing during them.
  return segments.hittable&&!video.paused;
+}
+export function endingReachedEnd(video,segments){
+ return segments?.phase==='escape'&&!video.seeking&&Number.isFinite(video.duration)&&video.duration>=8
+  &&(video.ended||video.readyState>=2&&video.currentTime>=video.duration-1/48);
 }
