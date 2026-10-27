@@ -33,7 +33,7 @@ test('component ignores stale seek completion, retains success guidance, and exi
   assert.equal(phase(),'impact');assert.equal(surface.dataset.pendingSeek,'4');
   await settle(4);await step(5);await settle(6);assert.equal(phase(),'idle');
   await act(async()=>ref.current.testSwing());await settle(4);await step(5);await settle(6);
-  await act(async()=>ref.current.testSwing());assert.equal(phase(),'escape');assert.equal(video.currentTime,7);assert.equal(video.playbackRate,1.5);
+  await act(async()=>ref.current.testSwing());assert.equal(phase(),'escape');assert.equal(video.currentTime,7);assert.equal(video.playbackRate,1);
   assert.equal(renderer.root.findByType('h1').children.join(''),'문이 열렸어요. 당신의 길로 나아가세요.');
   await settle(7);video.currentTime=14;await act(async()=>renderer.root.findByType('video').props.onTimeUpdate());
   await act(async()=>renderer.root.findByType('video').props.onEnded());assert.equal(advanced,1);assert.equal(video.currentTime,14);

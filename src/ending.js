@@ -1,7 +1,7 @@
 export const PHOTO_FADE_MS=900;
 export const ENDING_PRELUDE_MS=6000;
 export const ENDING_WHITE_MS=2000;
-export const ENDING_ESCAPE_RATE=1.5;
+export const ENDING_ESCAPE_RATE=1;
 export const HIT_COOLDOWN_MS=400;
 // Speed uses screen heights/second, correcting x for the 16:9 stage.
 export const HIT_MIN_SPEED=1.3;

@@ -66,7 +66,7 @@ test('escape completes on the actual last frame once available, never on a stall
  assert.equal(endingReachedEnd(v,s),false);v.currentTime=14.01;
  assert.equal(endingReachedEnd(v,s),true);v.seeking=true;assert.equal(endingReachedEnd(v,s),false);
  v.seeking=false;v.currentTime=7;v.ended=true;assert.equal(endingReachedEnd(v,s),true);
- assert.equal(ENDING_ESCAPE_RATE,1.5);
+ assert.equal(ENDING_ESCAPE_RATE,1);
 });
 
 
