@@ -7,7 +7,7 @@ export function useTreasureStation({ enabled, onReset }) {
   useEffect(() => {
     if (!enabled) return;
     const session = createStationSession({ onChange: setState,
-      onActivate: () => latest.current(), onReset: () => latest.current() });
+      onReset: () => latest.current() });
     controller.current = session;
     const sync = () => { if (!document.hidden && !session.state.pairingRequired) void session.sync(); };
     sync(); const timer = setInterval(sync, 2000);
@@ -17,9 +17,10 @@ export function useTreasureStation({ enabled, onReset }) {
       document.removeEventListener('visibilitychange', sync); window.removeEventListener('online', sync);
     };
   }, [enabled]);
+  const begin = useCallback(at => controller.current?.begin(at), []);
   const reset = useCallback(() => controller.current?.reset(), []);
   const submit = useCallback(result => controller.current?.submit(result), []);
   const retry = useCallback(() => { void controller.current?.retry(); void controller.current?.sync(); }, []);
   const pair = useCallback(code => controller.current?.pair(code), []);
-  return { ...state, enabled, reset, submit, retry, pair };
+  return { ...state, enabled, begin, reset, submit, retry, pair };
 }

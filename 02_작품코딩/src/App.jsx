@@ -90,9 +90,10 @@ export default function App() {
     clearPreviousVisit();
   }, [setLanguage, music.reset]);
   const station = useTreasureStation({ enabled: import.meta.env.VITE_TREASURE_STATION_ENABLED === 'true' && !sharedRoute, onReset: resetArtwork });
+  const beginExperience=useCallback(()=>{engage();station.begin();},[engage,station.begin]);
   const resetVisit = useCallback(() => { if (station.enabled) void station.reset(); else resetArtwork(); }, [station.enabled, station.reset, resetArtwork]);
-  const { remaining, continueVisit } = useIdleReset(engaged && (!station.enabled || station.active) && !station.busy && page !== "trap" && page !== "chest-light", resetVisit);
-  const obscured = Boolean(modal || remaining !== null || (station.enabled && (!station.active || station.pairingRequired)));
+  const { remaining, continueVisit } = useIdleReset(engaged && page !== "trap" && page !== "chest-light", resetVisit);
+  const obscured = Boolean(modal || remaining !== null);
   useEffect(() => {
     if (!station.enabled || !station.active || page !== 'result' || !escaped) return;
     try { station.submit(recorder.current.snapshot(answers, lightPlacements, language)); }
@@ -181,7 +182,7 @@ export default function App() {
       <div className="kiosk-stage" inert={obscured} aria-hidden={obscured ? true : undefined}>
         <LanguageSwitch onInteract={() => { engage(); continueVisit(); }} />
         {(page === "chest-light" || chestOverlay) && <ChestTransition chest={chest} initialScene={sceneIndex} first={!hasEnteredStory} onStart={startStory} onReveal={revealChestScene} onComplete={finishChest} />}
-        {page === "trap" ? <TrapTransition onSeal={sealAppears} onImpact={doorCloses} onComplete={finishTrap} /> : page === "chest-light" ? null : page === "escape" ? <Escape onRevealed={escapeRevealed} onEngage={engage} onResult={() => { setEscaped(true); setTrapped(false); setPage("result"); }} /> : !entered ? <Entrance key={visit} onDoorOpen={openGateSound} onEnter={enterRoom} onEngage={engage} /> : (
+        {page === "trap" ? <TrapTransition onSeal={sealAppears} onImpact={doorCloses} onComplete={finishTrap} /> : page === "chest-light" ? null : page === "escape" ? <Escape onRevealed={escapeRevealed} onEngage={engage} onResult={() => { setEscaped(true); setTrapped(false); setPage("result"); }} /> : !entered ? <Entrance key={visit} onDoorOpen={openGateSound} onEnter={enterRoom} onEngage={beginExperience} /> : (
           <div className="kiosk-shell" inert={chestOverlay} aria-hidden={chestOverlay ? true : undefined}>
             <a className="skip-link" href="#main-content">{t("본문으로 건너뛰기")}</a>
             <header className="kiosk-header">

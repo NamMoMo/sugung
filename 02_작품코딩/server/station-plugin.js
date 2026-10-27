@@ -18,7 +18,7 @@ export function stationPlugin() {
       let action, body = {};
       try {
         if (req.method === 'GET' && req.url === '/') action = 'state';
-        else if (req.method === 'POST' && ['/save', '/release'].includes(req.url)) {
+        else if (req.method === 'POST' && ['/start', '/save', '/release'].includes(req.url)) {
           action = req.url.slice(1); let text = '';
           for await (const chunk of req) { text += chunk; if (Buffer.byteLength(text) > 65536) throw new Error('TOO_LARGE'); }
           body = JSON.parse(text);
@@ -28,6 +28,7 @@ export function stationPlugin() {
         const args = { p_signal_key: env.ROOM_SIGNAL_KEY };
         if (action !== 'state') args.p_visit_id = body.visit_id;
         if (action === 'save') args.p_result = body.result;
+        if (action === 'start') { if(!Number.isFinite(Date.parse(body.started_at)))throw new Error('INVALID_START');args.p_started_at=body.started_at; }
         const upstream = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/treasure_station_${action}`, {
           method: 'POST', headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(args), signal: AbortSignal.timeout(12000),
@@ -39,7 +40,7 @@ export function stationPlugin() {
         }
         return send(200, data);
       } catch (error) {
-        const invalid = ['TOO_LARGE', 'INVALID_VISIT', 'INVALID_RESULT'].includes(error.message) || error instanceof SyntaxError;
+        const invalid = ['TOO_LARGE', 'INVALID_VISIT', 'INVALID_RESULT','INVALID_START'].includes(error.message) || error instanceof SyntaxError;
         return send(invalid ? 400 : 502, { error: invalid ? '올바른 체험 결과를 확인하지 못했습니다.' : '체험 서버에 연결하지 못했습니다. 다시 시도해 주세요.' });
       }
     });

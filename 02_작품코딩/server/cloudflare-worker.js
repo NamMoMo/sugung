@@ -33,7 +33,7 @@ async function authorized(request, secret) {
 export async function handleStationApi(request, env, upstream = fetch) {
   const url = new URL(request.url), action = url.pathname.replace(/^\/api\/treasure-station\/?/, '').replace(/\/$/, '') || 'state';
   if (request.headers.get('Origin') && request.headers.get('Origin') !== url.origin) return json({ error: '허용되지 않은 요청입니다.' }, 403);
-  if (!['state', 'pair', 'save', 'release'].includes(action) || request.method !== (action === 'state' ? 'GET' : 'POST')) return json({ error: '지원하지 않는 요청입니다.' }, 404);
+  if (!['state', 'pair', 'start', 'save', 'release'].includes(action) || request.method !== (action === 'state' ? 'GET' : 'POST')) return json({ error: '지원하지 않는 요청입니다.' }, 404);
   if (!env.ROOM_SIGNAL_KEY || !env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY || !env.STATION_PAIRING_CODE || !env.STATION_SESSION_SECRET)
     return json({ error: '전시 서버 연결을 준비하고 있습니다.' }, 503);
   try {
@@ -56,6 +56,7 @@ export async function handleStationApi(request, env, upstream = fetch) {
           (action === 'save' && !validateTreasureResult(body.result))) return json({ error: '올바른 체험 결과를 확인하지 못했습니다.' }, 400);
       args.p_visit_id = body.visit_id;
       if (action === 'save') args.p_result = body.result;
+      if (action === 'start') { if(!Number.isFinite(Date.parse(body.started_at)))return json({error:'체험 시작 시간을 확인해 주세요.'},400);args.p_started_at=body.started_at; }
     }
     const response = await upstream(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/treasure_station_${action}`, {
       method: 'POST', headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },

@@ -27,6 +27,7 @@ test('local server validates complete results, scopes the secret and rejects ext
     const saved = await request('/save', JSON.stringify(payload));
     assert.equal(saved.status, 200); assert.equal(upstream.body.p_signal_key, 'test-room-secret');
     assert(upstream.url.endsWith('/treasure_station_save')); assert(!JSON.stringify(saved).includes('test-room-secret'));
+    const began=await request('/start',JSON.stringify({visit_id:payload.visit_id,started_at:'2026-10-27T01:00:00Z'}));assert.equal(began.status,200);assert(upstream.url.endsWith('/treasure_station_start'));assert.equal(upstream.body.p_started_at,'2026-10-27T01:00:00Z');
     const invalid = structuredClone(payload); invalid.result.selections[0].action = '위조';
     assert.equal((await request('/save', JSON.stringify(invalid))).status, 400);
     assert.equal((await request('/save', JSON.stringify(payload), { origin: 'https://outside.example' })).status, 403);

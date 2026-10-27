@@ -44,3 +44,12 @@ test('paired cloud requests preserve result validation and never disclose server
   assert.equal((await handleStationApi(request('save', payload, { Cookie: cookie }), env, upstream)).status, 400);
   assert.equal((await handleStationApi(request('claim', {}), env, upstream)).status, 404);
 });
+
+test('optional artwork start still requires device authorization at the cloud API',async()=>{
+ const body={visit_id:'00000000-0000-0000-0000-000000000001',started_at:'2026-10-27T01:00:00Z'};
+ assert.equal((await handleStationApi(request('start',body),env)).status,401);
+ const cookie=(await createStationCookie(env.STATION_SESSION_SECRET)).split(';')[0];let sent;
+ const reply=await handleStationApi(request('start',body,{Cookie:cookie}),env,async(url,options)=>{sent={url,body:JSON.parse(options.body)};return Response.json({status:'active'});});
+ assert.equal(reply.status,200);assert(sent.url.endsWith('/treasure_station_start'));assert.equal(sent.body.p_started_at,body.started_at);assert.equal(sent.body.p_signal_key,env.ROOM_SIGNAL_KEY);
+ assert.equal((await handleStationApi(request('start',{...body,started_at:'bad'},{Cookie:cookie}),env)).status,400);
+});
