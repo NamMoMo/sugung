@@ -1,0 +1,153 @@
+{
+  "directions": {
+    "left": "발전하고자 하는 삶",
+    "right": "안정적인 삶"
+  },
+  "points": {
+    "first_interaction_per_choice": 1,
+    "second_interaction_per_capture": 1
+  },
+  "tie_break": "last captured word, then last first-interaction choice",
+  "words": {
+    "높은 연봉": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "고용 안정": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "워라밸": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "성장 기회": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "자율성": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "체계성": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "협력": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "독립성": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "목표 달성": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "타인의 인정": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "정당한 보상": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "자기발전": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "원칙 준수": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "융통성": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "공정성": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "인간적 배려": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "아이디어 실현": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "깊이 있는 연구": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "규칙적인 업무": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "협업 프로젝트": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "경제적 여유": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "전문성": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "사회적 영향력": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "시간적 자유": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "자아실현": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "경제적 독립": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    },
+    "사회적 기여": {
+      "side": "left",
+      "development": 1,
+      "stability": 0
+    },
+    "명예": {
+      "side": "right",
+      "development": 0,
+      "stability": 1
+    }
+  }
+}

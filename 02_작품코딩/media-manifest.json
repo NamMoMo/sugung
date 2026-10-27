@@ -1,0 +1,171 @@
+{
+  "project": "마음의 물결 — 전시 최종본",
+  "release_date": "2026-10-27",
+  "format": "1080×1920 portrait 9:16",
+  "active_videos": [
+    {
+      "file": "assets/opening_1080.mp4",
+      "source": "시작영상 1080.mp4",
+      "seconds": 37.686009,
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "file": "assets/underwater_60s.mp4",
+      "source": "00_마음의물결_수중배경_60초_1080x1920_30fps.mp4",
+      "seconds": 60,
+      "width": 1080,
+      "height": 1920,
+      "fps": 30
+    },
+    {
+      "file": "assets/result_left.mp4",
+      "playback_rate": 0.65
+    },
+    {
+      "file": "assets/result_right_stability.mp4",
+      "playback_rate": 0.65,
+      "generation_job_id": "cf0ce324-f135-48ef-99b1-f4f9a93f1f02",
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "seconds": 10,
+      "frames": 300
+    },
+    {
+      "file": "assets/descent.mp4",
+      "seconds": 6,
+      "width": 1080,
+      "height": 1920,
+      "fps": 30
+    },
+    {
+      "file": "assets/rain_bg.mp4",
+      "seconds": 8,
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "loop": true
+    },
+    {
+      "file": "assets/ending_revised_with_sfx.mp4",
+      "seconds": 22.11,
+      "width": 1080,
+      "height": 1920,
+      "fps": 30
+    }
+  ],
+  "ending": {
+    "source": "마지막 영상 수정.mp4",
+    "active": "assets/ending_revised_with_sfx.mp4",
+    "seconds": 22.11,
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "video_stream": "copied without re-encoding",
+    "original_audio_gain": 0.7,
+    "effects": "sound-manifest.json",
+    "video_stream_sha256": "77c8b66a344bcda01ffa15ef3c735f58d563c0340c2adda65848cb756cad7976",
+    "source_sha256": "b920f99a15803c47efb13c9b08192a6c994cc98f93c397b3ea56869e97c72f1f",
+    "original_source_filename": "마지막 영상 수정.mp4"
+  },
+  "scoring": {
+    "source": "config.js",
+    "reference": "word-scores.json",
+    "guide": "scores.html",
+    "max_selection": 7,
+    "max_captures": 15,
+    "max_total": 22
+  },
+  "mapping": {
+    "left": "발전하고자 하는 삶 / 기존 화면의 왼쪽 용궁",
+    "right": "안정적인 삶 / 기존 화면의 오른쪽 육지",
+    "tie": "last captured word, then last first-interaction choice",
+    "points": "all first-stage choices + captured word occurrences, 1 point each"
+  },
+  "audio": {
+    "engine": "audio.js",
+    "files": "sound-manifest.json",
+    "source": "local original procedural synthesis",
+    "external_audio_uploads": false
+  },
+  "right_generation": {
+    "job_id": "cf0ce324-f135-48ef-99b1-f4f9a93f1f02",
+    "model": "minimax_h3",
+    "duration": 10,
+    "aspect_ratio": "9:16",
+    "estimated_credits": 20,
+    "first_frame": "9fd7070e-7884-4f5c-9bf3-e8ebc8b065c7",
+    "file": "assets/result_right_stability.mp4",
+    "status": "completed",
+    "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2xJ3eC3tAKBgXOstnZczKqhrrwh/hf_20261026_205729_cf0ce324-f135-48ef-99b1-f4f9a93f1f02.mp4",
+    "source_width": 1440,
+    "source_height": 2560,
+    "source_fps": 24,
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "frames": 300,
+    "seconds": 10,
+    "audio": false,
+    "normalization": "local FFmpeg; lanczos scaling, H.264 CRF18, no crop or frame mirroring",
+    "visual_check": "one golden sphere travels from center to right, water current bends, camera remains upright"
+  },
+  "runtime": {
+    "hand_model": "MediaPipe HandLandmarker",
+    "version": "0.10.21",
+    "max_hands": 2,
+    "local_only": true,
+    "microphone": false
+  },
+  "hand_input": "camera fist/clap and mouse preview",
+  "original_video_sources": "User source videos remain in their original desktop folder and earlier backups.",
+  "assets": [
+    "assets/audio/bubble_pop.wav",
+    "assets/audio/descent.wav",
+    "assets/audio/ending_design.wav",
+    "assets/audio/gather.wav",
+    "assets/audio/light_path.wav",
+    "assets/audio/move_left.wav",
+    "assets/audio/move_right.wav",
+    "assets/audio/underwater_bed.wav",
+    "assets/audio/water_touch.wav",
+    "assets/audio/word_catch.wav",
+    "assets/branch_start.png",
+    "assets/bubbles/00.png",
+    "assets/bubbles/01.png",
+    "assets/bubbles/02.png",
+    "assets/bubbles/03.png",
+    "assets/bubbles/04.png",
+    "assets/bubbles/05.png",
+    "assets/bubbles/06.png",
+    "assets/bubbles/07.png",
+    "assets/bubbles/08.png",
+    "assets/bubbles/09.png",
+    "assets/bubbles/10.png",
+    "assets/bubbles/11.png",
+    "assets/bubbles/12.png",
+    "assets/bubbles/13.png",
+    "assets/bubbles/14.png",
+    "assets/bubbles/15.png",
+    "assets/bubbles/16.png",
+    "assets/bubbles/17.png",
+    "assets/bubbles/18.png",
+    "assets/bubbles/19.png",
+    "assets/bubbles/20.png",
+    "assets/bubbles/21.png",
+    "assets/bubbles/22.png",
+    "assets/bubbles/23.png",
+    "assets/bubbles/24.png",
+    "assets/bubbles/25.png",
+    "assets/bubbles/26.png",
+    "assets/bubbles/27.png",
+    "assets/descent.mp4",
+    "assets/ending_revised_with_sfx.mp4",
+    "assets/opening_1080.mp4",
+    "assets/rain_bg.mp4",
+    "assets/result_left.mp4",
+    "assets/result_right_stability.mp4",
+    "assets/underwater_60s.mp4"
+  ]
+}

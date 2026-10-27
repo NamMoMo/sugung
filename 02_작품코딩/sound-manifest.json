@@ -1,0 +1,107 @@
+{
+  "method": "Original local procedural synthesis; no Artlist samples and no paid AI generation",
+  "master_default": 0.65,
+  "ending_footstep_seconds": 17.65,
+  "files": [
+    {
+      "name": "underwater_bed",
+      "file": "assets/audio/underwater_bed.wav",
+      "seconds": 20.0,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -16.34,
+      "rms_dbfs": -30.71,
+      "description": "짙고 부드러운 수중 공간음. 주기 신호를 사용한 20초 반복."
+    },
+    {
+      "name": "bubble_pop",
+      "file": "assets/audio/bubble_pop.wav",
+      "seconds": 0.65,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -11.93,
+      "rms_dbfs": -25.83,
+      "description": "선택한 비눗막이 터지는 짧은 물방울과 잔향."
+    },
+    {
+      "name": "word_catch",
+      "file": "assets/audio/word_catch.wav",
+      "seconds": 1.1,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -18.66,
+      "rms_dbfs": -33.47,
+      "description": "단어를 붙잡았을 때의 밝고 절제된 금빛 반짝임."
+    },
+    {
+      "name": "water_touch",
+      "file": "assets/audio/water_touch.wav",
+      "seconds": 0.85,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -12.47,
+      "rms_dbfs": -32.24,
+      "description": "놓친 단어가 수면에 닿을 때의 작은 물 튀김."
+    },
+    {
+      "name": "descent",
+      "file": "assets/audio/descent.wav",
+      "seconds": 6.0,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -11.55,
+      "rms_dbfs": -27.03,
+      "description": "수중으로 내려가는 6초 물살."
+    },
+    {
+      "name": "gather",
+      "file": "assets/audio/gather.wav",
+      "seconds": 6.0,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -11.64,
+      "rms_dbfs": -26.91,
+      "description": "입자들이 한 점으로 모이는 물살과 은은한 광택."
+    },
+    {
+      "name": "move_left",
+      "file": "assets/audio/move_left.wav",
+      "seconds": 15.384625,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -10.92,
+      "rms_dbfs": -26.95,
+      "description": "균형에서 방향 결정으로 이어지는 15.38초 물살. 선택 방향으로 스테레오 이동."
+    },
+    {
+      "name": "move_right",
+      "file": "assets/audio/move_right.wav",
+      "seconds": 15.384625,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -10.82,
+      "rms_dbfs": -26.97,
+      "description": "균형에서 방향 결정으로 이어지는 15.38초 물살. 선택 방향으로 스테레오 이동."
+    },
+    {
+      "name": "light_path",
+      "file": "assets/audio/light_path.wav",
+      "seconds": 4.0,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -12.38,
+      "rms_dbfs": -26.95,
+      "description": "구슬의 빛이 길로 흩어지는 4초 잔향."
+    },
+    {
+      "name": "ending_design",
+      "file": "assets/audio/ending_design.wav",
+      "seconds": 22.11,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak_dbfs": -13.15,
+      "rms_dbfs": -30.76,
+      "description": "수중 빛 → 육지 파도 → 17.65초의 부드러운 한 발걸음. 기존 영상 음성과 혼합."
+    }
+  ]
+}

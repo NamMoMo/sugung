@@ -1,0 +1,23 @@
+{
+  "release_date": "2026-10-27",
+  "package": "마음의 물결_최종본",
+  "browser_test": "passed against this final folder with real local media and fake webcam",
+  "checks": [
+    "7 questions and 28 bubble images",
+    "one-second selection and burst",
+    "deep-water descent and interaction 2",
+    "15 captures and 22-point scoring",
+    "left development and right stability result films",
+    "revised ending with sound effects",
+    "audio decoding, actual output signal, mute and volume",
+    "offline hand model, fist and clap integration",
+    "permission failure, reconnect and reset",
+    "source rebuild equivalence"
+  ],
+  "physical_exhibition_calibration": "Check hand-tracking distance, lighting and speaker volume at the exhibition.",
+  "active_video_count": 7,
+  "bubble_count": 28,
+  "sound_count": 10,
+  "revised_ending_video_stream_unchanged": true,
+  "external_audio_service_required": false
+}

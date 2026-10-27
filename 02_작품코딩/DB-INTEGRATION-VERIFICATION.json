@@ -1,0 +1,23 @@
+{
+  "verified_at": "2026-10-27T00:50:21.236829+00:00",
+  "room_id": "conflict",
+  "team_id": 3,
+  "node_tests_passed": 13,
+  "python_tests_passed": 7,
+  "supabase_rollback_verification": "PASS",
+  "live_supabase_state_read": true,
+  "persisted_test_participants": 0,
+  "original_media_files_unchanged": 53,
+  "original_scoring_and_renderer_unchanged": true,
+  "completion_milestone": "ending video ended",
+  "browser_smoke": [
+    "QR gate",
+    "mouse preview",
+    "question screen",
+    "branch video",
+    "ending and return to QR gate"
+  ],
+  "browser_console_errors": 0,
+  "physical_camera_verified": false,
+  "secret_scan": "PASS; .env excluded from Git and HTTP"
+}
