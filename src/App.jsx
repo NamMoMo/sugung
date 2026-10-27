@@ -26,7 +26,6 @@ import {useParticipantQueue} from './useParticipantQueue.js';
 const stageNames = { standby:'00. 대기화면',intro:'01. 오프닝',minigame:'02. 자라미니게임',king:'03. 용왕',glitch:'04. 4분할글리치',rabbitPause:'토끼해킹 전 검정 화면',rabbit:'05. 토끼해킹',mainReady:'5.5 메인시작', main: '나의 기준', photo: '나의 모습', endingPrelude:'7.5. 엔딩전', ending:'08. 엔딩',endingWhite:'엔딩 후 흰 화면',escaped:'09. 마지막' };
 export default function App() {
   const [session,setSession] = useState(newSession);
-  const queue = useParticipantQueue(resetArtwork, session.scene, session);
   const [language,setLanguage]=useState('ko');const languageRef=useRef(language);languageRef.current=language;
   const english=language==='en'&&isLanguageScene(session.scene);
   const t=value=>translate(value,english?'en':'ko');
@@ -35,6 +34,7 @@ export default function App() {
   function toggleLanguage(){setLanguage(value=>value==='ko'?'en':'ko');grip.current.reset();confirmation.current.reset();}
   const sessionRef=useRef(session);sessionRef.current=session;
   const [mode,setMode]=useState('idle');const modeRef=useRef(mode);modeRef.current=mode;
+  const queue=useParticipantQueue(session.scene,session,mode);
   const [status,setStatus]=useState('카메라를 켜고, 나만의 기준을 찾아보세요.');
   const [error,setError]=useState('');const [starting,setStarting]=useState(false);
   const [text,setText]=useState('');const [toast,setToast]=useState('');
@@ -62,7 +62,6 @@ export default function App() {
   const lastGesture=useRef({value:'unknown',since:0,stable:'unknown',id:null});
   const inputActive=useRef(false),mounted=useRef(true),startVersion=useRef(0),lastSeen=useRef(0);
   const reduce = action => {
-    if(queue.blocked.current && action.type!=='reset')return;
     if(transitioning.current)return;
     const previous=sessionRef.current,updated=reduceSession(previous,action);
     if(previous.scene==='standby'&&updated.scene==='intro'){
@@ -82,8 +81,8 @@ export default function App() {
   useEffect(()=>{if(!toast)return;const id=setTimeout(()=>setToast(''),2400);return()=>clearTimeout(id);},[toast]);
   function clearInteraction(){arrivalEntry.current.reset();grip.current.reset();confirmation.current.reset();languageHold.current.reset();dragPoint.current=null;grabbedMask.current=null;heldLabel.current=null;activeHand.current=null;lastGesture.current={value:'unknown',since:0,stable:'unknown',id:null};}
   function next(){if(transitioning.current)return;if(sessionRef.current.scene==='standby'){arrival.current?.prime();journey.current?.prime();glitchRabbit.current?.prime();ending.current?.prime();}if(['rabbit','mainReady'].includes(sessionRef.current.scene))music.current?.arm();clearInteraction();reduce({type:'next'});}
-  function requestNext(){if(transitioning.current)return;const scene=sessionRef.current.scene;if(scene==='escaped'){reset();return;}if(queue.blocked.current)return;queue.valid.current=false;if(scene==='minigame'){journey.current?.finish();return;}if(scene==='glitch'){glitchRabbit.current?.finish();return;}if(scene==='ending'){ending.current?.finish();return;}next();}
-  function reset(){if(!queue.working.current)void queue.release();}
+  function requestNext(){if(transitioning.current)return;const scene=sessionRef.current.scene;if(scene==='escaped'){reset();return;}queue.valid.current=false;if(scene==='minigame'){journey.current?.finish();return;}if(scene==='glitch'){glitchRabbit.current?.finish();return;}if(scene==='ending'){ending.current?.finish();return;}next();}
+  function reset(){void queue.release();resetArtwork();}
   function resetArtwork(){setLanguage('ko');languageHold.current.reset();setLanguageProgress(0);pointer.current=null;arrival.current?.reset();music.current?.stop();transitionTimers.current.forEach(clearTimeout);transitioning.current=false;setFlash(false);setPhotoFade(false);stableLayout.current.reset();anchorFrame.current=null;birthTimes.current.clear();clearInteraction();bursts.current=[];setText('');input.current?.blur();reduce({type:'reset'});}
   useEffect(()=>{
     const handler=e=>{if(e.isComposing||isTextEntry(e.target))return;if(e.repeat)return;if(e.code==='Digit0'||e.code==='Numpad0'){e.preventDefault();requestNext();}if(e.code==='Digit1'||e.code==='Numpad1'){e.preventDefault();reset();}};
@@ -235,17 +234,8 @@ export default function App() {
   function add(e){e.preventDefault();if(sessionRef.current.scene!=='main'||transitioning.current)return;const clean=text.trim();if(!clean)return;const id=crypto.randomUUID();birthTimes.current.set(id,{time:performance.now(),emitted:false});reduce({type:'add',text:clean,id});setText('');inputActive.current=false;input.current?.blur();clearInteraction();}
   const photo=session.scene==='photo',main=session.scene==='main',ready=session.scene==='mainReady';
   return <main className="app">
-    {queue.show&&<section className="station-wait" aria-label="체험 준비">
-      <div>{queue.busy&&<p>체험 결과를 저장하고 있습니다.</p>}
-        {mode==='idle'&&<button onClick={startCamera} disabled={starting}>{starting?'카메라 준비 중…':'웹캠 인식 켜기'}</button>}
-        {error&&<p role="alert">{error}</p>}
-        {queue.error&&<p role="alert">{queue.error}</p>}
-      </div>
-    </section>}
-    {session.scene==='escaped'&&queue.error&&<p className="queue-ending-error" role="status">{queue.error}</p>}
-    {queue.completionError&&<button className="queue-save-retry" disabled={queue.busy} onClick={queue.retryFinish}>완료 기록 다시 저장</button>}
     <audio ref={audio} src="/audio/main_BGM.mp3" loop preload="auto" onError={()=>setAudioError('main_BGM.mp3 파일을 재생할 수 없습니다.')} aria-label={t("메인 콘텐츠 배경음악")}/>
-    <div ref={stage} inert={queue.show} lang={english?'en':'ko'} className={`stage ${english?'language-en':''} ${mode==='demo'?'demo':''} ${session.labels.length>8?'dense-labels':''} scene-${session.scene}`} style={{width:OUTPUT_W,height:OUTPUT_H,transform:`translate(-50%,-50%) scale(${scale})`}} onPointerMove={onPointer} onPointerDown={e=>{if(e.target.closest('button,input')&&!e.target.closest('.confirm-button,.main-start-button'))return;input.current?.blur();onPointer(e,'fist');if(!e.target.closest('button'))e.currentTarget.setPointerCapture?.(e.pointerId);}} onPointerUp={e=>onPointer(e,'open')} onPointerCancel={()=>{pointer.current=null;}} onPointerLeave={()=>{if(!grip.current.drag)pointer.current=null;}}>
+    <div ref={stage} lang={english?'en':'ko'} className={`stage ${english?'language-en':''} ${mode==='demo'?'demo':''} ${session.labels.length>8?'dense-labels':''} scene-${session.scene}`} style={{width:OUTPUT_W,height:OUTPUT_H,transform:`translate(-50%,-50%) scale(${scale})`}} onPointerMove={onPointer} onPointerDown={e=>{if(e.target.closest('button,input')&&!e.target.closest('.confirm-button,.main-start-button'))return;input.current?.blur();onPointer(e,'fist');if(!e.target.closest('button'))e.currentTarget.setPointerCapture?.(e.pointerId);}} onPointerUp={e=>onPointer(e,'open')} onPointerCancel={()=>{pointer.current=null;}} onPointerLeave={()=>{if(!grip.current.drag)pointer.current=null;}}>
     <section className="stage-shell">
       <div className="scene-layer">
         <img className="scene-background main-background" src="/assets/main_BG.png" alt="" data-figma-node="62:30" style={{visibility:main||ready?'visible':'hidden'}}/>
@@ -279,7 +269,7 @@ export default function App() {
     </footer>
     <div className="utility"><button onClick={()=>setDebug(!debug)}>{t('운영')} {debug?'−':'+'}</button></div>
     {starting&&<button className="cancel-camera" onClick={()=>{startVersion.current++;setStarting(false);setStatus('웹캠 연결을 취소했습니다.');stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;}}>카메라 권한 대기 취소</button>}
-    {debug&&<section className="debug-panel"><strong>운영 · 테스트</strong><p>0 다음 씬 · 1 처음으로 (입력창에서는 비활성)</p><p>{status}</p><p>배경음악 · {ui.musicPlaying?'재생 중':'대기'} · {ui.musicVolume??0}%</p>{audioError&&<p className="error">{t(audioError)}</p>}<p>{stageNames[session.scene]} · 인식 {ui.fps}fps · {ui.hands[0]?.id||'손 대기'} · {ui.hands[0]?.gesture||'—'}</p><div><button onClick={requestNext}>다음 씬 [0]</button><button onClick={reset}>처음 [1]</button><button onClick={()=>demo()} disabled={starting}>00 마우스 테스트</button><button onClick={()=>demo('minigame')} disabled={starting}>02 미니게임 테스트</button>{session.scene==='minigame'&&<button onClick={()=>journey.current?.testTurn()}>첨벙 턴 검증 (가상 양손)</button>}<button onClick={()=>demo('king')} disabled={starting}>03 용왕 테스트</button><button onClick={()=>demo('glitch')} disabled={starting}>04 글리치 테스트</button><button onClick={()=>demo('rabbit')} disabled={starting}>05 토끼 테스트</button><button onClick={()=>demo('endingPrelude')} disabled={starting}>7.5 엔딩전 테스트</button><button onClick={()=>demo('ending')} disabled={starting}>08 엔딩 테스트</button>{session.scene==='ending'&&<button onClick={()=>ending.current?.testSwing()}>엔딩 타격 검증 (가상 손목)</button>}<button onClick={openMain} disabled={starting}>5.5 메인시작</button><button onClick={startCamera} disabled={starting}>웹캠 연결</button><button onClick={()=>setPreview(!preview)}>웹캠 미리보기</button><button onClick={()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}>전체 화면</button></div>{error&&<p className="error">{error}</p>}</section>}
+    {debug&&<section className="debug-panel"><strong>운영 · 테스트</strong><p>DB 연결: {queue.state.active?.nickname||'개별 관객 연결 없음'}</p>{queue.error&&<p role="status">{queue.error}</p>}{queue.completionError&&<button disabled={queue.busy} onClick={queue.retryFinish}>완료 기록 다시 저장</button>}<p>0 다음 씬 · 1 처음으로 (입력창에서는 비활성)</p><p>{status}</p><p>배경음악 · {ui.musicPlaying?'재생 중':'대기'} · {ui.musicVolume??0}%</p>{audioError&&<p className="error">{t(audioError)}</p>}<p>{stageNames[session.scene]} · 인식 {ui.fps}fps · {ui.hands[0]?.id||'손 대기'} · {ui.hands[0]?.gesture||'—'}</p><div><button onClick={requestNext}>다음 씬 [0]</button><button onClick={reset}>처음 [1]</button><button onClick={()=>demo()} disabled={starting}>00 마우스 테스트</button><button onClick={()=>demo('minigame')} disabled={starting}>02 미니게임 테스트</button>{session.scene==='minigame'&&<button onClick={()=>journey.current?.testTurn()}>첨벙 턴 검증 (가상 양손)</button>}<button onClick={()=>demo('king')} disabled={starting}>03 용왕 테스트</button><button onClick={()=>demo('glitch')} disabled={starting}>04 글리치 테스트</button><button onClick={()=>demo('rabbit')} disabled={starting}>05 토끼 테스트</button><button onClick={()=>demo('endingPrelude')} disabled={starting}>7.5 엔딩전 테스트</button><button onClick={()=>demo('ending')} disabled={starting}>08 엔딩 테스트</button>{session.scene==='ending'&&<button onClick={()=>ending.current?.testSwing()}>엔딩 타격 검증 (가상 손목)</button>}<button onClick={openMain} disabled={starting}>5.5 메인시작</button><button onClick={startCamera} disabled={starting}>웹캠 연결</button><button onClick={()=>setPreview(!preview)}>웹캠 미리보기</button><button onClick={()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}>전체 화면</button></div>{error&&<p className="error">{error}</p>}</section>}
     </div>
   </main>;
 }

@@ -22,7 +22,7 @@ export function queuePlugin() {
       let action, body = {};
       try {
         if (req.method === 'GET' && req.url === '/') action = 'state';
-        else if (req.method === 'POST' && ['/release', '/complete'].includes(req.url)) {
+        else if (req.method === 'POST' && ['/start', '/release', '/complete'].includes(req.url)) {
           action = req.url.slice(1);
           let raw = '';
           for await (const chunk of req) { raw += chunk; if (Buffer.byteLength(raw) > 65536) throw new Error('TOO_LARGE'); }
@@ -32,11 +32,12 @@ export function queuePlugin() {
         const args = { p_signal_key: env.ROOM_SIGNAL_KEY };
         if (action !== 'state') args.p_visit_id = body.visit_id;
         if (action === 'complete') args.p_result = body.result;
+        if (action === 'start') { if (!Number.isFinite(Date.parse(body.started_at))) throw new Error('INVALID_START'); args.p_started_at=body.started_at; }
         const upstream = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/beliefs_queue_${action}`, {
           method: 'POST', headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(args), signal: AbortSignal.timeout(12000),
         });
-        if (!upstream.ok) return send(409, { error: '체험 상태가 바뀌었거나 DB 설정을 확인해야 합니다. 새로고침 후 다시 시도해 주세요.' });
+        if (!upstream.ok) { let denied;try{denied=await upstream.json();}catch{denied={};} return send(409, { code:['VISIT_STOPPED','VISIT_NOT_CURRENT'].includes(denied.message)?denied.message:undefined,error: '체험 상태가 바뀌었거나 DB 설정을 확인해야 합니다. 새로고침 후 다시 시도해 주세요.' }); }
         send(200, await upstream.json());
       } catch { send(502, { error: '체험 서버에 연결하지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요.' }); }
     });

@@ -37,6 +37,8 @@ test('local bridge keeps the room key on server and rejects external origins and
     session = reduceSession({ ...session, scene: 'main' }, { type: 'discard', id: 'initial-0', at: 2000 });
     session = reduceSession(session, { type: 'add', id: 'mine', text: '나다움', at: 3000 });
     const result = resultForSession({ ...session, finishedAt: 5000 });
+    const began=await request('/start','POST',JSON.stringify({visit_id:'00000000-0000-0000-0000-000000000001',started_at:'2026-10-27T01:00:00Z'}));
+    assert.equal(began.status,200);assert(upstream.url.endsWith('/beliefs_queue_start'));assert.equal(JSON.parse(upstream.options.body).p_started_at,'2026-10-27T01:00:00Z');
     const saved = await request('/complete', 'POST', JSON.stringify({ visit_id: '00000000-0000-0000-0000-000000000001', result }));
     assert.equal(saved.status, 200);
     assert(upstream.url.endsWith('/beliefs_queue_complete'));

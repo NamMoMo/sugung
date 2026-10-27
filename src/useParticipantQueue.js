@@ -1,82 +1,59 @@
 import {LIMIT} from './interaction.js';
-import { useEffect, useRef, useState } from 'react';
-import { queueRequest, resultForSession, selectionChanged } from './participant-queue.js';
+import {useEffect,useRef,useState} from 'react';
+import {queueRequest,resultForSession} from './participant-queue.js';
 
-export function useParticipantQueue(onStart, scene, session) {
-  const [show, setShow] = useState(true), [state, setState] = useState({ active: null });
-  const [error, setError] = useState(''), [busy, setBusy] = useState(false);
-  const [completionError, setCompletionError] = useState(false);
-  const selected = useRef(null), blocked = useRef(true), valid = useRef(true), working = useRef(false);
-  const endingVisible = useRef(false);
-  const revision = useRef(0), readSerial = useRef(0), alive = useRef(true);
-  const latest = useRef({ onStart, session }); latest.current = { onStart, session };
-  const refresh = async () => {
-    const started = revision.current;
-    const serial = ++readSerial.current;
-    const data = await queueRequest();
-    if (!alive.current || started !== revision.current || serial !== readSerial.current) return data;
-    setState({ active: data.active });
-    const change = selectionChanged(selected.current?.visit_id, data.active);
-    if (change.stop && !endingVisible.current) {
-      selected.current = null; blocked.current = true; setShow(true);
-      latest.current.onStart();
-      setError('');
+// Optional record association. QR/DB state never controls artwork execution.
+export function useParticipantQueue(scene,session,mode='camera') {
+  const [state,setState]=useState({active:null}),[error,setError]=useState(''),[busy,setBusy]=useState(false),[completionError,setCompletionError]=useState(false);
+  const candidate=useRef(null),bound=useRef(null),pending=useRef(null),saving=useRef(false),alive=useRef(true),serial=useRef(0),runAt=useRef(null),ignored=useRef(new Set());
+  const valid=useRef(true),latest=useRef({session,mode});latest.current={session,mode};
+  const refresh=async()=>{
+    const read=++serial.current;
+    const data=await queueRequest();if(!alive.current||read!==serial.current)return;
+    candidate.current=data.active||null;setState({active:candidate.current});
+    if(pending.current&&data.last?.visit_id===pending.current.visit_id&&data.last.status==='stopped'){
+      pending.current=null;setCompletionError(false);setError('모바일에서 해당 방문이 중지되었습니다.');
     }
-    if (change.start) begin(data.active);
-    return data;
   };
-  useEffect(() => {
-    alive.current = true;
-    let disposed = false;
-    async function poll() {
-      if (!working.current) {
-        try { await refresh(); } catch (e) { if (!disposed) setError(e.message); }
-      }
-    }
-    void poll(); const timer = setInterval(poll, 2000);
-    return () => { disposed = true; alive.current = false; clearInterval(timer); };
-  }, []);
-  async function run(task) {
-    if (working.current) return;
-    revision.current++;
-    working.current = true; setBusy(true); setError('');
-    try { await task(); } catch (e) { setError(e.message); }
-    finally { working.current = false; if (alive.current) setBusy(false); }
+  useEffect(()=>{
+    alive.current=true;
+    const poll=async()=>{if(saving.current)return;try{await refresh();}catch(e){if(alive.current)setError(e.message);}};
+    void poll();const timer=setInterval(poll,2000);
+    return()=>{alive.current=false;serial.current++;clearInterval(timer);};
+  },[]);
+  useEffect(()=>{
+    if(!Number.isFinite(session.startedAt)||runAt.current===session.startedAt)return;
+    runAt.current=session.startedAt;bound.current=null;
+    const person=candidate.current;
+    if(mode!=='camera'||!valid.current||pending.current||!person||ignored.current.has(person.visit_id))return;
+    bound.current=person;
+    void queueRequest('start',{visit_id:person.visit_id,started_at:new Date(session.startedAt).toISOString()}).catch(e=>{if(alive.current)setError(e.message);});
+  },[session.startedAt,mode]);
+  async function retryFinish(){
+    if(!pending.current||saving.current)return;
+    const job=pending.current;saving.current=true;setBusy(true);setError('');
+    try{
+      const reply=await queueRequest('complete',job);
+      if(reply.status!=='completed')throw new Error('완료 저장을 확인하지 못했습니다.');
+      if(pending.current===job)pending.current=null;ignored.current.add(job.visit_id);
+      if(bound.current?.visit_id===job.visit_id)bound.current=null;
+      if(alive.current){setCompletionError(false);await refresh();}
+    }catch(e){if(alive.current){if(['VISIT_STOPPED','VISIT_NOT_CURRENT'].includes(e.code))pending.current=null;setCompletionError(!!pending.current);setError(e.message);}}
+    finally{saving.current=false;if(alive.current)setBusy(false);}
   }
-  function begin(person) {
-    endingVisible.current = false;
-    setCompletionError(false);
-    latest.current.onStart(); selected.current = person; valid.current = true;
-    setState({ active: person });
-    blocked.current = false; setShow(false); setError('');
+  useEffect(()=>{
+    if(scene!=='escaped')return;
+    const person=bound.current,current=latest.current;
+    if(!person||pending.current||candidate.current?.visit_id!==person.visit_id)return;
+    if(current.mode!=='camera'||!valid.current||current.session.count!==LIMIT){setError('테스트 체험은 완료로 기록하지 않습니다.');return;}
+    pending.current={visit_id:person.visit_id,result:resultForSession(current.session)};
+    void retryFinish();
+  },[scene]);
+  function release(){
+    const person=bound.current;bound.current=null;runAt.current=null;valid.current=true;
+    if(person)ignored.current.add(person.visit_id);
+    if(!person||pending.current)return Promise.resolve();
+    return queueRequest('release',{visit_id:person.visit_id}).then(()=>refresh()).catch(e=>{if(alive.current)setError(e.message);});
   }
-  function release() {
-    if (working.current) return;
-    blocked.current = true; setShow(true);
-    return run(async () => {
-      const person = selected.current || state.active;
-      if (person) await queueRequest('release', { visit_id: person.visit_id });
-      selected.current = null; endingVisible.current = false; latest.current.onStart(); await refresh();
-      setCompletionError(false);
-    });
-  }
-  function finish() {
-    const person = selected.current;
-    if (!person || working.current) return;
-    blocked.current = true; endingVisible.current = true;
-    // 09 is part of the artwork. Saving completion must not cover it with the waiting screen.
-    setShow(false);
-    if (!valid.current || latest.current.session.count !== LIMIT) {
-      setError('관리자 장면 이동 또는 테스트 체험입니다. 완료 기록 없이 초기화해 주세요.'); return;
-    }
-    return run(async () => {
-      try {
-        await queueRequest('complete', { visit_id: person.visit_id, result: resultForSession(latest.current.session) });
-        selected.current = null; setCompletionError(false); await refresh();
-      } catch (e) { setCompletionError(true); throw e; }
-    });
-  }
-  useEffect(() => { if (scene === 'escaped') void finish(); }, [scene]);
-  return { show, state, error, busy, completionError, blocked, valid, working, release,
-    refresh: () => run(refresh), retryFinish: finish };
+  return {state,error,busy,completionError,valid,release,refresh:()=>refresh().catch(e=>setError(e.message)),retryFinish};
 }

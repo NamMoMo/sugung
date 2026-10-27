@@ -12,7 +12,7 @@ export async function queueRequest(action = 'state', data, fetcher = fetch) {
     signal: AbortSignal.timeout(15000),
   });
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error || '대기 명단을 불러오지 못했습니다.');
+  if (!response.ok) { const error=new Error(body.error || 'DB 연결 상태를 확인해 주세요.');error.code=body.code;throw error; }
   return body;
 }
 
