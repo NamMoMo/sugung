@@ -1,3 +1,22 @@
+# 2026-10-27 Vercel 이전
+
+새 운영 주소: https://sugung-roomb.vercel.app/
+스크린: /display.html · 직원: /staff.html
+
+기존 모바일·스크린·직원 화면과 API는 유지하고, Vercel Node 함수에서 기존 Worker 로직을 실행합니다. `ROOMB`는 `server/supabase-kv.js`를 통해 Supabase의 `lantern_projection_kv` 테이블을 사용합니다. 새 서버는 Cloudflare KV/API를 호출하지 않습니다. 참가자 완료/결과 원본은 기존 Supabase 계약을 유지합니다.
+
+`supabase/202610270012_lantern_projection_store.sql`을 중앙 DB에 적용했습니다. 서버 환경변수: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, ROOM_SIGNAL_KEY(lantern-dream), STAFF_PIN. 키 값은 `.env.vercel`에만 두고 Git에 넣지 않습니다. Cloudflare에 있던 PIN은 조회할 수 없어 승인 후 새 서버용 PIN을 발급했습니다. 운영자 로컬 `.staff-pin-vercel`에서 확인하며 Git/배포에는 포함하지 않습니다. 기존 Cloudflare PIN은 변경하지 않습니다.
+
+`npm test`, `npm run build:vercel`, `npm run deploy:vercel`로 검증/배포합니다. Vercel 프로젝트는 `sonephmos-projects/sugung-roomb`입니다. 배포 빌드에는 서버 소스와 .env를 정적 파일로 복사하지 않습니다.
+
+Cloudflare KV 목록 조회가 일일 무료 제한(10048)에 걸려 전체 키 목록 백업은 현재 불가능합니다. 알려진 피드 80건과 결과 80건을 담은 KV 값 81개를 복구해 가져왔으며, 원본 Cloudflare KV는 삭제하지 않았습니다. 목록 조회가 복구되면 `tools/kv-migration.mjs backup <프로젝트 밖 비공개 JSON>`과 `prepare-import <JSON> <비공개 SQL>`로 나머지를 보완할 수 있습니다. SQL은 중앙 Supabase CLI로 실행합니다. 새 저장소의 같은 키는 보존하도록 import해야 합니다.
+
+기존 `sugung-roomb.pages.dev`는 운영 브랜치 `main`의 정적 리디렉션으로 새 주소에 연결했습니다. 참가자 쿼리·화면 경로는 보존합니다. `cloudflare-redirect/`를 `wrangler pages deploy ... --project-name sugung-roomb --branch main`으로 배포한 것입니다. 이미 열려 있는 구형 모바일 화면의 API POST도 메서드/본문을 보존해 Vercel로 전달합니다. 새 서버는 Cloudflare를 호출하지 않습니다. KV 원본과 Cloudflare PIN은 변경하지 않았습니다. 기존 화면은 새로고침하여 새 주소를 사용하세요.
+
+아래는 기존 Cloudflare 연동 당시의 계약 설명이며 URL/저장소 운영 설정은 위 Vercel 설명을 우선합니다.
+
+---
+
 # 수궁야행 앱 ↔ 4조 연결 기반
 
 ## 구현 상태

@@ -1,0 +1,12 @@
+node_modules
+.wrangler
+.env
+.env.*
+.dev.vars*
+public
+demo
+demo-wrapper
+tests
+
+.staff-pin*
+cloudflare-redirect

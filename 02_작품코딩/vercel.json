@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "node build-vercel.mjs",
+  "outputDirectory": "public",
+  "functions": { "api/handler.js": { "maxDuration": 30 } },
+  "rewrites": [{ "source": "/api/:path*", "destination": "/api/handler?__room_route=:path*" }],
+  "headers": [{ "source": "/(.*)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }]
+}

@@ -8,3 +8,8 @@ node_modules/
 .DS_Store
 Thumbs.db
 02_작품코딩/demo/
+
+.vercel/
+02_작품코딩/public/
+
+.staff-pin-vercel

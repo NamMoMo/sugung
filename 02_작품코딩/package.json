@@ -9,11 +9,15 @@
     "dev": "wrangler pages dev main --kv ROOMB --port 8788",
     "serve": "serve main -l 3000",
     "demo": "node make-demo.mjs",
-    "deploy": "cd main && node setup.mjs --deploy"
+    "deploy": "cd main && node setup.mjs --deploy",
+    "build:vercel": "node build-vercel.mjs",
+    "deploy:vercel": "npx --yes vercel@65.4.0 deploy --prod"
   },
   "devDependencies": {
     "serve": "14.2.6",
     "wrangler": "4.151.2"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
