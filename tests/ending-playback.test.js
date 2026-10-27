@@ -12,9 +12,10 @@ for(const [from,to] of [['react',import.meta.resolve('react')],['../ending.js',n
 const {default:EndingScenes}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
 
 test('component ignores stale seek completion, retains success guidance, and exits once without rewinding',async()=>{
- const original={raf:globalThis.requestAnimationFrame,caf:globalThis.cancelAnimationFrame,performance:globalThis.performance,nowDescriptor:Object.getOwnPropertyDescriptor(globalThis.performance,'now'),act:globalThis.IS_REACT_ACT_ENVIRONMENT};
+ const original={fetch:globalThis.fetch,raf:globalThis.requestAnimationFrame,caf:globalThis.cancelAnimationFrame,performance:globalThis.performance,nowDescriptor:Object.getOwnPropertyDescriptor(globalThis.performance,'now'),act:globalThis.IS_REACT_ACT_ENVIRONMENT};
  let clock=1000,id=0,raf=new Map(),advanced=0,renderer;const ref=React.createRef(),surface={dataset:{}};
  globalThis.IS_REACT_ACT_ENVIRONMENT=true;
+ globalThis.fetch=async()=>({ok:true,blob:async()=>new Blob(['seekable-video'],{type:'video/mp4'})});
  Object.defineProperty(globalThis.performance,'now',{value:()=>clock,configurable:true});
  globalThis.requestAnimationFrame=cb=>{raf.set(++id,cb);return id;};globalThis.cancelAnimationFrame=n=>raf.delete(n);
  const media=()=>({style:{},dataset:{},duration:14,currentTime:0,readyState:4,paused:true,seeking:false,ended:false,volume:0,playbackRate:1,play(){this.paused=false;return Promise.resolve();},pause(){this.paused=true;},closest(){return surface;}});
@@ -24,6 +25,7 @@ test('component ignores stale seek completion, retains success guidance, and exi
  const phase=()=>renderer.root.findAllByType('section').find(n=>n.props.className?.includes('ending-scene')).props['data-segment'];
  try{
   await act(async()=>{renderer=create(React.createElement(EndingScenes,{ref,scene:'ending',runKey:1,mode:'demo',handsRef:{current:[]},handRef:{current:null},onAdvance(){advanced++;}}),{createNodeMock:e=>e.type==='video'?video:e.type==='audio'?(e.props.src.includes('rabbit_ending')?voice:bgm):{style:{},animate(){}}});});
+  assert.match(renderer.root.findByType('video').props.src,/^blob:/);
   await step(1);await settle(2);assert.equal(phase(),'idle');
   await act(async()=>ref.current.testSwing());assert.equal(phase(),'impact');assert.equal(video.currentTime,4);
   // An older loop seek reaches 6 after the newer hit has requested 4.
@@ -36,7 +38,7 @@ test('component ignores stale seek completion, retains success guidance, and exi
   await settle(7);video.currentTime=14;await act(async()=>renderer.root.findByType('video').props.onTimeUpdate());
   await act(async()=>renderer.root.findByType('video').props.onEnded());assert.equal(advanced,1);assert.equal(video.currentTime,14);
  }finally{
-  await act(async()=>renderer?.unmount());globalThis.requestAnimationFrame=original.raf;globalThis.cancelAnimationFrame=original.caf;if(original.nowDescriptor)Object.defineProperty(original.performance,'now',original.nowDescriptor);else delete original.performance.now;
+  await act(async()=>renderer?.unmount());globalThis.fetch=original.fetch;globalThis.requestAnimationFrame=original.raf;globalThis.cancelAnimationFrame=original.caf;if(original.nowDescriptor)Object.defineProperty(original.performance,'now',original.nowDescriptor);else delete original.performance.now;
   if(original.act===undefined)delete globalThis.IS_REACT_ACT_ENVIRONMENT;else globalThis.IS_REACT_ACT_ENVIRONMENT=original.act;
  }
 });

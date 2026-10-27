@@ -17,7 +17,20 @@ const EndingScenes=forwardRef(function EndingScenes({scene,runKey,mode,handsRef,
  const seek=useRef(null),flash=useRef(null),shake=useRef(null),lastRevision=useRef(-1);
  const seekAt=useRef(0),completed=useRef(false);
  const [blocked,setBlocked]=useState(false),[problem,setProblem]=useState(''),[marks,setMarks]=useState({}),[count,setCount]=useState(0),[phase,setPhase]=useState('intro');
+ const [mediaUrl,setMediaUrl]=useState(null),[mediaError,setMediaError]=useState(''),[mediaAttempt,setMediaAttempt]=useState(0);
  const active=scene==='ending';
+ useEffect(()=>{
+  const abort=new AbortController();let disposed=false,objectUrl=null;
+  setMediaUrl(null);setMediaError('');
+  // Static sharing hosts may ignore HTTP Range requests. A fully downloaded
+  // blob is seekable locally even when the remote server returns HTTP 200.
+  fetch('/videos/ending_VD.mp4?v=segment-seeks-20261027',{signal:abort.signal}).then(async response=>{
+   if(!response.ok)throw new Error(`HTTP ${response.status}`);
+   const blob=await response.blob();if(disposed)return;
+   objectUrl=URL.createObjectURL(blob);setMediaUrl(objectUrl);
+  }).catch(e=>{if(!disposed&&e.name!=='AbortError')setMediaError('엔딩 영상을 불러오지 못했습니다. 다시 시도해 주세요.');});
+  return()=>{disposed=true;abort.abort();if(objectUrl)URL.revokeObjectURL(objectUrl);};
+ },[mediaAttempt]);
  function notice(e){if(e.name!=='AbortError'&&['endingPrelude','ending'].includes(live.current.scene))setBlocked(true);}
  function playVideo(){film.current.play()?.catch(notice);}
  function jump(time){
@@ -128,7 +141,7 @@ const EndingScenes=forwardRef(function EndingScenes({scene,runKey,mode,handsRef,
   {scene==='endingPrelude'&&<section className="ending-prelude" aria-label="7.5. 엔딩전"><div className="prelude-pin"/><div className="prelude-bloom"/><div className="prelude-dust"/></section>}
   <section className={`ending-scene ${active||scene==='escaped'?'is-visible':''}`} data-segment={phase} data-hit-count={count} aria-label={scene==='escaped'?'탈출 완료':'08. 엔딩'}>
    <div ref={shake} className="ending-door">
-    <video ref={film} className="ending-film" src="/videos/ending_VD.mp4?v=segment-seeks-20261027" preload="auto" playsInline aria-label="ending_VD 엔딩 영상"
+    <video ref={film} className="ending-film" src={mediaUrl||undefined} preload="auto" playsInline aria-label="ending_VD 엔딩 영상"
      onPlaying={()=>{if(live.current.scene==='ending'&&revealStarted.current===null)revealStarted.current=performance.now();}}
      onLoadedMetadata={()=>{if(film.current.duration<8)setProblem('ending_VD는 7초 이후 탈출 구간이 포함된 원본 영상이 필요합니다.');if(live.current.scene==='ending'&&seek.current!==null)jump(seek.current);}}
      onSeeked={()=>{if(logic.current&&endingVideoReady(film.current,logic.current))seek.current=null;}} onError={()=>setProblem('public/videos/ending_VD.mp4 영상을 확인해 주세요.')}
@@ -143,6 +156,8 @@ const EndingScenes=forwardRef(function EndingScenes({scene,runKey,mode,handsRef,
    {active&&<><div ref={reveal} className="ending-reveal"/><div ref={flash} className="ending-white"/></>}
    {(active||scene==='endingPrelude')&&blocked&&<button className="ending-play" onClick={()=>{setBlocked(false);if(live.current.scene==='ending'){film.current.volume=.7;playVideo();startAudio();}else narration.current?.enter('endingPrelude',runKey,notice);}}>영상과 소리 재생</button>}
    {(active||scene==='endingPrelude')&&problem&&<p className="ending-problem" role="alert">{problem}</p>}
+   {(active||scene==='endingPrelude')&&!mediaUrl&&!mediaError&&<p className="ending-problem" role="status">엔딩 영상을 준비하고 있습니다…</p>}
+   {(active||scene==='endingPrelude')&&mediaError&&<button className="ending-play" onClick={()=>setMediaAttempt(n=>n+1)}>{mediaError}</button>}
    {scene==='escaped'&&<div className="escape-complete"><p>YOUR OWN WAY</p><h1>이제, 당신의 길로.</h1><button onClick={onReset}>처음으로 돌아가기</button></div>}
   </section>
  </>;
