@@ -14,9 +14,9 @@ test('first choice point plus capture point, including final-capture tie break, 
  const chosen=config.questions.map(q=>q[2][0]);const r=config.resolveResult({'높은 연봉':1},'높은 연봉',chosen);assert.equal(r.left,r.right);assert.equal(r.side,'right');
 });
 test('polling binds the QR visitor once, no waiting selection, and removes stopped visitor',async()=>{
- let active={visit_id:id},starts=0,stops=0;const c=new Controller({request:async()=>({active}),onAssignment:()=>starts++,onLost:()=>stops++});await c.refresh();await c.refresh();assert.equal(starts,1);assert.equal(c.allowed,true);assert.equal(c.enterPreview(),false);active=null;await c.refresh();assert.equal(stops,1);assert.equal(c.allowed,false);
+ let active={visit_id:id},starts=0,stops=0;const c=new Controller({request:async()=>({active}),onAssignment:()=>starts++,onLost:()=>stops++});await c.refresh();await c.refresh();assert.equal(starts,1);assert.equal(c.active.visit_id,id);active=null;await c.refresh();assert.equal(stops,1);assert.equal(c.active,null);
 });
-test('preview never writes completion',async()=>{const c=new Controller({request:()=>{throw Error('unexpected')}});assert.equal(c.enterPreview(),true);assert.equal(await c.finish({}),false);c.leavePreview();assert.equal(c.allowed,false);});
+test('unlinked artwork never writes participant start or completion',async()=>{const c=new Controller({request:()=>{throw Error('unexpected')}});assert.equal(await c.startRun(null,Date.now()),false);assert.equal(await c.finish({}),false);});
 test('lost completion response retains exact original participant and immutable result for retry',async()=>{
  let active={visit_id:id},fail=true,writes=[];const r=resultForExperience(config,experience());const c=new Controller({request:async(action,body)=>{if(action==='state')return{active};writes.push(structuredClone(body));if(fail)throw Error('offline');return{status:'completed'};}});
  await c.refresh();assert.equal(await c.finish(r),false);r.summary.keywords[0]='changed';active={visit_id:other};await c.refresh();assert.equal(c.active.visit_id,id);assert.equal(await c.release(),false);fail=false;assert.equal(await c.retry(),true);assert.deepEqual(writes[0],writes[1]);assert.equal(writes[1].visit_id,id);assert.equal(c.saved,true);await c.refresh();assert.equal(c.active.visit_id,other);
@@ -24,7 +24,7 @@ test('lost completion response retains exact original participant and immutable 
 test('late poll cannot restore a participant after completion or release',async()=>{
  let resolve;const c=new Controller({request:async(action)=>action==='state'?new Promise(r=>resolve=r):{status:'completed'}});c.active={visit_id:id};const read=c.refresh();await c.finish(resultForExperience(config,experience()));resolve({active:{visit_id:id}});await read;assert.equal(c.active,null);assert.equal(c.saved,true);
 });
-test('release failure keeps the active participant; success returns to QR gate',async()=>{
+test('release failure keeps the active participant; success clears the optional participant link',async()=>{
  let fail=true;const c=new Controller({request:async()=>{if(fail)throw Error('offline');return{active:null};}});c.active={visit_id:id};assert.equal(await c.release(),false);assert.equal(c.active.visit_id,id);fail=false;assert.equal(await c.release(),true);assert.equal(c.active,null);
 });
 test('a mobile stop after a failed save releases the held screen without awarding completion',async()=>{

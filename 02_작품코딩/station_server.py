@@ -110,6 +110,15 @@ class WaveClient:
                 raise StationError('연결 관객을 확인해 주세요.', 400)
         if action == 'complete':
             args['p_result'] = validate_result(body.get('result'))
+        if action == 'start':
+            try:
+                started = body['started_at']
+                parsed = datetime.fromisoformat(started.replace('Z', '+00:00'))
+                if parsed.tzinfo is None:
+                    raise ValueError()
+            except (KeyError, TypeError, ValueError, AttributeError):
+                raise StationError('체험 시작 시간을 확인해 주세요.', 400)
+            args['p_started_at'] = started
         request = Request(env['SUPABASE_URL'].rstrip('/') + '/rest/v1/rpc/wave_station_' + action,
                           data=json.dumps(args, ensure_ascii=False).encode(),
                           headers={'apikey': env['SUPABASE_PUBLISHABLE_KEY'], 'Content-Type': 'application/json'})
@@ -169,7 +178,7 @@ class StationMixin:
         if not self.allowed_request():
             return self.send_json(403, {'error': '허용되지 않은 요청입니다.'})
         action = urlsplit(self.path).path.removeprefix('/api/wave-station/')
-        if self.path != '/api/wave-station/' + action or action not in ('release', 'complete'):
+        if self.path != '/api/wave-station/' + action or action not in ('start', 'release', 'complete'):
             return self.send_json(404, {'error': '지원하지 않는 요청입니다.'})
         try:
             length = int(self.headers.get('Content-Length', '0'))

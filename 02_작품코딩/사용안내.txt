@@ -53,3 +53,6 @@ media-manifest.json: 최종 재생 목록과 제작 정보
 설정과 .env 전달 방법은 APP-INTEGRATION.md를 확인하세요.
 작품 영상·질문·점수표는 학생 최종본을 유지합니다.
 검증결과.json은 학생 원본의 점검 기록이며, DB 연결 검증은 APP-INTEGRATION.md와 tests 및 ../supabase/verify-wave-station.sql을 참고하세요.
+
+9. QR 대기 제거 (2026-10-27)
+작품은 QR 없이 원래 시작 화면에서 실행합니다. 관객이 연결되어 있을 때만 시작·종료·결과가 DB에 반영됩니다. QR/DB 상태 변화나 저장 오류로 작품 진행을 막지 않습니다.

@@ -19,8 +19,8 @@
     };
   }
   class Controller{
-    constructor({request,onChange=()=>{},onAssignment=()=>{},onLost=()=>{}}){this.request=request;this.onChange=onChange;this.onAssignment=onAssignment;this.onLost=onLost;this.active=null;this.preview=false;this.pending=null;this.saved=false;this.error='';this.epoch=0;this.polling=false;this.saving=false;this.releasing=false;}
-    get allowed(){return this.preview||!!this.active;}
+    constructor({request,onChange=()=>{},onAssignment=()=>{},onLost=()=>{}}){this.request=request;this.onChange=onChange;this.onAssignment=onAssignment;this.onLost=onLost;this.active=null;this.pending=null;this.saved=false;this.error='';this.epoch=0;this.polling=false;this.saving=false;this.releasing=false;}
+    // DB association is optional and never decides whether the artwork may run.
     get held(){return !!this.pending;}
     notify(){this.onChange(this);}
     async refresh(){
@@ -32,16 +32,19 @@
           return;
         }
         const next=data.active||null;
-        if(next?.visit_id!==this.active?.visit_id){const previous=this.active;this.active=next;this.epoch++;this.saved=false;this.preview=false;this.error='';
+        if(next?.visit_id!==this.active?.visit_id){const previous=this.active;this.active=next;this.epoch++;this.saved=false;this.error='';
           if(next)this.onAssignment(next);else if(previous)this.onLost();
         }
         this.error='';this.notify();
       }catch(e){if(epoch===this.epoch){this.error=e.message;this.notify();}}
       finally{this.polling=false;}
     }
-    enterPreview(){if(this.active||this.pending)return false;this.preview=true;this.error='';this.notify();return true;}
-    leavePreview(){this.preview=false;this.notify();}
-    async finish(result){if(!this.active||this.preview||this.pending)return false;this.pending={visit_id:this.active.visit_id,result:JSON.parse(JSON.stringify(result))};this.epoch++;this.notify();return this.retry();}
+    async startRun(visitId,startedAt){
+      if(!visitId||this.pending||this.releasing||this.active?.visit_id!==visitId)return false;
+      try{await this.request('start',{visit_id:visitId,started_at:new Date(startedAt).toISOString()});return true;}
+      catch(e){if(this.active?.visit_id===visitId){this.error=e.message;this.notify();}return false;}
+    }
+    async finish(result,visitId=this.active?.visit_id){if(!visitId||this.active?.visit_id!==visitId||this.pending)return false;this.pending={visit_id:visitId,result:JSON.parse(JSON.stringify(result))};this.epoch++;this.notify();return this.retry();}
     async retry(){
       if(!this.pending||this.saving)return false;this.saving=true;this.error='';this.notify();
       try{const reply=await this.request('complete',this.pending);if(reply.status!=='completed')throw new Error('완료 저장 응답을 확인하지 못했습니다.');this.pending=null;this.active=null;this.saved=true;this.epoch++;this.error='';this.notify();return true;}
@@ -50,9 +53,9 @@
     }
     async release(){
       if(this.pending||this.releasing)return false;
-      if(!this.active){this.leavePreview();return true;}
+      if(!this.active)return true;
       const id=this.active.visit_id;this.releasing=true;this.epoch++;
-      try{await this.request('release',{visit_id:id});this.active=null;this.saved=false;this.preview=false;this.error='';this.onLost();this.notify();return true;}
+      try{await this.request('release',{visit_id:id});this.active=null;this.saved=false;this.error='';this.onLost();this.notify();return true;}
       catch(e){this.error=e.message;this.notify();return false;}
       finally{this.releasing=false;}
     }

@@ -1,23 +1,25 @@
 {
-  "verified_at": "2026-10-27T00:50:21.236829+00:00",
+  "verified_at": "2026-10-27T01:13:57.797992+00:00",
   "room_id": "conflict",
   "team_id": 3,
-  "node_tests_passed": 13,
-  "python_tests_passed": 7,
-  "supabase_rollback_verification": "PASS",
+  "node_tests_passed": 16,
+  "python_tests_passed": 8,
+  "supabase_rollback_verification": "PASS including start/idempotency/stopped safety",
   "live_supabase_state_read": true,
   "persisted_test_participants": 0,
   "original_media_files_unchanged": 53,
   "original_scoring_and_renderer_unchanged": true,
   "completion_milestone": "ending video ended",
   "browser_smoke": [
-    "QR gate",
-    "mouse preview",
-    "question screen",
-    "branch video",
-    "ending and return to QR gate"
+    "original intro without QR gate",
+    "mouse start without QR",
+    "opening playing without QR"
   ],
   "browser_console_errors": 0,
   "physical_camera_verified": false,
-  "secret_scan": "PASS; .env excluded from Git and HTTP"
+  "secret_scan": "PASS; .env excluded from Git and HTTP",
+  "qr_required": false,
+  "db_availability_blocks_artwork": false,
+  "participant_link": "optional; bound at actual start",
+  "start_tracking": "room_visits.experience_started_at"
 }

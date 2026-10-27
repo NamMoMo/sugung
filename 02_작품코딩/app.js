@@ -5,7 +5,8 @@ const sound=new WaveSound([videos.opening,videos.ending]);
 const waterLayers=[videos.water,$('waterTwin')];let waterFront=0,waterMix=false;
 const phases={gather:'PPT 5 · 물웅덩이 줌 이동',branch:'PPT 6 · 빛 구슬의 균형',direction:'PPT 6 · 방향 결정',approach:'PPT 7 · 선택한 세계로 접근',lightpath:'PPT 8 · 빛의 길',ending:'PPT 8 · 마지막 영상'};
 const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=v=>{v=clamp(v,0,1);return v*v*(3-2*v);};
-let startedAt=null,finishedAt=null,experienceTest=false,experienceHistory=[];
+let startedAt=null,finishedAt=null,experienceTest=false,experienceHistory=[],linkedVisitId=null;
+const ignoredVisitIds=new Set();
 let scene='intro',mode='camera',questionIndex=0,chosen=[],caught={},caughtTotal=0,lastCaught='',result=null;
 let elapsed=0,clock=0,lastFrame=0,questionLock=0,selectedIdx=-1,hoverIdx=-1,hoverSince=0,hoverHand=null,releaseRequired=false;
 let hands=[],pointer={x:W/2,y:H/2,active:false},rainDrops=[],particles=[],splashes=[],hitFlashes=[],waterEnergy=0,rainActive=0,pendingGather=-1,lastCatch=-Infinity;
@@ -194,8 +195,8 @@ function setScene(next){
   if(next==='complete')void saveExperience();
   sound.setScene(next,result);updateUI();
 }
-function resetArtwork(){startedAt=null;finishedAt=null;experienceTest=false;experienceHistory=[];startAttempt++;chosen=[];caught={};caughtTotal=0;lastCaught='';result=null;questionIndex=0;particles=[];rainDrops=[];splashes=[];hitFlashes=[];waterEnergy=0;rainActive=0;lastGesture='';pendingGather=-1;clearInput();setScene('intro');}
-async function reset(){if(station.held)return;if(station.active)return station.release();station.leavePreview();resetArtwork();}
+function resetArtwork(){linkedVisitId=null;startedAt=null;finishedAt=null;experienceTest=false;experienceHistory=[];startAttempt++;chosen=[];caught={};caughtTotal=0;lastCaught='';result=null;questionIndex=0;particles=[];rainDrops=[];splashes=[];hitFlashes=[];waterEnergy=0;rainActive=0;lastGesture='';pendingGather=-1;clearInput();setScene('intro');}
+function reset(){if(linkedVisitId&&station.active?.visit_id===linkedVisitId&&!station.held){ignoredVisitIds.add(linkedVisitId);void station.release();}resetArtwork();}
 function updateQuestion(){const q=C.questions[questionIndex];$('count').textContent=`${questionIndex+1} / 7 · ${q[0]}`;$('questionTitle').textContent=q[1];$('progress').innerHTML=C.questions.map((_,i)=>`<i class="${i<questionIndex?'done':''}"></i>`).join('');resetHold();}
 function targets(t){return positions.map(([x,y],i)=>({x:x+Math.sin(t*.85+i*1.7)*8,y:y+Math.cos(t*.74+i*2.1)*9}));}
 
@@ -421,21 +422,21 @@ const camera=new CameraInput($('camera'),value=>{
   else if(state==='tracking'&&!releaseRequired)notice();
 });
 async function changeMode(next){if(next==='mouse')experienceTest=true;mode=next;$('inputMode').value=next;clearInput();notice();updateUI();if(next==='mouse'){camera.stop();$('inputStatus').textContent='마우스 테스트';$('inputStatus').dataset.state='mouse';return true;}return camera.ready||await camera.connect();}
-async function start(next){if(!station.allowed||station.held)return;sound.unlock();const attempt=++startAttempt;$('begin').disabled=true;$('mouseBegin').disabled=true;const ready=await changeMode(next);$('begin').disabled=false;$('mouseBegin').disabled=false;if(ready&&attempt===startAttempt&&scene==='intro'){chosen=[];caught={};caughtTotal=0;questionIndex=0;startedAt=Date.now();finishedAt=null;experienceHistory=[];experienceTest=next!=='camera'||station.preview;setScene('opening');}}
+async function start(next){sound.unlock();const attempt=++startAttempt;$('begin').disabled=true;$('mouseBegin').disabled=true;const ready=await changeMode(next);$('begin').disabled=false;$('mouseBegin').disabled=false;if(ready&&attempt===startAttempt&&scene==='intro'){chosen=[];caught={};caughtTotal=0;questionIndex=0;startedAt=Date.now();finishedAt=null;experienceHistory=[];experienceTest=next!=='camera';linkedVisitId=!experienceTest&&!station.held&&!station.releasing&&!ignoredVisitIds.has(station.active?.visit_id)?station.active?.visit_id||null:null;void station.startRun(linkedVisitId,startedAt);setScene('opening');}}
 $('begin').onclick=()=>start('camera');$('mouseBegin').onclick=()=>start('mouse');$('again').onclick=reset;$('restart').onclick=reset;$('errorHome').onclick=reset;
 $('resumeMedia').onclick=async()=>{if(!playback)return;const {key}=playback;hideVideoError();try{await sound.unlock();await resumeActive();visibleVideo(key);}catch{videoError('재생하지 못했습니다. 영상 파일과 브라우저를 확인해 주세요.');}};
 $('reconnect').onclick=async()=>{await changeMode('camera');};$('inputMode').onchange=e=>changeMode(e.target.value);$('gestureMode').onchange=()=>{camera.gestures.reset();updateUI();};
 $('operatorToggle').onclick=()=>{$('operator').hidden=!$('operator').hidden;};$('fullscreen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else $('stage').requestFullscreen().catch(()=>notice('브라우저 전체화면을 사용할 수 없습니다. F11로 실행해 주세요.'));};
 function pos(e){const rect=canvas.getBoundingClientRect();pointer={x:clamp((e.clientX-rect.left)/rect.width*W,0,W),y:clamp((e.clientY-rect.top)/rect.height*H,0,H),active:true};}
 canvas.addEventListener('pointermove',e=>{if(mode==='mouse')pos(e);});canvas.addEventListener('pointerdown',e=>{if(mode==='mouse'){pos(e);catchAt(pointer.x,pointer.y);}});canvas.addEventListener('pointerleave',()=>{pointer.active=false;if(mode==='mouse')resetHold();});
-window.addEventListener('keydown',e=>{if(['SELECT','INPUT'].includes(document.activeElement?.tagName))return;if(['2','3','4','5'].includes(e.key)){if(!station.allowed||station.held)return;experienceTest=true;}if(['1','2','3','4','5'].includes(e.key))sound.unlock();if(e.key.toLowerCase()==='d')$('operator').hidden=!$('operator').hidden;else if(e.key==='Escape'){$('operator').hidden=true;resetHold();}else if(e.key==='1')reset();else if(e.key==='2'){questionIndex=0;chosen=[];setScene('select');}else if(e.key==='3'){if(!chosen.length)chosen=C.questions.map(q=>q[2][0]);setScene('rain');}else if(e.key==='4'||e.key==='5'){const side=e.key==='4'?'left':'right';result=C.resolveResult({},'',Array(7).fill(side==='left'?'성장 기회':'고용 안정'));setScene('branch');}});
+window.addEventListener('keydown',e=>{if(['SELECT','INPUT'].includes(document.activeElement?.tagName))return;if(['2','3','4','5'].includes(e.key)){experienceTest=true;}if(['1','2','3','4','5'].includes(e.key))sound.unlock();if(e.key.toLowerCase()==='d')$('operator').hidden=!$('operator').hidden;else if(e.key==='Escape'){$('operator').hidden=true;resetHold();}else if(e.key==='1')reset();else if(e.key==='2'){questionIndex=0;chosen=[];setScene('select');}else if(e.key==='3'){if(!chosen.length)chosen=C.questions.map(q=>q[2][0]);setScene('rain');}else if(e.key==='4'||e.key==='5'){const side=e.key==='4'?'left':'right';result=C.resolveResult({},'',Array(7).fill(side==='left'?'성장 기회':'고용 안정'));setScene('branch');}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)sound.pause();else sound.resume();clearInput();lastFrame=0;if(document.hidden){visibilityPaused=!!activeKey&&!(activeKey==='water'?waterLayers[waterFront]:videos[activeKey]).paused;[...Object.values(videos),...waterLayers].forEach(v=>v.pause());}else if(visibilityPaused&&activeKey){visibilityPaused=false;resumeActive().catch(()=>videoError('계속하려면 다시 재생을 눌러 주세요.'));}});
 window.addEventListener('pagehide',()=>{camera.stop();sound.pause();});
 $('soundEnabled').onchange=e=>sound.setEnabled(e.target.checked);$('soundVolume').oninput=e=>sound.setVolume(e.target.value/100);
 function loop(now){
   const dt=lastFrame?Math.min(.05,(now-lastFrame)/1000):0;lastFrame=now;camera.tick(now,['select','rain'].includes(scene));
   if(document.hidden){requestAnimationFrame(loop);return;}
-  updateWater();const advancing=!mediaBlocked&&(station.allowed||scene==='complete');const step=advancing?dt:0;clock+=step;elapsed+=step;ctx.clearRect(0,0,W,H);
+  updateWater();const advancing=!mediaBlocked;const step=advancing?dt:0;clock+=step;elapsed+=step;ctx.clearRect(0,0,W,H);
   if(scene==='intro'){drawDust(clock);}
   else if(scene==='select'){if(advancing)drawSelection(clock,step);else drawSelection(clock,0);drawDust(clock);drawParticles(step*1000);drawPointers();}
   else if(scene==='descent'){drawDescent();drawDust(clock);}
@@ -444,7 +445,7 @@ function loop(now){
   else if(['branch','direction','approach'].includes(scene)){drawBranch();}
   else if(scene==='lightpath'){drawLightPath();}
   else if(scene==='ending'&&!videos.ending.classList.contains('visible')&&videos.ending.readyState>=2){ctx.drawImage(videos.ending,0,0,W,H);}
-  else if(scene==='complete'&&elapsed>12&&!station.held)void reset();
+  else if(scene==='complete'&&elapsed>12)reset();
   if(!$('operator').hidden)$('diagnostic').textContent=`장면: ${phases[scene]||scene}\n입력: ${mode} · 손: ${hands.length} · 마지막 제스처: ${lastGesture||'없음'}\n선택: ${chosen.length}/7 · 잡은 단어: ${caughtTotal}/${C.catchTarget}\n점수: 발전 ${result?.development??0} / 안정 ${result?.stability??0}\n결과: ${result?result.label:'미정'} · 활성 체험: ${rainActive.toFixed(1)}초`;
   requestAnimationFrame(loop);
 }
@@ -453,25 +454,23 @@ if(window.__WAVE_TEST__)window.__wave={get state(){return{scene,mode,questionInd
 if(location.protocol==='file:'){$('launchHelp').hidden=true;notice('카메라 사용은 실행하기.bat로 실행해 주세요. 마우스 미리보기는 직접 열어도 사용할 수 있습니다.');}
 
 function stationUI(){
-  $('stationGate').hidden=station.allowed||scene!=='intro';
-  $('stationError').textContent=station.error;
-  $('stationInfo').textContent=station.active?`연결 관객: ${station.active.nickname} · ${station.active.participant_code}`:station.preview?'마우스 미리보기 · DB 저장 안 함':station.saved?'체험 완료 · DB 저장됨':'QR 입장 대기 · 3조 / 부스 코드 1002';
+  const phase=scene==='intro'?'전시 시작 전':scene==='complete'?'전시 종료':'전시 체험 중';
+  const visitor=station.active?`연결 관객: ${station.active.nickname} · ${station.active.participant_code}`:'개별 관객 연결 없음';
+  $('stationInfo').textContent=`${phase}\n${visitor}${station.saved?'\n결과 DB 저장 완료':''}${station.error?'\n'+station.error:''}`;
   $('stationSave').hidden=!station.held;
-  $('stationSaveText').textContent=station.saving?'체험 결과를 저장하고 있습니다.':station.error||'체험 결과 저장을 다시 시도해 주세요.';
+  $('stationSaveText').textContent=station.saving?'체험 결과 저장 중':station.error||'체험 결과 저장을 다시 시도해 주세요.';
   $('stationRetry').disabled=station.saving;
 }
 async function saveExperience(){
-  if(!station.active||station.preview)return;
+  if(!linkedVisitId||station.active?.visit_id!==linkedVisitId)return;
   try{
     const payload=WaveStation.resultForExperience(C,{chosen,caught,caughtTotal,lastCaught,rainActive,mode,test:experienceTest||!!window.__WAVE_TEST__,startedAt,finishedAt,history:experienceHistory});
-    await station.finish(payload);
+    await station.finish(payload,linkedVisitId);
   }catch{notice('미리보기 또는 테스트 체험입니다. DB 완료 기록은 저장하지 않습니다. 처음으로 돌아가 다시 진행해 주세요.');}
 }
 const station=new WaveStation.Controller({request:WaveStation.request,onChange:stationUI,
-  onAssignment:()=>{camera.stop();mode='camera';$('inputMode').value='camera';resetArtwork();},
-  onLost:()=>resetArtwork()});
-$('stationPreview').onclick=()=>{if(station.enterPreview())void start('mouse');};
-$('stationRefresh').onclick=()=>station.refresh();$('stationRetry').onclick=()=>station.retry();
+  onAssignment:()=>{},onLost:()=>{}});
+$('stationRetry').onclick=()=>station.retry();
 void station.refresh();setInterval(()=>void station.refresh(),2000);
 setScene('intro');stationUI();requestAnimationFrame(loop);
 })();
