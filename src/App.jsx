@@ -7,7 +7,7 @@ import {pickLabel} from './layout.js';
 import {DualWrists} from './dual-wrists.js';
 import {EndingWristTracker,poseWrists} from './ending-wrists.js';
 import {smoothMask} from './mask.js';
-import {UpperBodyLayout} from './upper-body.js';
+import {UpperBodyLayout,upperBodyFrame,upperBodyOccluded} from './upper-body.js';
 import {FIXED_BUST_FRAME} from './fixed-silhouette.js';
 import { createVision, HandSearch, foregroundMask } from './vision.js';
 import { createRenderer, OUTPUT_W, OUTPUT_H } from './renderer.js';
@@ -54,6 +54,7 @@ export default function App() {
   const grabbedMask=useRef(null),glitchMask=useRef(null);
   const confirmation=useRef(new ConfirmController());
   const stableLayout=useRef(new UpperBodyLayout(FIXED_BUST_FRAME)),heldLabel=useRef(null);
+  const resultLayout=useRef(new UpperBodyLayout()),resultFrame=useRef(null);
   const confirmButton=useRef(null),audio=useRef(null),music=useRef(null);
   const [audioError,setAudioError]=useState('');
   const journey=useRef(null),glitchRabbit=useRef(null),ending=useRef(null);
@@ -93,6 +94,7 @@ export default function App() {
     clearInteraction();
     inputActive.current=false;
     if(session.scene!=='main') input.current?.blur();
+    if(session.scene!=='photo'){renderer.current?.resetResult();resultFrame.current=null;resultLayout.current.reset();}
     if(session.scene!=='glitch'){glitchMask.current=null;allWrists.current=[];dualWrists.current=new DualWrists();}
   },[session.scene]);
 
@@ -152,14 +154,21 @@ export default function App() {
             }
             allWrists.current=endingTracker.update(detected,poseHands,now);
           }else{poseHands=[];allWrists.current=dualWrists.current.update(detected).map(h=>({...h,sampleAt:now}));}
-          if(current.scene==='glitch'&&now-lastSegment>200){
+          if(['glitch','photo'].includes(current.scene)&&now-lastSegment>200){
             lastSegment=now;
-            const vw=video.current.videoWidth,vh=video.current.videoHeight,sw=Math.min(vw,vh*16/9),sh=sw*9/16;
-            segmentationContext.drawImage(video.current,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,768,432);
+            if(current.scene==='glitch'){
+              const vw=video.current.videoWidth,vh=video.current.videoHeight,sw=Math.min(vw,vh*16/9),sh=sw*9/16;
+              segmentationContext.drawImage(video.current,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,768,432);
+            }else segmentationContext.drawImage(video.current,0,0,768,432);
             vision.current.segmenter.segmentForVideo(segmentationFrame,now,result=>{
               const mask=foregroundMask(result);
-              if(mask)glitchMask.current={mask:smoothMask(mask,glitchMask.current?.mask),time:now,version:(glitchMask.current?.version??0)+1};
+              if(mask&&current.scene==='glitch')glitchMask.current={mask:smoothMask(mask,glitchMask.current?.mask),time:now,version:(glitchMask.current?.version??0)+1};
+              else if(mask&&sessionRef.current.scene==='photo')renderer.current.updateResultMask(mask,now);
             });
+            if(current.scene==='photo'){
+              const points=vision.current.pose.detectForVideo(segmentationFrame,now).landmarks[0];
+              resultFrame.current=upperBodyFrame(points)||renderer.current.resultFrame;
+            }
           }
           frames++;
         }catch(err){setError(`인식이 중단되었습니다: ${err.message}`);setMode('idle');stream.current?.getTracks().forEach(t=>t.stop());}
@@ -182,7 +191,10 @@ export default function App() {
       if(displayCache.current.source!==current.labels||displayCache.current.language!==languageRef.current)displayCache.current={source:current.labels,language:languageRef.current,labels:current.labels.map(l=>({...l,text:displayLabel(l,languageRef.current)}))};
       const displayLabels=displayCache.current.labels;
       const sizes={};for(const l of displayLabels){const units=[...l.text].reduce((n,c)=>n+(/\s/.test(c)?30:c.charCodeAt(0)>255?76:44),0);sizes[l.id]={w:Math.min(1100,Math.max(340,units+124))/OUTPUT_W,h:116/OUTPUT_H,fontSize:66};}
-      const positions=(current.scene==='main'||current.scene==='photo')?stableLayout.current.update(displayLabels,sizes,null,now-lastLayoutTime.current,r.mask,false,false):[];lastLayoutTime.current=now;
+      const liveResult=current.scene==='photo'&&!demoMode;
+      const resultBody=resultFrame.current||r.resultFrame;
+      const activeLayout=liveResult?resultLayout.current:stableLayout.current;
+      const positions=liveResult?(r.resultMask?activeLayout.update(displayLabels,sizes,resultBody,now-lastLayoutTime.current,r.resultMask,true,upperBodyOccluded(resultBody,allWrists.current)):[]):(current.scene==='main'||current.scene==='photo')?activeLayout.update(displayLabels,sizes,null,now-lastLayoutTime.current,r.mask,false,false):[];lastLayoutTime.current=now;
       for(const l of positions){const born=birthTimes.current.get(l.id);if(born&&!born.emitted){bursts.current.push({...l,type:'birth',time:now});born.emitted=true;}}
       const hand=(demoMode||modeRef.current==='camera')?pointer.current:null;
       if(arrivalEntry.current.update({scene:current.scene,enabled:modeRef.current==='camera'||demoMode,point:hand})){next();}
@@ -218,8 +230,8 @@ export default function App() {
       }
       music.current?.update({now,scene:photoFading.current?'endingPrelude':sessionRef.current.scene,progress:confirmation.current.progress,holding:current.scene==='photo'&&target==='confirm'&&hand?.gesture==='fist'});
       bursts.current=bursts.current.filter(b=>now-b.time<1850);
-      if(current.scene==='main'||current.scene==='photo')r.draw({time:now,count:current.count,bursts:bursts.current,phase:current.scene,bodyFrame:stableLayout.current.frame});
-      if(now-lastUI>45){lastUI=now;setLanguageProgress(languageHold.current.progress);setUi({labels:positions,hands:hand?[hand]:[],progress:target==='language'?languageHold.current.progress:confirm?confirmation.current.progress:grip.current.progress,target:grip.current.target||target,drag:grip.current.drag,dragPoint:dragPoint.current,fps,musicVolume:Math.round((audio.current?.volume||0)*100),musicPlaying:!audio.current?.paused});}
+      if(current.scene==='main'||current.scene==='photo')r.draw({time:now,count:current.count,bursts:bursts.current,phase:current.scene,bodyFrame:activeLayout.frame,liveResult});
+      if(now-lastUI>45){lastUI=now;setLanguageProgress(languageHold.current.progress);setUi({resultFresh:r.resultFresh(now),labels:positions,hands:hand?[hand]:[],progress:target==='language'?languageHold.current.progress:confirm?confirmation.current.progress:grip.current.progress,target:grip.current.target||target,drag:grip.current.drag,dragPoint:dragPoint.current,fps,musicVolume:Math.round((audio.current?.volume||0)*100),musicPlaying:!audio.current?.paused});}
       raf=requestAnimationFrame(loop);
     }
     raf=requestAnimationFrame(loop);
@@ -239,7 +251,7 @@ export default function App() {
         <JourneyScenes ref={journey} runKey={journeyRun} scene={session.scene} handRef={pointer} handsRef={allWrists} mode={mode} enabled={mode==='camera'||mode==='demo'} onAdvance={advanceFrom}/>
         <GlitchRabbitScenes ref={glitchRabbit} runKey={journeyRun} scene={session.scene} handRef={pointer} handsRef={allWrists} cameraRef={video} maskRef={glitchMask} mode={mode} onAdvance={advanceFrom}/>
         <EndingScenes ref={ending} runKey={journeyRun} scene={session.scene} handRef={pointer} handsRef={allWrists} mode={mode} onAdvance={advanceFrom} onReset={reset}/>
-        <canvas ref={canvas} style={{visibility:main||photo?'visible':'hidden'}} className="art" aria-label={t("고정 상반신 실루엣과 빛 입자")}/>
+        <canvas ref={canvas} style={{visibility:main||photo?'visible':'hidden'}} className="art" aria-label={t(photo?"실시간 관객 실루엣과 빛 입자":"고정 상반신 실루엣과 빛 입자")}/>
         <video ref={video} className={preview?'camera-preview':'camera-hidden'} muted playsInline aria-label={t("좌우 반전 웹캠 미리보기")}/>
         {(main||photo)&&<div className="scene-title"><h1>{english?(photo?<>You, shaped by<br/><em>your own values.</em></>:<>Beyond the words<br/>you were given,<br/><em>leave your own values.</em></>):photo?<>당신의 기준으로<br/>채워진, 당신.</>:<>정해진 말 너머,<br/><em>나만의 기준</em>을<br/>남겨보세요.</>}</h1><p>{t(photo?'지금의 모습을 휴대폰으로 남겨보세요.':'나에게 맞지 않는 말은 내려놓고, 소중한 말을 더해보세요.')}</p></div>}
         {(main||photo)&&<div className="labels" aria-label={t("실루엣 키워드")}><svg className="label-threads" viewBox="0 0 3840 2160" aria-hidden="true">{ui.labels.filter(l=>l.id!==ui.drag).map(l=><line key={l.id} {...shortTether(l)}/>)}</svg>{ui.labels.map(l=>{
@@ -252,6 +264,7 @@ export default function App() {
         {main&&<aside className="count-display" aria-label={t("진행 횟수")} aria-live="polite"><span>{t('완료한 상호작용')}</span><strong>{String(session.count).padStart(2,'0')}<small>/ {LIMIT}</small></strong><div className="count-line"><i style={{width:session.count/LIMIT*100+'%'}}/></div><p>{english?<><em>{LIMIT-session.count}</em> interactions remaining</>:<>앞으로 <em>{LIMIT-session.count}회</em> 남았어요</>}</p></aside>}
         {photo&&<button ref={confirmButton} className={`confirm-button ${ui.target==='confirm'?'is-hovered':''}`} onClick={next} style={{'--hold':`${ui.target==='confirm'?ui.progress*100:0}%`}}>{t('확인')} <span>→</span><small>{ui.target==='confirm'?(ui.progress>0?(english?`${(ui.progress*3).toFixed(1)} / 3s · Keep holding`:`${(ui.progress*3).toFixed(1)} / 3초 · 그대로 유지하세요`):t('손이 닿았어요 · 주먹을 쥐어주세요')):t('주먹 3초 유지 또는 클릭')}</small></button>}
         {ready&&<div className="welcome main-ready" aria-label="5.5 메인시작"><p className="eyebrow">{english?"Discover what matters to you":"나의 기준을 찾는 시간"}</p><h1>{english?<>Beyond the words you were given,<br/><em>leave your own values.</em></>:<>정해진 말 너머,<br/><em>나만의 기준을 남겨보세요.</em></>}</h1>{english?(<div className="main-ready-guide"><section><strong>01 · Let go of a keyword</strong><p>Hold a fist over a label for <em>2 seconds</em> to grab it.<br/>Move outside the silhouette and open your hand to let it go.<br/>Release inside the silhouette to return it.</p></section><section><strong>02 · Add your own values</strong><p>Type a keyword and press <em>Enter</em>.<br/>You can type in any language.<br/>Complete <em>{LIMIT} actions</em> in total: letting go or adding.</p></section></div>):(<div className="main-ready-guide"><section><strong>01 · 키워드 내려놓기</strong><p>라벨 위에서 주먹을 <em>2초</em> 쥐어 잡으세요.<br/>실루엣 밖으로 옮겨 손을 펴면 사라져요.<br/>실루엣 안에서 놓으면 원래 자리로 돌아와요.</p></section><section><strong>02 · 나의 기준 더하기</strong><p>입력창에 나만의 키워드를 적고<br/>키보드의 <em>Enter</em>를 누르세요.<br/>버리기와 입력을 합해 <em>{LIMIT}회</em> 진행해요.</p></section></div>)}<button ref={confirmButton} className={`main-start-button ${ui.target==='confirm'?'is-hovered':''}`} style={{'--hold':`${ui.target==='confirm'?ui.progress*100:0}%`}} aria-label={t("시작하기")} onClick={next}>{t("시작하기")} <small>{ui.target==='confirm'&&ui.progress>0?(english?`${(ui.progress*3).toFixed(1)} / 3s · Keep holding`:`${(ui.progress*3).toFixed(1)} / 3초 · 그대로 유지하세요`):t('버튼 위에서 주먹을 3초간 유지해주세요')}</small></button></div>}
+        {photo&&mode!=='demo'&&!ui.resultFresh&&<p className="result-tracking-hint" role="status">{t('카메라 앞에서 상반신이 보이도록 서주세요.')}</p>}
         {photoFade&&<div className="photo-ending-fade" aria-label={t("최종결과 페이드아웃")}/>}
         {toast&&<div className="toast" role="status">✧ {t(toast)}</div>}
         {flash&&<WaterDropTransition/>}

@@ -1,6 +1,6 @@
 import React,{forwardRef,useEffect,useImperativeHandle,useLayoutEffect,useRef,useState} from 'react';
 import {createCracks,endingCoverOpacity,endingAcceptsHit,endingVideoReady,endingReachedEnd,CrackHits,EndingSegments,ENDING_PRELUDE_MS,ENDING_WHITE_MS,ENDING_ESCAPE_RATE} from '../ending.js';
-import {EndingAudioFade,EndingNarration,narrationAllowsCracks} from '../ending-audio.js';
+import {EndingAudioFade,EndingNarration,narrationAllowsCracks,narrationHasFinished} from '../ending-audio.js';
 import {EndingCursorDisplay} from '../ending-wrists.js';
 import './ending.css';
 
@@ -18,6 +18,7 @@ const EndingScenes=forwardRef(function EndingScenes({scene,runKey,mode,handsRef,
  const seekAt=useRef(0),completed=useRef(false);
  const [blocked,setBlocked]=useState(false),[problem,setProblem]=useState(''),[marks,setMarks]=useState({}),[count,setCount]=useState(0),[phase,setPhase]=useState('intro');
  const [mediaUrl,setMediaUrl]=useState(null),[mediaError,setMediaError]=useState(''),[mediaAttempt,setMediaAttempt]=useState(0);
+ const [voiceUrl,setVoiceUrl]=useState(null),[voiceError,setVoiceError]=useState('');
  const active=scene==='ending';
  useEffect(()=>{
   const abort=new AbortController();let disposed=false,objectUrl=null;
@@ -31,6 +32,16 @@ const EndingScenes=forwardRef(function EndingScenes({scene,runKey,mode,handsRef,
   }).catch(e=>{if(!disposed&&e.name!=='AbortError')setMediaError('엔딩 영상을 불러오지 못했습니다. 다시 시도해 주세요.');});
   return()=>{disposed=true;abort.abort();if(objectUrl)URL.revokeObjectURL(objectUrl);};
  },[mediaAttempt]);
+ useEffect(()=>{
+  const abort=new AbortController();let disposed=false,url=null;
+  setVoiceUrl(null);setVoiceError('');
+  fetch('/audio/rabbit_ending.wav?v=complete-narration-20261028',{signal:abort.signal}).then(async response=>{
+   if(!response.ok)throw new Error(`HTTP ${response.status}`);
+   const blob=await response.blob();if(disposed)return;
+   url=URL.createObjectURL(blob);setVoiceUrl(url);
+  }).catch(e=>{if(!disposed&&e.name!=='AbortError')setVoiceError('나레이션을 불러오지 못했습니다. 눌러서 다시 준비해 주세요.');});
+  return()=>{disposed=true;abort.abort();if(url)URL.revokeObjectURL(url);};
+ },[mediaAttempt]);
  function notice(e){if(e.name!=='AbortError'&&['endingPrelude','ending'].includes(live.current.scene))setBlocked(true);}
  function playVideo(){film.current.play()?.catch(notice);}
  function jump(time){
@@ -40,13 +51,14 @@ const EndingScenes=forwardRef(function EndingScenes({scene,runKey,mode,handsRef,
   playVideo();
  }
  function completeEscape(){
-  if(live.current.scene!=='ending'||completed.current||!endingReachedEnd(film.current,logic.current))return;
+  if(live.current.scene!=='ending'||completed.current||!endingReachedEnd(film.current,logic.current)||!narrationHasFinished(voice.current))return;
   completed.current=true;film.current.pause();
   if(flash.current)flash.current.style.opacity='1';
   bgmFade.current.start(bgm.current,performance.now());live.current.onAdvance('ending');
  }
- function startAudio(){
+ function startAudio(force=false){
   narration.current?.enter(live.current.scene,runKey,notice);
+  if(force)narration.current?.resume(performance.now(),notice,true);
   bgm.current.volume=.42;bgm.current.play()?.catch(notice);
  }
  function prime(){
@@ -103,6 +115,7 @@ const EndingScenes=forwardRef(function EndingScenes({scene,runKey,mode,handsRef,
   if(scene!=='endingPrelude'&&scene!=='ending')return;
   let raf,fired=false;
   function frame(now){
+   narration.current?.resume(now,notice);
    if(scene==='endingPrelude'){
     if(now-start.current>=ENDING_PRELUDE_MS&&!fired){fired=true;live.current.onAdvance('endingPrelude');return;}
    }else{
@@ -115,7 +128,7 @@ const EndingScenes=forwardRef(function EndingScenes({scene,runKey,mode,handsRef,
     const lost=mode==='camera'&&missingSince.current!==null&&now-missingSince.current>1500;
     if(lost!==warningShown.current){warningShown.current=lost;setTrackingLost(lost);}
     for(let i=0;i<2;i++){const el=cursorNodes.current[i],p=displayed[i];if(el){el.style.opacity=String(p?.opacity??0);if(p){el.style.left=p.x*100+'%';el.style.top=p.y*100+'%';}}}
-    surface.dataset.detectedWrists=String(points.length);surface.dataset.wristSources=points.map(p=>p.source||'hand').join(',');
+    surface.dataset.detectedWrists=String(points.length);surface.dataset.wristSources=points.map(p=>p.source||'hand').join(',');surface.dataset.narrationTime=String(voice.current.currentTime);
     const hit=hits.current.update(points,now,cracksOpen.current&&endingAcceptsHit(v,l));
     if(hit)commitHit(hit);
     // A stale seeked event cannot acknowledge a newer impact/escape request.
@@ -148,16 +161,17 @@ const EndingScenes=forwardRef(function EndingScenes({scene,runKey,mode,handsRef,
      onTimeUpdate={completeEscape} onEnded={completeEscape}/>
     {active&&cracksReady&&cracks.map(c=><div key={c.id} className={`ending-crack ${marks[c.id]!==undefined?'is-struck':''}`} style={{left:c.x*100+'%',top:c.y*100+'%',width:c.r*4320,height:c.r*4320}} data-crack-id={c.id} data-hit={marks[c.id]!==undefined} aria-label={`타격 균열 ${c.id}`}><i/><i/><b/></div>)}
    </div>
-   <audio ref={voice} src="/audio/rabbit_ending.wav" preload="auto" aria-label="rabbit_ending 엔딩 나레이션" onError={()=>setProblem('rabbit_ending.wav 오디오를 확인해 주세요.')}/>
+   <audio ref={voice} src={voiceUrl||undefined} preload="auto" aria-label="rabbit_ending 엔딩 나레이션" onCanPlay={()=>{if(['endingPrelude','ending'].includes(live.current.scene))narration.current?.enter(live.current.scene,runKey,notice);}} onEnded={completeEscape} onError={()=>setVoiceError('나레이션을 재생하지 못했습니다. 눌러서 다시 준비해 주세요.')}/>
    <audio ref={bgm} src="/audio/ending_BGM.mp3" loop preload="auto" aria-label="ending_BGM 엔딩 배경음악" onError={()=>setProblem('ending_BGM.mp3 오디오를 확인해 주세요.')}/>
    {active&&<header className="ending-instructions"><h1>{phase==='escape'?'문이 열렸어요. 당신의 길로 나아가세요.':'균열을 향해 손을 휘둘러보세요.'}</h1><p>{phase==='escape'?'The door is open. Follow your own path.':'Swing your hand at the crack.'}</p>{cracksReady&&<span aria-live="polite">{count} / 3</span>}</header>}
    {active&&cracksReady&&phase!=='escape'&&trackingLost&&<p className="ending-tracking-hint" role="status">손과 팔이 카메라 화면 안에 보이도록 움직여주세요.</p>}
    {active&&[0,1].map(i=><div key={i} ref={el=>cursorNodes.current[i]=el} className="ending-wrist" aria-label={`${i+1}번째 손목 위치`}/>)}
    {active&&<><div ref={reveal} className="ending-reveal"/><div ref={flash} className="ending-white"/></>}
-   {(active||scene==='endingPrelude')&&blocked&&<button className="ending-play" onClick={()=>{setBlocked(false);if(live.current.scene==='ending'){film.current.volume=.7;playVideo();startAudio();}else narration.current?.enter('endingPrelude',runKey,notice);}}>영상과 소리 재생</button>}
+   {(active||scene==='endingPrelude')&&blocked&&<button className="ending-play" onClick={()=>{setBlocked(false);if(live.current.scene==='ending'){film.current.volume=.7;playVideo();startAudio(true);}else{narration.current?.enter('endingPrelude',runKey,notice);narration.current?.resume(performance.now(),notice,true);}}}>영상과 소리 재생</button>}
    {(active||scene==='endingPrelude')&&problem&&<p className="ending-problem" role="alert">{problem}</p>}
    {(active||scene==='endingPrelude')&&!mediaUrl&&!mediaError&&<p className="ending-problem" role="status">엔딩 영상을 준비하고 있습니다…</p>}
    {(active||scene==='endingPrelude')&&mediaError&&<button className="ending-play" onClick={()=>setMediaAttempt(n=>n+1)}>{mediaError}</button>}
+   {(active||scene==='endingPrelude')&&voiceError&&<button className="ending-play" onClick={()=>setMediaAttempt(n=>n+1)}>{voiceError}</button>}
    {scene==='escaped'&&<div className="escape-complete"><p>YOUR OWN WAY</p><h1>이제, 당신의 길로.</h1><button onClick={onReset}>처음으로 돌아가기</button></div>}
   </section>
  </>;

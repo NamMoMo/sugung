@@ -2,6 +2,8 @@ const words = {실력:'Ability',자유:'Freedom',연봉:'Salary',명예:'Recogni
 export const isLanguageScene = scene => ['mainReady','main','photo'].includes(scene);
 export function displayLabel(label,language){return language==='en'&&!label.own ? words[label.text]||label.text : label.text;}
 export const EN = {
+ '실시간 관객 실루엣과 빛 입자':'Live visitor silhouette and light particles',
+ '카메라 앞에서 상반신이 보이도록 서주세요.':'Stand where the camera can see your upper body.',
  '나에게 맞지 않는 말은 내려놓고, 소중한 말을 더해보세요.':'Let go of what does not fit you. Add what matters to you.',
  '지금의 모습을 휴대폰으로 남겨보세요.':'Capture this moment with your phone.',
  '이동':'Move','펴기':'Open hand','완료한 상호작용':'Interactions completed','확인':'Confirm',

@@ -27,5 +27,14 @@ test('cracks wait until three real seconds remain, and stay locked on blocked/un
  a.currentTime=14.99;a.playbackRate=1;assert.equal(narrationAllowsCracks(a),true);
  a.paused=true;assert.equal(narrationAllowsCracks(a),false);
  a.paused=false;a.duration=NaN;assert.equal(narrationAllowsCracks(a),false);
- a.ended=true;assert.equal(narrationAllowsCracks(a),true);
+ a.ended=true;assert.equal(narrationAllowsCracks(a),false);
+ a.duration=17.99;a.currentTime=17.99;a.paused=true;assert.equal(narrationAllowsCracks(a),true);
+});
+
+test('fresh playback cannot be skipped by a stale ended flag, and unexpected pauses resume without a rewind',async()=>{
+ const a={duration:17.99,readyState:4,paused:true,ended:true,currentTime:17.99,plays:0,pause(){this.paused=true;},play(){this.paused=false;this.plays++;return Promise.resolve();}};
+ const n=new EndingNarration(a);n.enter('endingPrelude',1);await Promise.resolve();await Promise.resolve();
+ assert.equal(a.currentTime,0);assert.equal(a.plays,1);assert.equal(narrationAllowsCracks(a),false);
+ a.ended=false;a.currentTime=6;a.paused=true;n.resume(performance.now()+2000);await Promise.resolve();await Promise.resolve();
+ assert.equal(a.plays,2);assert.equal(a.currentTime,6);n.enter('ending',1);assert.equal(a.currentTime,6);
 });

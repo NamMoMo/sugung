@@ -63,3 +63,5 @@
 
 /* Prevent focus scrolling the scaled exhibition stage away from wrist coordinates. */
 .stage{overflow:clip}
+
+.result-tracking-hint{position:absolute;left:50%;bottom:370px;transform:translateX(-50%);z-index:20;padding:22px 40px;background:#061321d9;border:1px solid #dcc38e66;color:#f6e4b7;font-size:36px;white-space:nowrap}

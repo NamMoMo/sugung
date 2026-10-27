@@ -19,13 +19,15 @@ test('component ignores stale seek completion, retains success guidance, and exi
  Object.defineProperty(globalThis.performance,'now',{value:()=>clock,configurable:true});
  globalThis.requestAnimationFrame=cb=>{raf.set(++id,cb);return id;};globalThis.cancelAnimationFrame=n=>raf.delete(n);
  const media=()=>({style:{},dataset:{},duration:14,currentTime:0,readyState:4,paused:true,seeking:false,ended:false,volume:0,playbackRate:1,play(){this.paused=false;return Promise.resolve();},pause(){this.paused=true;},closest(){return surface;}});
- const video=media(),voice={...media(),duration:17.99,ended:true},bgm=media();
+ const video=media(),voice={...media(),duration:17.99,ended:false},bgm=media();
  const step=async time=>{clock+=1000;if(time!==undefined)video.currentTime=time;const callbacks=[...raf.values()];raf.clear();await act(async()=>callbacks.forEach(cb=>cb(clock)));};
  const settle=async time=>{video.currentTime=time;video.seeking=false;await act(async()=>renderer.root.findByType('video').props.onSeeked());};
  const phase=()=>renderer.root.findAllByType('section').find(n=>n.props.className?.includes('ending-scene')).props['data-segment'];
  try{
-  await act(async()=>{renderer=create(React.createElement(EndingScenes,{ref,scene:'ending',runKey:1,mode:'demo',handsRef:{current:[]},handRef:{current:null},onAdvance(){advanced++;}}),{createNodeMock:e=>e.type==='video'?video:e.type==='audio'?(e.props.src.includes('rabbit_ending')?voice:bgm):{style:{},animate(){}}});});
+  await act(async()=>{renderer=create(React.createElement(EndingScenes,{ref,scene:'ending',runKey:1,mode:'demo',handsRef:{current:[]},handRef:{current:null},onAdvance(){advanced++;}}),{createNodeMock:e=>e.type==='video'?video:e.type==='audio'?(e.props['aria-label'].includes('rabbit_ending')?voice:bgm):{style:{},animate(){}}});});
   assert.match(renderer.root.findByType('video').props.src,/^blob:/);
+  assert.match(renderer.root.findByProps({'aria-label':'rabbit_ending 엔딩 나레이션'}).props.src,/^blob:/);
+  voice.currentTime=15;
   await step(1);await settle(2);assert.equal(phase(),'idle');
   await act(async()=>ref.current.testSwing());assert.equal(phase(),'impact');assert.equal(video.currentTime,4);
   // An older loop seek reaches 6 after the newer hit has requested 4.
@@ -36,6 +38,8 @@ test('component ignores stale seek completion, retains success guidance, and exi
   await act(async()=>ref.current.testSwing());assert.equal(phase(),'escape');assert.equal(video.currentTime,7);assert.equal(video.playbackRate,1);
   assert.equal(renderer.root.findByType('h1').children.join(''),'문이 열렸어요. 당신의 길로 나아가세요.');
   await settle(7);video.currentTime=14;await act(async()=>renderer.root.findByType('video').props.onTimeUpdate());
+  assert.equal(advanced,0);voice.currentTime=17.99;voice.ended=true;
+  await act(async()=>renderer.root.findByProps({'aria-label':'rabbit_ending 엔딩 나레이션'}).props.onEnded());
   await act(async()=>renderer.root.findByType('video').props.onEnded());assert.equal(advanced,1);assert.equal(video.currentTime,14);
  }finally{
   await act(async()=>renderer?.unmount());globalThis.fetch=original.fetch;globalThis.requestAnimationFrame=original.raf;globalThis.cancelAnimationFrame=original.caf;if(original.nowDescriptor)Object.defineProperty(original.performance,'now',original.nowDescriptor);else delete original.performance.now;

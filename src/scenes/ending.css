@@ -38,3 +38,8 @@
 .prelude-bloom,.prelude-dust{animation:prelude-glint-local 3s 2 both}
 @keyframes prelude-pin-local{0%,8%{opacity:0;scale:.3}22%{opacity:1;scale:1.3}46%{opacity:.6;scale:.65}100%{opacity:0;scale:.2}}
 @keyframes prelude-glint-local{0%,10%{opacity:0;transform:scale(.18)}24%{opacity:1;transform:scale(1)}52%{opacity:.42;transform:scale(.94)}100%{opacity:0;transform:scale(.7)}}
+
+/* Deep blue targets belong only to 08; 02 keeps its water-light guides. */
+.ending-scene .ending-crack{background:radial-gradient(circle,#00104ff2 0%,#06258bd9 25%,#103aa377 52%,transparent 75%);box-shadow:0 0 45px #07309a99}
+.ending-scene .ending-crack i{border:7px solid #061f8e;box-shadow:0 0 18px #2254d7aa,inset 0 0 30px #08289a88}
+.ending-scene .ending-crack b{background:radial-gradient(circle,#00114f 0%,#0b2d9bcc 48%,transparent 78%);filter:drop-shadow(0 0 16px #092a96)}
